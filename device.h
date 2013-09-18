@@ -48,7 +48,8 @@ class cMcliDevice:public cDevice
       protected:
       	cPluginMcli *m_mcli;
 	virtual bool SetChannelDevice (const cChannel * Channel, bool LiveView);
-	virtual bool HasLock (int TimeoutMs);
+	virtual bool HasLock(int TimeoutMs = 0) const;
+
 	virtual bool SetPid (cPidHandle * Handle, int Type, bool On);
 	virtual bool OpenDvr (void);
 	virtual void CloseDvr (void);
@@ -61,7 +62,6 @@ class cMcliDevice:public cDevice
 #ifdef GET_TS_PACKETS
 	virtual int GetTSPackets (uchar *, int);
 #endif
-	bool IsTunedToTransponderConst (const cChannel * Channel) const;
 	void TranslateTypePos(int &type, int &pos, const int Source) const;
 	
 	
@@ -106,7 +106,7 @@ class cMcliDevice:public cDevice
 	virtual bool ProvidesSource (int Source) const;
 	virtual bool ProvidesTransponder (const cChannel * Channel) const;
 	virtual bool ProvidesChannel (const cChannel * Channel, int Priority = -1, bool * NeedsDetachReceivers = NULL) const;
-	virtual bool IsTunedToTransponder (const cChannel * Channel);
+	virtual bool IsTunedToTransponder (const cChannel * Channel) const;
 
 	virtual int HandleTsData (unsigned char *buffer, size_t len);
 	tra_t *GetTenData (void) {

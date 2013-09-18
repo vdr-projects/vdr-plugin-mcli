@@ -355,7 +355,7 @@ bool cMcliDevice::ProvidesTransponder (const cChannel * Channel) const
 	return ret;
 }
 
-bool cMcliDevice::IsTunedToTransponderConst (const cChannel * Channel) const
+bool cMcliDevice::IsTunedToTransponder(const cChannel * Channel) const
 {
 //      printf ("IsTunedToTransponder %s == %s \n", Channel->Name (), m_chan.Name ());
 	if (!m_enable || !m_tuned) {
@@ -382,10 +382,6 @@ bool cMcliDevice::IsTunedToTransponderConst (const cChannel * Channel) const
 	return false;
 }
 
-bool cMcliDevice::IsTunedToTransponder (const cChannel * Channel)
-{
-	return IsTunedToTransponderConst(Channel);
-}
 
 bool cMcliDevice::CheckCAM(const cChannel * Channel, bool steal) const
 {
@@ -426,7 +422,7 @@ bool cMcliDevice::ProvidesChannel (const cChannel * Channel, int Priority, bool 
 		result = hasPriority;
 		if (Priority >= 0 && Receiving (true))
 		{
-			if (!IsTunedToTransponderConst(Channel)) {
+			if (!IsTunedToTransponder(Channel)) {
 				needsDetachReceivers = true;
 			} else {
 				result = true;
@@ -729,16 +725,16 @@ bool cMcliDevice::SetChannelDevice (const cChannel * Channel, bool LiveView)
 	return true;
 }
 
-bool cMcliDevice::HasLock (int TimeoutMs)
+bool cMcliDevice::HasLock (int TimeoutMs) const
 {
-//      printf ("HasLock TimeoutMs:%d\n", TimeoutMs);
+	dbg ("HasLock TimeoutMs:%d\n", TimeoutMs);
 
 	if ((m_ten.s.st & FE_HAS_LOCK) || !TimeoutMs) {
 		return m_ten.s.st & FE_HAS_LOCK;
 	}
-	cMutexLock MutexLock (&mutex);
+	cMutexLock MutexLock ((cMutex*)&mutex); // ugly hack to lock a mutex in a const member
 	if (TimeoutMs && !(m_ten.s.st & FE_HAS_LOCK)) {
-		m_locked.TimedWait (mutex, TimeoutMs);
+		((cCondVar&)m_locked).TimedWait ((cMutex&)mutex, TimeoutMs); // ugly hack to lock a mutex in a const member
 	}
 	if (m_ten.s.st & FE_HAS_LOCK) {
 		return true;
