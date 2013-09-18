@@ -1,6 +1,6 @@
 #Comment this out to disable debugging output
 #DEBUG = 1
-#API_SOCK=1
+API_SOCK=1
 
 ifdef RBMINI
   ARMEL=1
