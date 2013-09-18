@@ -142,18 +142,46 @@ cPluginMcli::~cPluginMcli ()
 
 bool cPluginMcli::InitMcli (void)
 {
-	if (!recv_init (m_cmd.iface, m_cmd.port)) {
-		m_recv_init_done = 1;
+	if(m_recv_init_done && (m_mld_init_done || !m_cmd.mld_start) && m_api_init_done && m_mmi_init_done) return true;
+	int ifacelen = strlen(m_cmd.iface);
+	if(ifacelen) { // Check if iface exists
+		FILE *file = fopen("/proc/net/if_inet6", "r");
+		if(!file) return false;
+		bool found = false;
+		char buf[255];
+		while(fgets(buf, sizeof(buf), file)) {
+			int buflen = strlen(buf);
+			while(buf[buflen-1]=='\n') buf[--buflen] = 0;
+			while(buf[buflen-1]=='\r') buf[--buflen] = 0;
+			while(buf[buflen-1]==' ' ) buf[--buflen] = 0;
+			if((buflen >= ifacelen) && (!strcmp(&buf[buflen-ifacelen], m_cmd.iface))) {
+				found = true;
+				break;
+			}
+		}
+		fclose(file);
+		if(!found) return false;
 	}
-	if (m_cmd.mld_start && !mld_client_init (m_cmd.iface)) {
-		m_mld_init_done = 1;
+	// Ok, iface exists so go on
+	if (!m_recv_init_done) {
+		if(!recv_init (m_cmd.iface, m_cmd.port))
+			m_recv_init_done = 1;
+		else return false;
 	}
-	if (!api_sock_init (m_cmd.cmd_sock_path)) {
-		m_api_init_done = 1;
+	if (!m_mld_init_done && m_cmd.mld_start) {
+		if(!mld_client_init (m_cmd.iface))
+			m_mld_init_done = 1;
+		else return false;
 	}
-	m_cam_mmi = mmi_broadcast_client_init (m_cmd.port, m_cmd.iface);
-	if (m_cam_mmi > 0) {
-		m_mmi_init_done = 1;
+	if (!m_api_init_done) {
+		if(!api_sock_init (m_cmd.cmd_sock_path))
+			m_api_init_done = 1;
+		else return false;
+	}
+	if(!m_mmi_init_done) {
+		if((m_cam_mmi = mmi_broadcast_client_init (m_cmd.port, m_cmd.iface)) != NULL)
+			m_mmi_init_done = 1;
+		else return false;
 	}
 	for(int i=m_devs.Count(); i < MCLI_MAX_DEVICES; i++) {
 		cMcliDevice *m = NULL;
@@ -174,15 +202,19 @@ void cPluginMcli::ExitMcli (void)
 {
 	if (m_mmi_init_done) {
 		mmi_broadcast_client_exit (m_cam_mmi);
+		m_mmi_init_done = 0;
 	}
 	if (m_api_init_done) {
 		api_sock_exit ();
+		m_api_init_done = 0;
 	}
 	if (m_mld_init_done) {
 		mld_client_exit ();
+		m_mld_init_done = 0;
 	}
 	if (m_recv_init_done) {
 		recv_exit ();
+		m_recv_init_done = 0;
 	}
 }
 
@@ -197,7 +229,6 @@ bool cPluginMcli::ProcessArgs (int argc, char *argv[])
 	int tuners = 0, i;
 	char c;
 	int ret;
-
 	while (1) {
 		//int this_option_optind = optind ? optind : 1;
 		int option_index = 0;
@@ -439,7 +470,7 @@ bool cPluginMcli::SatelitePositionLookup(const satellite_list_t *satlist, int po
 		}
 	}
 //	printf("satlist not found\n");
-	
+
 	return false;
 }
 
@@ -468,7 +499,7 @@ bool cPluginMcli::TunerSatelitePositionLookup(tuner_pool_t *tp, int pos) const
 	bool ret;
 	if(satlist == NULL) {
 		ret = false;
-	} else {	
+	} else {
 		ret=SatelitePositionLookup(satlist, pos);
 	}
 	nc_unlock_list ();
@@ -558,7 +589,7 @@ tuner_pool_t *cPluginMcli::TunerAvailable(fe_type_t type, int pos, bool lock)
 	if (TunerCountByType (type) == m_cmd.tuner_type_limit[type]) {
 #ifdef DEBUG_RESOURCES
 		//printf("Type %d limit (%d) reached\n", type, m_cmd.tuner_type_limit[type]);
-#endif		
+#endif
 		if(lock) {
 			Unlock();
 		}
@@ -650,14 +681,18 @@ void cPluginMcli::Action (void)
 #endif
     /** lets inform vdr and its plugins if TunerChange event happened */
 	bool netCVChanged;
-    
+
 	while (Running ()) {
         netCVChanged = false;
 		Lock ();
+		if(!InitMcli()) {
+			usleep (250 * 1000);
+			continue;
+		}
 		nc_lock_list ();
 		time_t now = time (NULL);
 		bool tpa = false;
-		
+
 		for (int n = 0; n < nc_list->nci_num; n++) {
 			netceiver_info_t *nci = nc_list->nci + n;
 			if ((now - nci->lastseen) > MCLI_DEVICE_TIMEOUT) {
@@ -724,9 +759,10 @@ void cPluginMcli::Action (void)
 		Unlock ();
 		UpdateDevices();
 
-        if (netCVChanged) {
-            cPluginManager::CallAllServices("NetCeiver changed");
-        }
+        //RC: disabled, see mantis #995
+        //if (netCVChanged) {
+        //    cPluginManager::CallAllServices("NetCeiver changed");
+        //}
         
 //TB: reelvdr itself tunes if the first tuner appears, don't do it twice
 #if 1 //ndef REELVDR
@@ -758,7 +794,8 @@ void cPluginMcli::TempDisableDevices(bool now)
 }
 bool cPluginMcli::Initialize (void)
 {
-	return InitMcli ();
+	InitMcli ();
+	return true;
 }
 
 
@@ -930,28 +967,28 @@ bool cPluginMcli::Service (const char *Id, void *Data)
 		if (Data) {
 			  mcli_tuner_count_t *tuner_count = (mcli_tuner_count_t*)Data;
 			int count;
-		    
+
 			count = tuner_count->dvb_c;
 			if (count < 0) count = MCLI_MAX_DEVICES;
 			//SetupParse("DVB-C", itoa(count));
 			m_cmd.tuner_type_limit[FE_QAM] = count;
 			/* save settings to .conf*/
 			SetupStore("DVB-C", count);
-		    
+
 			count = tuner_count->dvb_t;
 			if (count < 0) count = MCLI_MAX_DEVICES;
 			//SetupParse("DVB-T", itoa(count));
 			m_cmd.tuner_type_limit[FE_OFDM] = count;
 			/* save settings to .conf*/
 			SetupStore("DVB-T", count);
-		    
+
 			count = tuner_count->dvb_s;
 			if (count < 0) count = MCLI_MAX_DEVICES;
 			//SetupParse("DVB-S", itoa(count));
 			m_cmd.tuner_type_limit[FE_QPSK] = count;
 			/* save settings to .conf*/
 			SetupStore("DVB-S", count);
-		    
+
 			count = tuner_count->dvb_s2;
 			if (count < 0) count = MCLI_MAX_DEVICES;
 			//SetupParse("DVB-S2", itoa(count));
@@ -964,7 +1001,7 @@ bool cPluginMcli::Service (const char *Id, void *Data)
 	else if (Id && strcmp (Id, "Get tuner count") == 0) {
 		if (Data) {
 			mcli_tuner_count_t *tuner_count = (mcli_tuner_count_t*)Data;
-	    
+
 			tuner_count->dvb_c = TunerCountByType(FE_QAM);
 			tuner_count->dvb_t = TunerCountByType(FE_OFDM);
 			tuner_count->dvb_s = TunerCountByType(FE_QPSK);
@@ -1017,10 +1054,10 @@ cString cPluginMcli::SVDRPCommand (const char *Command, const char *Option, int 
             std::string strBuff;
             FILE *file = NULL;
 
-	    int cable =0;
-	    int sat   =0;
-            int satS2 = 0;
-            int terr  = 0;
+	    int cable = 9999;
+	    int sat   = 9999;
+            int satS2 = 9999;
+            int terr  = 9999;
             file = fopen("/etc/default/mcli", "r");
             if(file)
             {
@@ -1081,7 +1118,7 @@ cString cPluginMcli::SVDRPCommand (const char *Command, const char *Option, int 
             if ( sat   > nrTunersPhys.sat )
 		sat   = nrTunersPhys.sat;
             if ( satS2 > nrTunersPhys.satS2 )
-		satS2  = nrTunersPhys.sat;
+		satS2  = nrTunersPhys.satS2;
 	    if ( terr  > nrTunersPhys.terr )
 		terr   = nrTunersPhys.terr;
 
