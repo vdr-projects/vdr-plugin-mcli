@@ -35,11 +35,11 @@ else
   LIBRARY_PATH = /usr/lib
 endif
 
-CFLAGS ?= -Os -Wall 
+CFLAGS ?= -Os -Wall -pthread 
 
 INCLUDES += $(XML_INC) -I../dvbloop -I../common/ -I../client
 
-LDFLAGS:=$(XML_LIB) -lpthread
+LDFLAGS:=$(XML_LIB) -pthread
 
 ifdef API_SHM
 LDFLAGS:= $(LDFLAGS) -lrt
