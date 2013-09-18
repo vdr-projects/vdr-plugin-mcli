@@ -26,7 +26,7 @@ endif
 INCLUDES:=$(INCLUDES) -I../client -I../common $(XML_INC)
 DEFS:=$(DEFS) -g -DCLIENT 
 LDADD:=$(LDADD) -L../client
-STATICLIBS:=$(LIBS) ../client/libmcli.a $(XML_LIB) -lpthread
+STATICLIBS:=$(LIBS) ../client/libmcli.a $(XML_LIB) -lpthread -lz
 LIBS:=$(LIBS) $(XML_LIB) -lpthread -lmcli
 LDFLAGS:=$(LDFLAGS) -Wl,--as-needed
 
