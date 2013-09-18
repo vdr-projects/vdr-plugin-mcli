@@ -23,6 +23,9 @@
 #define st_Pos  0x07FF
 #define st_Neg  0x0800
 
+#define DVB_SYSTEM_1 0
+#define DVB_SYSTEM_2 1
+
 using namespace std;
 
 static int handle_ts (unsigned char *buffer, size_t len, void *p)
@@ -132,9 +135,14 @@ void cMcliDevice::SetEnable (bool val)
 			bool s2=m_chan.Modulation() == QPSK_S2 || m_chan.Modulation() == PSK8;
 #elif VDRVERSNUM < 10714
 			bool s2=m_chan.System() == SYS_DVBS2;
-#else
+#elif VDRVERSNUM < 10722
 			cDvbTransponderParameters dtp(m_chan.Parameters());
 			bool s2=dtp.System() == SYS_DVBS2;
+#elif VDRVERSNUM < 10723
+        #error "vdr version not supported"
+#else
+			cDvbTransponderParameters dtp(m_chan.Parameters());
+			bool s2=dtp.System() == DVB_SYSTEM_2;
 #endif
 			bool ret = false;
 			int pos;
@@ -311,9 +319,14 @@ bool cMcliDevice::ProvidesTransponder (const cChannel * Channel) const
 	bool s2=Channel->Modulation() == QPSK_S2 || Channel->Modulation() == PSK8;
 #elif VDRVERSNUM < 10714	
 	bool s2=Channel->System() == SYS_DVBS2;
-#else
+#elif VDRVERSNUM < 10722
 	cDvbTransponderParameters dtp(Channel->Parameters());
 	bool s2=dtp.System() == SYS_DVBS2;
+#elif VDRVERSNUM < 10723
+	#error "vdr version not supported"
+#else
+	cDvbTransponderParameters dtp(Channel->Parameters());
+	bool s2=dtp.System() == DVB_SYSTEM_2;
 #endif	
 	bool ret=ProvidesSource (Channel->Source ());
 	if(ret) {
@@ -526,9 +539,14 @@ bool cMcliDevice::SetChannelDevice (const cChannel * Channel, bool LiveView)
 	s2=Channel->Modulation() == QPSK_S2 || Channel->Modulation() == PSK8;
 #elif VDRVERSNUM < 10714	
 	s2=Channel->System() == SYS_DVBS2;
-#else
+#elif VDRVERSNUM < 10722
         cDvbTransponderParameters dtp(Channel->Parameters());
 	s2=dtp.System() == SYS_DVBS2;
+#elif VDRVERSNUM < 10723
+	#error "vdr version not supported"
+#else
+	cDvbTransponderParameters dtp(Channel->Parameters());
+	s2=dtp.System() == DVB_SYSTEM_2;
 #endif	
 	if(s2) {
 		type = FE_DVBS2;
