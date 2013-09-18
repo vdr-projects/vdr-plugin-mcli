@@ -160,6 +160,8 @@ class cMcliDevice:public cDevice
 		return true;
 	}
 #endif
+       virtual int SignalStrength(void) const;
+       virtual int SignalQuality(void) const;
 };
 
 #endif // VDR_MCLI_DEVICE_H

@@ -977,4 +977,16 @@ int cMcliDevice::GetAttribute (const char *attr_name, char *val, int maxret)
 	}
 	return ret;
 }
+
 #endif
+
+int cMcliDevice::SignalStrength(void) const 
+{
+       return int(m_ten.s.strength/65536.*100.);
+} 
+
+int cMcliDevice::SignalQuality(void) const 
+{
+       return int(m_ten.s.snr/65536.*100.);
+}
+
