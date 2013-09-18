@@ -5,48 +5,40 @@
 # The official name of this plugin.
 # This name will be used in the '-P...' option of VDR to load the plugin.
 # By default the main source file also carries this name.
-# IMPORTANT: the presence of this macro is important for the Make.config
-# file. So it must be defined, even if it is not used here!
-#
-#MCLI_SHARED=1
+
 PLUGIN = mcli
-APPLE_DARWIN = $(shell gcc -dumpmachine | grep -q 'apple-darwin' && echo "1" || echo "0")
 
 ### The version number of this plugin (taken from the main source file):
 
 VERSION = $(shell grep 'static const char \*VERSION *=' $(PLUGIN).c | awk '{ print $$6 }' | sed -e 's/[";]//g')
 
-### The C++ compiler and options:
-
-CXX      ?= g++
-ifeq ($(APPLE_DARWIN), 1)
-CXXFLAGS ?= -fPIC -pg -O2 -Wall -Woverloaded-virtual -Wno-parentheses -fno-common -bundle -flat_namespace -undefined suppress
-else
-CXXFLAGS ?= -fPIC -pg -O2 -Wall -Woverloaded-virtual -Wno-parentheses
-endif
-
 ### The directory environment:
 
-VDRDIR = ../../..
-LIBDIR = ../../lib
-TMPDIR = /tmp
+# Use package data if installed...otherwise assume we're under the VDR source directory:
+PKGCFG = $(if $(VDRDIR),$(shell pkg-config --variable=$(1) $(VDRDIR)/vdr.pc),$(shell pkg-config --variable=$(1) vdr || pkg-config --variable=$(1) ../../../vdr.pc))
+LIBDIR = $(call PKGCFG,libdir)
+PLGCFG = $(call PKGCFG,plgcfg)
+#
+TMPDIR ?= /tmp
 
-### Make sure that necessary options are included:
+### The compiler options:
 
--include $(VDRDIR)/Make.global
+export CFLAGS   = $(call PKGCFG,cflags)
+export CXXFLAGS = $(call PKGCFG,cxxflags)
+
+### The version number of VDR's plugin API:
+
+APIVERSION = $(call PKGCFG,apiversion)
 
 ### Allow user defined options to overwrite defaults:
 
--include $(VDRDIR)/Make.config
-
-### The version number of VDR's plugin API (taken from VDR's "config.h"):
-
-APIVERSION = $(shell sed -ne '/define APIVERSION/s/^.*"\(.*\)".*$$/\1/p' $(VDRDIR)/config.h)
+-include $(PLGCFG)
 
 ### The name of the distribution archive:
 
 ARCHIVE = $(PLUGIN)-$(VERSION)
 PACKAGE = vdr-$(ARCHIVE)
+
 
 ### Includes and Defines (add further entries here):
 
@@ -68,18 +60,6 @@ endif
 INCLUDES += -I$(VDRDIR)/include -I. $(XML_INC)
 
 
-ifeq ($(APPLE_DARWIN), 1)
-INCLUDES += -I/sw/include -Imcast/common/darwin/include/
-DEFINES += -DAPPLE
-ifdef MCLI_SHARED
-DEFINES += -Imcast/common/darwin/include/
-endif
-endif
-
-ifdef REELVDR
-  DEFINES += -DREELVDR 
-endif
-
 DEFINES += -D_GNU_SOURCE -DPLUGIN_NAME_I18N='"$(PLUGIN)"'
 # -DDEVICE_ATTRIBUTES
 
@@ -88,6 +68,8 @@ DEFINES += -D_GNU_SOURCE -DPLUGIN_NAME_I18N='"$(PLUGIN)"'
 OBJS = $(PLUGIN).o cam_menu.o device.o filter.o packetbuffer.o
 
 ### The main target:
+
+all: $(SOFILE)
 
 plug: libmcli.so libvdr-$(PLUGIN).so
 
@@ -100,14 +82,14 @@ libmcli.so:
 ### Implicit rules:
 
 %.o: %.c
-	$(CXX) $(CXXFLAGS) -c $(DEFINES) $(INCLUDES) $<
+	$(CXX) $(CXXFLAGS) -c $(DEFINES) $(INCLUDES) -o $@ $<
 
 ### Dependencies:
 
 MAKEDEP = $(CXX) -MM -MG
 DEPFILE = .dependencies
 $(DEPFILE): Makefile
-	@$(MAKEDEP) $(DEFINES) $(INCLUDES) $(OBJS:%.o=%.c) > $@
+	@$(MAKEDEP) $(CXXFLAGS) $(DEFINES) $(INCLUDES) $(OBJS:%.o=%.c) > $@
 
 -include $(DEPFILE)
 
@@ -139,6 +121,8 @@ i18n: $(I18Nmsgs) $(I18Npot)
 i18n-dist: $(I18Nmsgs)
 
 ### Targets:
+$(SOFILE): $(OBJS)
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -shared $(OBJS) -o $@
 
 libvdr-$(PLUGIN).so: $(OBJS)
 ifeq ($(APPLE_DARWIN), 1)
@@ -149,12 +133,10 @@ else
 	@cp --remove-destination $@ $(LIBDIR)/$@.$(APIVERSION)
 endif
 
-install:
-ifdef MCLI_SHARED
-	install -m 755 -D mcast/client/libmcli.so /usr/lib
-endif
-	install -m 755 -D libvdr-$(PLUGIN).so $(PLUGINLIBDIR)/libvdr-$(PLUGIN).so.$(APIVERSION)
+install-lib: $(SOFILE)
+	install -D $^ $(DESTDIR)$(LIBDIR)/$^.$(APIVERSION)
 
+install: install-lib
 
 dist: clean
 	@-rm -rf $(TMPDIR)/$(ARCHIVE)
@@ -165,4 +147,4 @@ dist: clean
 	@echo Distribution package created as $(PACKAGE).tgz
 
 clean:
-	@-rm -f $(OBJS) $(DEPFILE) *.so *.tgz core* *~ $(PODIR)/*.mo $(PODIR)/*.pot $(LIBDIR)/libvdr-$(PLUGIN).so.* mcast/client/*.o mcast/client/*.so mcast/client/*.a
+	@-rm -f $(OBJS) $(DEPFILE) *.so *.tgz core* *~
