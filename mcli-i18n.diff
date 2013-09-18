@@ -1,0 +1,22 @@
+Index: po/de_DE.po
+===================================================================
+--- po/de_DE.po	(Revision 180)
++++ po/de_DE.po	(Arbeitskopie)
+@@ -22,7 +22,7 @@
+ msgstr "Aktualisiere Konfiguration..."
+ 
+ msgid "Configuration is up to date..."
+-msgstr "Konfuguration ist aktuell..."
++msgstr "Konfiguration ist aktuell..."
+ 
+ #, c-format
+ msgid "Getting configuration from Netceiver %s"
+@@ -30,7 +30,7 @@
+ 
+ #, c-format
+ msgid "Failed to get configuration from Netceiver %s"
+-msgstr "Fehler beim Holen der Konfiguration von Netceiver %s"
++msgstr "Fehler beim Laden der Konfiguration von Netceiver %s"
+ 
+ #, c-format
+ msgid "Changing configuration for Netceiver %s"

@@ -1,0 +1,38 @@
+Index: plugin.h
+===================================================================
+--- plugin.h	(revision 2072)
++++ plugin.h	(working copy)
+@@ -45,7 +45,8 @@
+ 
+   virtual const char *MainMenuEntry(void);
+   virtual cOsdObject *MainMenuAction(void);
+-
++  virtual cOsdObject *AltMenuAction(void) { return NULL; };
++  
+   virtual cMenuSetupPage *SetupMenu(void);
+   virtual bool SetupParse(const char *Name, const char *Value);
+   void SetupStore(const char *Name, const char *Value = NULL);
+Index: vdr.c
+===================================================================
+--- vdr.c	(revision 2072)
++++ vdr.c	(working copy)
+@@ -929,6 +929,19 @@
+            Recordings.Update();
+            DeletedRecordings.Update();
+            }
++	cPlugin *mcliPlugin = cPluginManager::GetPlugin("mcli");
++	if (mcliPlugin) {
++		if (!ShutdownHandler.countdown) { // if kPower has been pressed, cMenuShutdown takes precedence over other menus
++			cOsdObject *MyMenu = mcliPlugin->AltMenuAction();
++			if (MyMenu) { // is there any cam-menu waiting?
++				DELETE_MENU;
++				if (cControl::Control())
++					cControl::Control()->Hide();
++				Menu = MyMenu;
++				Menu->Show();
++			}
++		}
++	}
+         // CAM control:
+         if (!Menu && !cOsd::IsOpen())
+            Menu = CamControl();

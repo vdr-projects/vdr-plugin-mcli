@@ -1,0 +1,61 @@
+Index: device.c
+===================================================================
+--- device.c    (Revision 178)
++++ device.c    (Arbeitskopie)
+@@ -89,6 +89,10 @@
+        DELETENULL (m_PB);
+ }
+
++bool cMcliDevice::Ready() {
++       return m_mcli ? m_mcli->Ready() : false;
++}
++
+ void cMcliDevice::SetTenData (tra_t * ten)
+ {
+        if(!ten->lastseen) {
+Index: device.h
+===================================================================
+--- device.h    (Revision 178)
++++ device.h    (Arbeitskopie)
+@@ -71,6 +71,7 @@
+        cMcliFilters *m_filters;
+        cMcliDevice (void);
+        virtual ~ cMcliDevice ();
++       virtual bool Ready();
+        void SetMcliRef(cPluginMcli *m)
+        {
+                m_mcli=m;
+Index: mcli.c
+===================================================================
+--- mcli.c      (Revision 178)
++++ mcli.c      (Arbeitskopie)
+@@ -471,6 +471,17 @@
+        return NULL;
+ }
+
++bool cPluginMcli::Ready()
++{
++       tuner_pool_t *tp;
++       for(int i=0; i<TUNER_POOL_MAX; i++) {
++               tp=m_tuner_pool+i;
++               if(tp->type != -1)
++                   return true;
++       }
++       return false;
++}
++
+ int cPluginMcli::TunerCountByType (const fe_type_t type)
+ {
+        int ret=0;
+Index: mcli.h
+===================================================================
+--- mcli.h      (Revision 178)
++++ mcli.h      (Arbeitskopie)
+@@ -161,6 +161,7 @@
+        bool TunerSatelitePositionLookup(tuner_pool_t *tp, int pos) const;
+
+        tuner_pool_t *TunerFindByUUID (const char *uuid);
++       bool Ready();
+        int TunerCountByType (const fe_type_t type);
+        bool TunerPoolAdd(tuner_info_t *t);
+        bool TunerPoolDel(tuner_pool_t *tp);

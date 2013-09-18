@@ -1,0 +1,97 @@
+--- ../vdr-1.6.0/device.c	2009-01-26 20:26:49.000000000 +0100
++++ device.c	2009-01-26 22:32:03.000000000 +0100
+@@ -253,14 +253,19 @@
+   for (int i = 0; i < MAXRECEIVERS; i++)
+       receiver[i] = NULL;
+ 
+-  if (numDevices < MAXDEVICES)
+-     device[numDevices++] = this;
+-  else
+-     esyslog("ERROR: too many devices!");
++  for (int i = 0; i < MAXDEVICES; i++)
++  if (!device[i]) {
++     device[i] = this;
++     numDevices++;
++     return;
++     }
++  esyslog("ERROR: too many devices!");
+ }
+ 
+ cDevice::~cDevice()
+ {
++  numDevices--;
++  device[DeviceNumber()] = NULL;
+   Detach(player);
+   DetachAllReceivers();
+   delete liveSubtitle;
+@@ -272,7 +277,7 @@
+ {
+   for (time_t t0 = time(NULL); time(NULL) - t0 < Timeout; ) {
+       bool ready = true;
+-      for (int i = 0; i < numDevices; i++) {
++      for (int i = 0; i < MAXDEVICES; i++) {
+           if (device[i] && !device[i]->Ready()) {
+              ready = false;
+              cCondWait::SleepMs(100);
+@@ -304,7 +309,7 @@
+ 
+ int cDevice::DeviceNumber(void) const
+ {
+-  for (int i = 0; i < numDevices; i++) {
++  for (int i = 0; i < MAXDEVICES; i++) {
+       if (device[i] == this)
+          return i;
+       }
+@@ -318,7 +323,7 @@
+ bool cDevice::SetPrimaryDevice(int n)
+ {
+   n--;
+-  if (0 <= n && n < numDevices && device[n]) {
++  if (0 <= n && n < MAXDEVICES && device[n]) {
+      isyslog("setting primary device to %d", n + 1);
+      if (primaryDevice)
+         primaryDevice->MakePrimaryDevice(false);
+@@ -352,7 +357,7 @@
+ 
+ cDevice *cDevice::GetDevice(int Index)
+ {
+-  return (0 <= Index && Index < numDevices) ? device[Index] : NULL;
++  return (0 <= Index && Index < MAXDEVICES) ? device[Index] : NULL;
+ }
+ 
+ cDevice *cDevice::GetDevice(const cChannel *Channel, int Priority, bool LiveView)
+@@ -388,8 +393,8 @@
+   for (int j = 0; j < NumCamSlots || !NumUsableSlots; j++) {
+       if (NumUsableSlots && SlotPriority[j] > MAXPRIORITY)
+          continue; // there is no CAM available in this slot
+-      for (int i = 0; i < numDevices; i++) {
+-          if (device[i] == AvoidDevice)
++      for (int i = 0; i < MAXDEVICES; i++) {
++          if (device[i] == NULL || device[i] == AvoidDevice)
+              continue; // this device shall be temporarily avoided
+           if (Channel->Ca() && Channel->Ca() <= CA_DVB_MAX && Channel->Ca() != device[i]->CardIndex() + 1)
+              continue; // a specific card was requested, but not this one
+@@ -463,10 +468,11 @@
+ void cDevice::Shutdown(void)
+ {
+   primaryDevice = NULL;
+-  for (int i = 0; i < numDevices; i++) {
+-      delete device[i];
+-      device[i] = NULL;
++  for (int i = 0; i < MAXDEVICES; i++) {
++      if( device[i]) {
++        delete device[i];
+       }
++    }
+ }
+ 
+ uchar *cDevice::GrabImage(int &Size, bool Jpeg, int Quality, int SizeX, int SizeY)
+@@ -703,7 +709,7 @@
+ 
+ bool cDevice::ProvidesTransponderExclusively(const cChannel *Channel) const
+ {
+-  for (int i = 0; i < numDevices; i++) {
++  for (int i = 0; i < MAXDEVICES; i++) {
+       if (device[i] && device[i] != this && device[i]->ProvidesTransponder(Channel))
+          return false;
+       }

@@ -1,0 +1,73 @@
+#ifndef __DEFS_H__
+#ifdef WIN32
+	#ifdef __CYGWIN__
+	#else
+		#ifndef IP_ADAPTER_IPV6_ENABLED
+  		#endif
+
+		#ifndef s6_addr16
+		#endif
+
+		#if ! defined _GNU_SOURCE && defined __cplusplus
+                #else
+                #endif
+
+		#ifdef LIBRARY
+		#else
+		#endif
+	#endif
+#else
+        #if defined __cplusplus
+        #else
+        #endif
+
+	#if ! (defined __uClinux__ || defined APPLE || defined MIPSEL)
+	#endif
+
+	#ifndef APPLE
+        #else
+		#ifndef s6_addr16
+                #endif
+        #endif
+
+	#ifdef APPLE
+	#endif
+
+	#if defined __uClinux__
+	#endif
+#endif // WIN32
+
+#ifndef __uClinux__
+	#if ! (defined WIN32 || defined APPLE)
+        #endif
+//	#else
+//	#endif
+#else
+#endif  // __uClinux__
+
+#ifdef DMALLOC
+#endif
+
+#if ! defined GETTID && ! defined WIN32 && ! defined APPLE
+#else
+#endif
+
+#ifndef WIN32
+    #ifdef SYSLOG
+	#ifdef DEBUG
+	#else
+	#endif
+    #else
+    #endif // Syslog
+#else   // WIN32
+	#ifdef DEBUG
+	#else
+	#endif //DEBUG
+#endif // WIN32
+
+	#ifndef MICROBLAZE
+	#endif
+	#ifdef MICROBLAZE
+	#else
+	#endif
+#endif  //__DEFS_H__
