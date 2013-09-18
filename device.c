@@ -506,7 +506,7 @@ bool cMcliDevice::SetChannelDevice (const cChannel * Channel, bool LiveView)
 	} else {
 		m_disabletimeout = TEMP_DISABLE_TIMEOUT_DEFAULT;
 	}
-	bool cam_force=!EITScanner.UsesDevice(this);
+	bool cam_force=true;
 	if(cam_force && !CheckCAM(Channel, true)) {
 #ifdef DEBUG_TUNE
 		printf("No CAM on %d available even after tried to steal one\n", CardIndex () + 1);
