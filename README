@@ -2,7 +2,7 @@ This is a "plugin" for the Video Disk Recorder (VDR) to access DVB-streams
 produced by the NetCeiver-hardware.
 
 Project's homepage:
-http://www.baycom.de/wiki/index.php/Products::netceiver
+http://www.baycom.de/hardware/netceiver/
 
 Latest version available via SVN at:
 https://svn.baycom.de/repos/vdr-mcli-plugin/
@@ -16,17 +16,17 @@ Copyright (C) 2010 by Christian Cier-Zniewski <c.cier@gmx.de>
 
 ------------------------------------------------------------------
 
-The mcli-library (libmcli.so) is covered by the 
-GNU LESSER GENERAL PUBLIC LICENSE (LGPL), version 2.1:
+The mcli-library (libmcli.so) and all tools (including netcv2dvbip) 
+are covered by the GNU LESSER GENERAL PUBLIC LICENSE (LGPL), version 2.1:
 
-This library is free software; you can redistribute it and/or modify it
-under the terms of the GNU Lesser General Public License version 2.1 as
-published by the Free Software Foundation.
+This library and all tools are free software; you can redistribute it and/or
+modify it under the terms of the GNU Lesser General Public License version
+2.1 as published by the Free Software Foundation.
 
-This library is distributed in the hope that it will be useful, but WITHOUT
-ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
-for more details.
+This library and all tools are distributed in the hope that it will be
+useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser
+General Public License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with this library; if not, write to the Free Software Foundation,
