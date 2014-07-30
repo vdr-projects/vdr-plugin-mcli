@@ -1,10 +1,25 @@
 VDR Plugin 'mcli' Revision History
 ----------------------------------
 
-2008-12-18: Version 0.0.1
+2014-07-12
+- mhorwath debug 2.1.x issue http://projects.vdr-developer.org/issues/1709 , little message cleanup, added cam info at startup, fixed compile warning  
 
-- Initial revision.
-
+2013-09-20
+- Hoppaz applied svn diff -r188:189 from https://svn.baycom.de/repos/vdr-mcli-plugin/ : r189 | fliegl | 2013-09-19 21:26:55 +0200 (Do, 19. Sep 2013) | 2 Zeilen , Add LGPL license for all tools (including netcvdvbip)
+ 
+2013-09-18
+- hsteinhaus explicitely define API_SOCK to resolve compile problems using Debian/Ubuntu tools (reason why OS-depended define does not work is not fully understood)
+- hsteinhaus explicitely set -fPIC for the plugin to resolve Debian build problems
+- Hoppaz fixed makefile netcv2dvbip du to link error
+- Hoppaz added netcv2dvbip revision 188 from https://svn.baycom.de/repos/vdr-mcli-plugin/mcast/netcv2dvbip
+- hsteinhaus Resolved issue #1504 - compile problems related to overloading of const methods of the cDevice interface
+- Hoppaz removed obsolete .svn directories
+- Hoppaz patch svn-pull.patch.txt applied
+- Hoppaz patch new_make_format.patch.txt applied
+- Hoppaz patch signal_strength.patch.txt applied
+ 
 2010-06-23:
-
 - Moved the mcli-library to LGPL-2.1-license.
+
+2008-12-18: Version 0.0.1
+- Initial revision.

@@ -39,6 +39,9 @@ APIVERSION = $(call PKGCFG,apiversion)
 ARCHIVE = $(PLUGIN)-$(VERSION)
 PACKAGE = vdr-$(ARCHIVE)
 
+### The name of the shared object file:
+
+SOFILE = libvdr-$(PLUGIN).so
 
 ### Includes and Defines (add further entries here):
 

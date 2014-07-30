@@ -59,15 +59,17 @@ cMcliDevice::cMcliDevice (void)
 	m_tuned = false;
 	StartSectionHandler ();
 #ifdef USE_VDR_PACKET_BUFFER
+	//printf ("Mcli::%s: USING VDR PACKET BUFFER \n", __FUNCTION__);
 	m_PB = new cRingBufferLinear(MEGABYTE(4), TS_SIZE, false, "MCLI_TS");
 	m_PB->SetTimeouts (0, 100);
 	delivered = false;
 #else
+	//printf ("Mcli::%s: USING INTERNAL MCLI PACKET BUFFER \n", __FUNCTION__);
 	m_PB = new cMyPacketBuffer (10000 * TS_SIZE, 10000);
 	m_PB->SetTimeouts (0, CLOCKS_PER_SEC * 20 / 1000);
 #endif
 	m_filters = new cMcliFilters ();
-//	printf ("cMcliDevice: got device number %d\n", CardIndex () + 1);
+
 	m_pidsnum = 0;
 	m_mcpidsnum = 0;
 	m_filternum = 0;
@@ -84,13 +86,16 @@ cMcliDevice::cMcliDevice (void)
 	m_tunerref = NULL;
 	m_camref = NULL;
 	InitMcli ();
+
+	printf ("Mcli::%s: DVB got device number %d\n", __FUNCTION__, CardIndex () + 1);
+
 }
 
 cMcliDevice::~cMcliDevice ()
 {
 	LOCK_THREAD;
 	StopSectionHandler ();
-	printf ("Device %d gets destructed\n", CardIndex () + 1);
+	printf ("Mcli::%s: DVB %d gets destructed\n", __FUNCTION__, CardIndex () + 1);
 	Cancel (0);
 	m_locked.Broadcast ();
 	ExitMcli ();
@@ -199,14 +204,14 @@ bool cMcliDevice::SetTempDisable (bool now)
 		if(GetCaEnable()) {
 			SetCaEnable(false);
 #ifdef DEBUG_TUNE
-			printf("Releasing CAM on %d (%s) (disable, %d)\n",CardIndex()+1, m_chan.Name(), now);
+			printf("Mcli::%s: Releasing CAM on device %d (%s) (disable, %d)\n", __FUNCTION__, CardIndex()+1, m_chan.Name(), now);
 #endif
 			m_mcli->CAMFree(m_camref);
 			m_camref = NULL;
 		}
 		if(m_tunerref) {
 #ifdef DEBUG_TUNE
-			printf("Releasing tuner on %d (%s)\n",CardIndex()+1, m_chan.Name());
+			printf("Mcli::%s: Releasing tuner on device %d (%s)\n", __FUNCTION__, CardIndex()+1, m_chan.Name());
 #endif			
 			m_mcli->TunerFree(m_tunerref, false);
 			m_tunerref = NULL;
@@ -242,9 +247,9 @@ int cMcliDevice::HandleTsData (unsigned char *buffer, size_t len)
 	}
 #else
 #ifdef USE_VDR_PACKET_BUFFER
-	if(m_PB->Free() < len) {
+	if((size_t)m_PB->Free() < len) { // m_PB->Free() returns an unsigned int
 		m_PB->Clear();
-		if(Receiving(true))  isyslog("MCLI: HandleTsData buffer overflow [%d] %s", CardIndex()+1, m_chan.Name());
+		if(Receiving(true))  isyslog("Mcli::%s: buffer overflow [%d] %s", __FUNCTION__, CardIndex()+1, m_chan.Name());
 	}
 	return m_PB->Put(buffer, len);
 #else
@@ -305,7 +310,7 @@ bool cMcliDevice::ProvidesSource (int Source) const
 		}
 	} 
 #ifdef DEBUG_TUNE_EXTRA
-	printf ("ProvidesSource:%d Type:%d Pos:%d -> %d\n", CardIndex () + 1, type, pos, ret);
+	printf ("Mcli::%s: DVB:%d Type:%d Pos:%d -> %d\n", __FUNCTION__, CardIndex () + 1, type, pos, ret);
 #endif
 	return ret;
 }
@@ -315,6 +320,7 @@ bool cMcliDevice::ProvidesTransponder (const cChannel * Channel) const
 	if (!m_enable) {
 		return false;
 	}
+ 	
 #if VDRVERSNUM < 10702	
 	bool s2=Channel->Modulation() == QPSK_S2 || Channel->Modulation() == PSK8;
 #elif VDRVERSNUM < 10714	
@@ -329,6 +335,11 @@ bool cMcliDevice::ProvidesTransponder (const cChannel * Channel) const
 	bool s2=dtp.System() == DVB_SYSTEM_2;
 #endif	
 	bool ret=ProvidesSource (Channel->Source ());
+
+        //printf ("Mcli::%s: DEBUG 'Channel->Parameters()' -> (%u) \n", __FUNCTION__, Channel->Parameters() );
+        //printf ("Mcli::%s: DEBUG 's2=dtp.System() == DVB_SYSTEM_2' -> (%d)=(%d) == (%d) \n", __FUNCTION__, s2, dtp.System(), DVB_SYSTEM_2 );
+        //printf ("Mcli::%s: DEBUG 'Channel->Source ()' -> (%u) \n", __FUNCTION__, Channel->Source () );
+
 	if(ret) {
 		int pos;
 		int type;
@@ -349,8 +360,9 @@ bool cMcliDevice::ProvidesTransponder (const cChannel * Channel) const
 			}
 		}
 	}
+
 #ifdef DEBUG_TUNE_EXTRA
-	printf ("ProvidesTransponder:%d S2:%d %s@%p -> %d\n", CardIndex () + 1, s2, Channel->Name (), this, ret);
+	printf ("Mcli::%s: DVB:%d S2:%d %s@%p -> %d\n", __FUNCTION__, CardIndex () + 1, s2, Channel->Name (), this, ret);
 #endif
 	return ret;
 }
@@ -414,23 +426,38 @@ bool cMcliDevice::ProvidesChannel (const cChannel * Channel, int Priority, bool 
 	}
 	if(!CheckCAM(Channel, false)) {
 #ifdef DEBUG_TUNE
-		printf ("ProvidesChannel:%d Channel:%s, Prio:%d this->Prio:%d m_chan.Name:%s -> %d\n", CardIndex () + 1, Channel->Name (), Priority, this->Priority (), m_chan.Name(), false);
+		printf ("Mcli::%s: DVB:%d Channel(%p):%s, Prio:%d this->Prio:%d m_chan.Name:%s -> %d\n", __FUNCTION__, CardIndex () + 1, Channel, Channel->Name (), Priority, this->Priority (), m_chan.Name(), false);
 #endif
 		return false;
 	}
 	if(ProvidesTransponder(Channel)) {
+		//printf ("Mcli::ProvidesChannel: DEBUG DVB:%d Channel(%p):%s * 'ProvidesTransponder(Channel)' is True\n", CardIndex () + 1, Channel, Channel->Name ());
 		result = hasPriority;
+
+		//printf ("Mcli::ProvidesChannel: DEBUG result %d hasPriority %d\n", result, hasPriority);
+
 		if (Priority >= 0 && Receiving (true))
 		{
+	                //printf ("Mcli::ProvidesChannel: DEBUG DVB:%d Channel(%p):%s * 'Priority >= 0 && Receiving (true)' is True\n", CardIndex () + 1, Channel, Channel->Name ());
+
 			if (!IsTunedToTransponder(Channel)) {
 				needsDetachReceivers = true;
+	                        //printf ("Mcli::ProvidesChannel: DEBUG DVB:%d Channel(%p):%s * '!IsTunedToTransponder(Channel)' is True\n", CardIndex () + 1, Channel, Channel->Name ());
+
 			} else {
 				result = true;
+                                //printf ("Mcli::ProvidesChannel: DEBUG DVB:%d Channel(%p):%s * '!IsTunedToTransponder(Channel)' is False * result = true ***** OK\n", CardIndex () + 1, Channel, Channel->Name ());
 			}
+
+		} else {
+                        //printf ("Mcli::ProvidesChannel: DEBUG DVB:%d Channel(%p):%s * 'Priority >= 0 && Receiving (true)' is False\n", CardIndex () + 1, Channel, Channel->Name ());
 		}
+	} else {
+                //printf ("Mcli::ProvidesChannel: DEBUG DVB:%d Channel(%p):%s * 'ProvidesTransponder(Channel)' is False\n", CardIndex () + 1, Channel, Channel->Name ());
 	}
+
 #ifdef DEBUG_TUNE
-	printf ("ProvidesChannel:%d Channel:%s, Prio:%d this->Prio:%d m_chan.Name:%s NeedsDetachReceivers:%d -> %d\n", CardIndex () + 1, Channel->Name (), Priority, this->Priority (), m_chan.Name(), needsDetachReceivers, result);
+	printf ("Mcli::%s: DVB:%d Channel(%p):%s, Prio:%d this->Prio:%d m_chan.Name:%s NeedsDetachReceivers:%d -> %d\n", __FUNCTION__, CardIndex () + 1, Channel, Channel->Name (), Priority, this->Priority (), m_chan.Name(), needsDetachReceivers, result);
 #endif
 	if (NeedsDetachReceivers) {
 		*NeedsDetachReceivers = needsDetachReceivers;
@@ -452,9 +479,16 @@ void cMcliDevice::TranslateTypePos(int &type, int &pos, const int Source) const
 	
 	pos=abs(n);
 	
+#if VDRVERSNUM < 20100
+	// Changed the sign of the satellite position value in cSource to reflect the standard
+	// of western values being negative. The new member function cSource::Position() can be
+	// used to retrieve the orbital position of a satellite.
+	// see changelog vdr2.1.1 * found by horwath@dayside.net
 	if (n > 0 ){
 		pos = -pos;
 	}
+#endif
+
 #endif
 	if (pos) {
 		pos += 1800;
@@ -463,12 +497,16 @@ void cMcliDevice::TranslateTypePos(int &type, int &pos, const int Source) const
 	}
 	
 	type = Source & cSource::st_Mask;
+
+        //printf("MCLI DEBUG type %d, cSource::stCable %d, cSource::stSat %d, cSource::stTerr %d \n", type, cSource::stCable, cSource::stSat, cSource::stTerr );
+        //printf("MCLI DEBUG FE_QAM %d, FE_QPSK %d, FE_OFDM %d \n", FE_QAM, FE_QPSK, FE_OFDM);
+       
 	switch(type) {
+                case cSource::stSat:
+                        type = FE_QPSK;
+                        break;
 		case cSource::stCable: 
 			type = FE_QAM;
-			break;
-		case cSource::stSat:
-			type = FE_QPSK;
 			break;
 		case cSource::stTerr:
 			type = FE_OFDM;
@@ -488,7 +526,7 @@ bool cMcliDevice::SetChannelDevice (const cChannel * Channel, bool LiveView)
 	is_scan = !strlen(Channel->Name()) && !strlen(Channel->Provider());
 	
 #ifdef DEBUG_TUNE
-	printf ("SetChannelDevice:%d Channel(%p):%s, Provider:%s, Source:%d, LiveView:%s, IsScan:%d, m_chan.Name:%s\n", CardIndex () + 1, Channel, Channel->Name (), Channel->Provider (), Channel->Source (), LiveView ? "true" : "false", is_scan, m_chan.Name());
+	printf ("Mcli::%s: DVB:%d Channel(%p):%s, Provider:%s, Source:%d, LiveView:%s, IsScan:%d, m_chan.Name:%s\n", __FUNCTION__, CardIndex () + 1, Channel, Channel->Name (), Channel->Provider (), Channel->Source (), LiveView ? "true" : "false", is_scan, m_chan.Name());
 #endif
 	if (!m_enable) {
 		return false;
@@ -505,7 +543,7 @@ bool cMcliDevice::SetChannelDevice (const cChannel * Channel, bool LiveView)
 	bool cam_force=true;
 	if(cam_force && !CheckCAM(Channel, true)) {
 #ifdef DEBUG_TUNE
-		printf("No CAM on %d available even after tried to steal one\n", CardIndex () + 1);
+		printf("Mcli::%s: No CAM on DVB %d available even after tried to steal one\n", __FUNCTION__, CardIndex () + 1);
 #endif
 		return false;
 	}
@@ -520,7 +558,7 @@ bool cMcliDevice::SetChannelDevice (const cChannel * Channel, bool LiveView)
 		}
 		if(!(m_camref=m_mcli->CAMAlloc(NULL, slot))) {
 #ifdef DEBUG_TUNE
-			printf("failed to get CAM on %d\n",CardIndex () + 1);
+			printf("Mcli::%s: failed to get CAM on DVB %d\n", __FUNCTION__, CardIndex () + 1);
 #endif
 			if(cam_force) {
 				return false;
@@ -581,7 +619,7 @@ bool cMcliDevice::SetChannelDevice (const cChannel * Channel, bool LiveView)
 		m_chan = *Channel;
 
 #ifdef DEBUG_TUNE
-                printf("Already tuned to transponder on %d\n",CardIndex () + 1);
+                printf("Mcli::%s: Already tuned to transponder on DVB %d\n", __FUNCTION__, CardIndex () + 1);
 #endif
 		return true;
 	} else {
@@ -715,7 +753,7 @@ bool cMcliDevice::SetChannelDevice (const cChannel * Channel, bool LiveView)
 //		printf("add dummy pid 0 @ %p\n", this);
 	}
 #ifdef DEBUG_PIDS
-	printf ("%p SetChannelDevice: Pidsnum:%d m_pidsnum:%d\n", m_r, m_mcpidsnum, m_pidsnum);
+	printf ("Mcli::%s: %p Pidsnum:%d m_pidsnum:%d\n", __FUNCTION__, m_r, m_mcpidsnum, m_pidsnum);
 	for (int i = 0; i < m_mcpidsnum; i++) {
 		printf ("Pid:%d\n", m_pids[i].pid);
 	}
@@ -745,7 +783,7 @@ bool cMcliDevice::HasLock (int TimeoutMs) const
 bool cMcliDevice::SetPid (cPidHandle * Handle, int Type, bool On)
 {
 #ifdef DEBUG_TUNE
-	printf ("SetPid %d Pid:%d (%s), Type:%d, On:%d, used:%d sid:%d ca_enable:%d channel_ca:%d\n",  CardIndex () + 1, Handle->pid, m_chan.Name(), Type, On, Handle->used, m_chan.Sid(), GetCaEnable(), m_chan.Ca (0));
+	printf ("Mcli::%s: DVB:%d Pid:%d (%s), Type:%d, On:%d, used:%d sid:%d ca_enable:%d channel_ca:%d\n", __FUNCTION__, CardIndex () + 1, Handle->pid, m_chan.Name(), Type, On, Handle->used, m_chan.Sid(), GetCaEnable(), m_chan.Ca (0));
 #endif
 	dvb_pid_t pi;
 	memset (&pi, 0, sizeof (dvb_pid_t));
@@ -787,7 +825,7 @@ bool cMcliDevice::SetPid (cPidHandle * Handle, int Type, bool On)
 	}
 	m_mcpidsnum = recv_pids_get (m_r, m_pids);
 #ifdef DEBUG_PIDS
-	printf ("%p SetPid: Pidsnum:%d m_pidsnum:%d m_filternum:%d\n", m_r, m_mcpidsnum, m_pidsnum, m_filternum);
+	printf ("Mcli::%s: %p Pidsnum:%d m_pidsnum:%d m_filternum:%d\n", __FUNCTION__, m_r, m_mcpidsnum, m_pidsnum, m_filternum);
 	for (int i = 0; i < m_mcpidsnum; i++) {
 		printf ("Pid:%d\n", m_pids[i].pid);
 	}
@@ -798,14 +836,14 @@ bool cMcliDevice::SetPid (cPidHandle * Handle, int Type, bool On)
 
 bool cMcliDevice::OpenDvr (void)
 {
-//	printf ("OpenDvr\n");
+	printf ("Mcli::%s:\n", __FUNCTION__);
 	m_dvr_open = true;
 	return true;
 }
 
 void cMcliDevice::CloseDvr (void)
 {
-//	printf ("CloseDvr\n");
+	printf ("Mcli::%s:\n", __FUNCTION__);
 	m_dvr_open = false;
 }
 
@@ -849,7 +887,7 @@ bool cMcliDevice::GetTSPacket (uchar * &Data)
 				}
 			}
 			m_PB->Del(Count);
-			esyslog("cMcliDevice::GetTSPacket: skipped %d bytes to sync on TS packet on device %d", Count, CardIndex());
+			esyslog("Mcli::%s: skipped %d bytes to sync on TS packet on DVB %d", __FUNCTION__, Count, CardIndex());
 			return true;
 		}
 		delivered = true;
@@ -882,7 +920,7 @@ int cMcliDevice::OpenFilter (u_short Pid, u_char Tid, u_char Mask)
 	recv_pid_add (m_r, &pi);
 	m_mcpidsnum = recv_pids_get (m_r, m_pids);
 #ifdef DEBUG_PIDS
-	printf ("%p OpenFilter: Pidsnum:%d m_pidsnum:%d\n", m_r, m_mcpidsnum, m_pidsnum);
+	printf ("Mcli::%s: %p Pidsnum:%d m_pidsnum:%d\n", __FUNCTION__, m_r, m_mcpidsnum, m_pidsnum);
 	for (int i = 0; i < m_mcpidsnum; i++) {
 		printf ("Pid:%d\n", m_pids[i].pid);
 	}
