@@ -78,7 +78,7 @@ plug: libmcli.so libvdr-$(PLUGIN).so
 
 all: libmcli.so libvdr-$(PLUGIN).so i18n
 
-libmcli.so:
+libmcli.a libmcli.so:
 	$(MAKE) -C mcast/client/
 
 
