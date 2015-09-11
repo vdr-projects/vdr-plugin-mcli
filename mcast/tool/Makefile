@@ -26,12 +26,7 @@ endif
 VDRDIR=../../../../..
 -include $(VDRDIR)/Make.config
 
-ifdef ARMEL
-  XML_INC := -I/usr/arm-linux-gnueabi/include/libxml2
-  XML_LIB := -lxml2
-else
-  XML_INC := `xml2-config --cflags`
-  XML_LIB := `xml2-config --libs`
+ifndef ARMEL
   LIBRARY_PATH = /usr/lib
 endif
 

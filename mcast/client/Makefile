@@ -10,7 +10,7 @@ ifdef RBMINI
   ARMEL=1
 endif
 
-ARCH= $(shell $(CC) -dumpmachine)
+ARCH ?= $(shell $(CC) -dumpmachine)
 APPLE_DARWIN = $(shell echo $(ARCH) | grep -q 'apple-darwin' && echo "1" || echo "0")
 CYGWIN = $(shell echo $(ARCH) | grep -q 'cygwin' && echo "1" || echo "0")
 MIPSEL = $(shell echo $(ARCH) | grep -q 'mipsel' && echo "1" || echo "0")
@@ -32,17 +32,11 @@ VDRDIR=../../../../..
 -include $(VDRDIR)/Make.config
 
 ifdef ARMEL
-  XML_INC := -I/usr/arm-linux-gnueabi/include/libxml2
-  XML_LIB := -lxml2
   CROSS = arm-linux-gnueabi-
 else
 ifeq ($(MIPSEL),1)
 DEFS:=$(DEFS) -DMIPSEL
-XML_INC:=-I../../libxml2/include
-XML_LIB:=-L../../libxml2/lib
 else
-XML_INC:=`xml2-config --cflags`
-XML_LIB:=`xml2-config --libs`
 LIBRARY_PATH=/usr/lib
 endif
 endif
@@ -106,7 +100,10 @@ MCLI_SOBJS := $(MCLI_SOBJS) dvblo_handler.o input.o
 endif 
 endif
 
-all: lib$(MCLI)
+all: 
+	$(MAKE) lib$(MCLI)
+	$(MAKE) $(MCLI)-shared
+	$(MAKE) mcli
 
 static: $(MCLI)-static
 
@@ -119,7 +116,7 @@ $(DEPFILE): Makefile
 -include $(DEPFILE)
 
 
-$(MCLI): $(MCLI_OBJS) $(MCLI_SOBJS)
+$(MCLI): $(MCLI_OBJS) $(MCLI_SOBJS) libmcli.so
 	$(CC) $(LDFLAGS) -o $@ $(MCLI_OBJS) $(MCLI_SOBJS) $(LDLIBS)
 ifndef DEBUG
 ifndef WIN32
