@@ -10,7 +10,7 @@ ifdef RBMINI
   ARMEL=1
 endif
 
-ARCH= $(shell $(CC) -dumpmachine)
+ARCH ?= $(shell $(CC) -dumpmachine)
 APPLE_DARWIN = $(shell echo $(ARCH) | grep -q 'apple-darwin' && echo "1" || echo "0")
 CYGWIN = $(shell echo $(ARCH) | grep -q 'cygwin' && echo "1" || echo "0")
 MIPSEL = $(shell echo $(ARCH) | grep -q 'mipsel' && echo "1" || echo "0")
@@ -106,7 +106,7 @@ MCLI_SOBJS := $(MCLI_SOBJS) dvblo_handler.o input.o
 endif 
 endif
 
-all: lib$(MCLI)
+all: lib$(MCLI) $(MCLI)-shared
 
 static: $(MCLI)-static
 
@@ -119,7 +119,7 @@ $(DEPFILE): Makefile
 -include $(DEPFILE)
 
 
-$(MCLI): $(MCLI_OBJS) $(MCLI_SOBJS)
+$(MCLI): $(MCLI_OBJS) $(MCLI_SOBJS) libmcli.so
 	$(CC) $(LDFLAGS) -o $@ $(MCLI_OBJS) $(MCLI_SOBJS) $(LDLIBS)
 ifndef DEBUG
 ifndef WIN32

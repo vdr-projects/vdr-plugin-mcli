@@ -127,7 +127,7 @@ i18n-dist: $(I18Nmsgs)
 $(SOFILE): $(OBJS)
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) -shared $(OBJS) -o $@
 
-libvdr-$(PLUGIN).so: $(OBJS)
+libvdr-$(PLUGIN).so: $(OBJS) libmcli.a
 ifeq ($(APPLE_DARWIN), 1)
 	$(CXX) $(CXXFLAGS) $(OBJS) $(LIBS) -o $@
 	@cp $@ $(LIBDIR)/$@.$(APIVERSION)
@@ -151,3 +151,7 @@ dist: clean
 
 clean:
 	@-rm -f $(OBJS) $(DEPFILE) *.so *.tgz core* *~
+	$(MAKE) -C mcast/client/ clean
+	$(MAKE) -C mcast/netcv2dvbip/ clean
+	$(MAKE) -C mcast/tool/ clean
+
