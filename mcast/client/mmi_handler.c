@@ -219,6 +219,8 @@ int mmi_get_data (xmlChar * xmlbuff, int buffersize, mmi_info_t * mmi_info)
 
 	xmlKeepBlanksDefault (0);	//reomve this f. "text" nodes
 	c.doc = xmlParseMemory ((char *) xmlbuff, buffersize);
+        c.str = NULL;
+        c.key = NULL;
 	root_element = xmlDocGetRootElement (c.doc);
 	pthread_cleanup_push (clean_xml_parser_thread, &c);
 

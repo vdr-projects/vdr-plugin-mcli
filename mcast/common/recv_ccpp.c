@@ -469,8 +469,8 @@ void *recv_ten (void *arg)
 	clock_t lastrecv=0;
 	int donetimeout=0;
 
-	pthread_cleanup_push (clean_ccpp_thread, &c);
 	memset (&c, 0, sizeof (ccpp_thread_context_t));
+	pthread_cleanup_push (clean_ccpp_thread, &c);
 
 	c.buf=(xmlChar *)malloc(XML_BUFLEN);
 	if (!c.buf) {
@@ -599,8 +599,8 @@ void *recv_tra (void *arg)
 	unsigned int dstlen;
 	struct in6_addr tra;
 
-	pthread_cleanup_push (clean_ccpp_thread, &c);
 	memset (&c, 0, sizeof (ccpp_thread_context_t));
+	pthread_cleanup_push (clean_ccpp_thread, &c);
 
 	c.buf=(xmlChar *)malloc(XML_BUFLEN);
 	if (!c.buf) {
@@ -1278,6 +1278,7 @@ void *recv_tca (void *arg)
 	netceiver_info_t nc_info;
 	struct in6_addr tca;
 
+	memset (&c, 0, sizeof (ccpp_thread_context_t));
 	pthread_cleanup_push (clean_ccpp_thread, &c);
 
 	c.buf=(xmlChar *)malloc(XML_BUFLEN);
