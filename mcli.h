@@ -65,7 +65,7 @@ class cMcliDeviceList:public cList < cMcliDeviceObject >
 	{
 	};
 	~cMcliDeviceList () {
-		printf ("Delete my Dev list\n");
+		dsyslog ("Delete my Dev list\n");
 	};
 };
 
