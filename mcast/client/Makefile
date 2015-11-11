@@ -106,7 +106,9 @@ MCLI_SOBJS := $(MCLI_SOBJS) dvblo_handler.o input.o
 endif 
 endif
 
-all: lib$(MCLI) $(MCLI)-shared
+all: 
+	$(MAKE) lib$(MCLI)
+	$(MAKE) $(MCLI)-shared
 
 static: $(MCLI)-static
 

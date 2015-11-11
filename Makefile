@@ -45,23 +45,18 @@ SOFILE = libvdr-$(PLUGIN).so
 
 ### Includes and Defines (add further entries here):
 
-ifdef RBMINI
-  XML_INC := -I/usr/arm-linux-gnueabi/include/libxml2
-  XML_LIB := -lxml2
-else
-  XML_INC := `xml2-config --cflags`
-  XML_LIB := `xml2-config --libs`
-endif
+.PHONY: i18n all clean
 
+XML_INC := `xml2-config --cflags`
+XML_LIB := `xml2-config --libs`
 
 ifdef MCLI_SHARED
-  LIBS = -lmcli -Lmcast/client $(XML_LIB)
+  LIBS = -Lmcast/client -lmcli $(XML_LIB)
 else
   LIBS = mcast/client/libmcli.a $(XML_LIB)
 endif
 
 INCLUDES += -I$(VDRDIR)/include -I. $(XML_INC)
-
 
 DEFINES += -D_GNU_SOURCE -DPLUGIN_NAME_I18N='"$(PLUGIN)"'
 # -DDEVICE_ATTRIBUTES
@@ -72,15 +67,16 @@ OBJS = $(PLUGIN).o cam_menu.o device.o filter.o packetbuffer.o
 
 ### The main target:
 
-all: $(SOFILE)
+plug: 
+	$(MAKE) libvdr-$(PLUGIN).so
 
-plug: libmcli.so libvdr-$(PLUGIN).so
-
-all: libmcli.so libvdr-$(PLUGIN).so i18n
+all: 
+	$(MAKE) libmcli.so
+	$(MAKE) libvdr-$(PLUGIN).so
+	$(MAKE) i18n
 
 libmcli.a libmcli.so:
-	$(MAKE) -C mcast/client/
-
+	$(MAKE) -C mcast/client/ libmcli
 
 ### Implicit rules:
 
@@ -118,21 +114,17 @@ $(I18Nmsgs): $(LOCALEDIR)/%/LC_MESSAGES/vdr-$(PLUGIN).mo: $(PODIR)/%.mo
 	@mkdir -p $(dir $@)
 	cp $< $@
 
-.PHONY: i18n
 i18n: $(I18Nmsgs) $(I18Npot)
 
 i18n-dist: $(I18Nmsgs)
 
 ### Targets:
-$(SOFILE): $(OBJS)
-	$(CXX) $(CXXFLAGS) $(LDFLAGS) -shared $(OBJS) -o $@
-
-libvdr-$(PLUGIN).so: $(OBJS) libmcli.a
+$(SOFILE): $(OBJS) libmcli.a
 ifeq ($(APPLE_DARWIN), 1)
 	$(CXX) $(CXXFLAGS) $(OBJS) $(LIBS) -o $@
 	@cp $@ $(LIBDIR)/$@.$(APIVERSION)
 else
-	$(CXX) $(CXXFLAGS) -shared $(OBJS) $(LIBS) -o $@
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -shared $(OBJS) $(LIBS) -o $@
 	@cp --remove-destination $@ $(LIBDIR)/$@.$(APIVERSION)
 endif
 
