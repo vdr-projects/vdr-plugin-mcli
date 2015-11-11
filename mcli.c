@@ -742,8 +742,8 @@ void cPluginMcli::Action (void)
                         if (netCVChanged) {
 				for(int j = 0; j < nci->cam_num; j++) {
 
-					const char *camstate;
-					const char *cammode;
+					const char *camstate = "";
+					const char *cammode = "";
 
 					switch(nci->cam[j].status) {
 						case DVBCA_CAMSTATE_MISSING: 

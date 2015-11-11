@@ -31,9 +31,6 @@ int send_mldv2_report (struct intnode *intn, int grec_number, struct in6_addr *m
 	int mca_index, src_index;
 	int count = 0;
 
-	bool any = false;
-
-
 	//printf("creating multicast listener report packet....\n");
 	//printf("size src = %d size grec = %d \n",sizeof(*src),sizeof(*grec));
 	if (intn->mtu < sizeof (*packet)) {
@@ -156,8 +153,6 @@ int send_mldv2_report (struct intnode *intn, int grec_number, struct in6_addr *m
 		}
 
 		/* Nothing added yet */
-		any = false;
-
 		for (src_index = 0; src_index < srcn || (!srcn && src_index == 0); src_index++) {
 
 			//check for duplicate source reocrds and any address
