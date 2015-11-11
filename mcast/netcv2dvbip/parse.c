@@ -278,6 +278,9 @@ bool StringToParameters (const char *s, channel_t * ch)
 		case 'Y':
 			s = ParseParameter (s, &ch->hierarchy, HierarchyValues);
 			break;
+		case 'P':
+			s+=2;
+			break;
 		default:
 			printf ("ERROR: unknown parameter key '%c' at pos %d\n",
 				 *s, (int)((long)(s-start)));
