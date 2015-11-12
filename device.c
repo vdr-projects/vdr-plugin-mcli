@@ -538,10 +538,11 @@ bool cMcliDevice::SetChannelDevice (const cChannel * Channel, bool LiveView)
 	} else {
 		m_disabletimeout = TEMP_DISABLE_TIMEOUT_DEFAULT;
 	}
-	bool cam_force=true;
+	bool cam_force = m_mcli && m_mcli->CAMPresent() && LiveView;
 	if(cam_force && !CheckCAM(Channel, true)) {
 #ifdef DEBUG_TUNE
 		dsyslog("Mcli::%s: No CAM on DVB %d available even after tried to steal one\n", __FUNCTION__, CardIndex () + 1);
+		dsyslog("CAMPresent: %d\n", m_mcli->CAMPresent());
 #endif
 		return false;
 	}
