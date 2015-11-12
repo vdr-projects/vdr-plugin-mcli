@@ -60,7 +60,7 @@ cMcliDevice::cMcliDevice (void)
 	StartSectionHandler ();
 #ifdef USE_VDR_PACKET_BUFFER
 	//printf ("Mcli::%s: USING VDR PACKET BUFFER \n", __FUNCTION__);
-	m_PB = new cRingBufferLinear(MEGABYTE(16), TS_SIZE, false, "MCLI_TS");
+	m_PB = new cRingBufferLinear(MEGABYTE(4), TS_SIZE, false, "MCLI_TS");
 	m_PB->SetTimeouts (0, 100);
 	delivered = false;
 #else
