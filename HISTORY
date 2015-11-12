@@ -1,6 +1,13 @@
 VDR Plugin 'mcli' Revision History
 ----------------------------------
 
+2015-11-12
+- hsteinhaus debugged makefiles to ensure complete compilation, even when using parallel make jobs
+- hsteinhaus consolidated debug logging and disabled it by default
+- hsteinhaus check if CAM is present before enforcing it's use
+- hsteinhaus resolved some compiler warnings
+- hsteinhaus removed some unused headers
+
 2014-07-12
 - mhorwath debug 2.1.x issue http://projects.vdr-developer.org/issues/1709 , little message cleanup, added cam info at startup, fixed compile warning  
 

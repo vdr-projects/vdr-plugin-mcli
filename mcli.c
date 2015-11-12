@@ -91,7 +91,9 @@ cOsdObject *cPluginMcli::AltMenuAction (void)
 				if (IN6_IS_ADDR_UNSPECIFIED (&c->mcg) || !memcmp (&c->mcg, &mcg, sizeof (struct in6_addr)))
 					return new cCamMenu (&m_cmd, &m);
 			}
-			isyslog ("SID/Program Number:%04x, SatPos:%d Freqency:%d\n", c->caid, satpos, fep.frequency);
+#ifdef DEBUG_TUNE
+			dsyslog ("SID/Program Number:%04x, SatPos:%d Freqency:%d\n", c->caid, satpos, fep.frequency);
+#endif
 		}
 		if (m.caid_num && m.caids) {
 			free (m.caids);
@@ -615,9 +617,9 @@ tuner_pool_t *cPluginMcli::TunerAvailable(fe_type_t type, int pos, bool lock)
 	if(lock) {
 		Lock();
 	}
-
-	isyslog("Mcli::%s: Testing for tuner type %d pos %d\n", __FUNCTION__, type, pos);
-
+#ifdef DEBUG_RESOURCES
+	dyslog("Mcli::%s: Testing for tuner type %d pos %d\n", __FUNCTION__, type, pos);
+#endif
 	if (TunerCountByType (type) == m_cmd.tuner_type_limit[type]) {
 
 #ifdef DEBUG_RESOURCES
@@ -646,7 +648,9 @@ tuner_pool_t *cPluginMcli::TunerAvailable(fe_type_t type, int pos, bool lock)
 			if(lock) {
 				Unlock();
 			}
-		        isyslog("Mcli::%s: Tuner %d(%p) available\n", __FUNCTION__, i, tp);
+#ifdef DEBUG_RESOURCES
+		        dsyslog("Mcli::%s: Tuner %d(%p) available\n", __FUNCTION__, i, tp);
+#endif
 
 			return tp;
 		}
@@ -772,12 +776,14 @@ void cPluginMcli::Action (void)
 						case CA_MULTI_TRANSPONDER:
 							cammode="CA_MULTI_TRANSPONDER"; break;
 					}
+#ifdef DEBUG_RESOURCES
 
 					if (nci->cam[j].status != DVBCA_CAMSTATE_MISSING) {
-						isyslog("Mcli::%s: Slot:%d CamModule '%s' State:%s Mode:%s\n", __FUNCTION__, j, nci->cam[j].menu_string, camstate, cammode);
+						dsyslog("Mcli::%s: Slot:%d CamModule '%s' State:%s Mode:%s\n", __FUNCTION__, j, nci->cam[j].menu_string, camstate, cammode);
 					} else {
-						isyslog("Mcli::%s: Slot:%d CamModule State:%s\n", __FUNCTION__, j, camstate);
+						dsyslog("Mcli::%s: Slot:%d CamModule State:%s\n", __FUNCTION__, j, camstate);
 					}
+#endif
 				}
 			}
 
