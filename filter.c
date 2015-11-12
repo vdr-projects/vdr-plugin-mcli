@@ -160,7 +160,9 @@ bool cMcliFilter::PutSection (const uchar * Data, int Length, bool Pusi)
 		}
 
 		if (m_Used > length) {
+#ifdef DEBUG_FILTER
 			dsyslog ("cMcliFilter::PutSection: m_Used > length !  Pid %2d, Tid%2d " "(len %3d, got %d/%d)", m_Pid, m_Tid, Length, m_Used, length);
+#endif
 			if (Length < TS_SIZE - 5) {
 				// TS packet not full -> this must be last TS packet of section data -> safe to reset now
 				Reset ();
@@ -428,7 +430,9 @@ void cMcliFilters::Action (void)
 		}
 	}
 	DELETENULL (m_PB);
+#ifdef DEBUG_FILTER
 	dsyslog ("McliFilters::Action() ended");
+#endif
 }
 
 void cMcliFilters::ProcessChunk(u_short pid, const uchar *block, int len, bool Pusi) {

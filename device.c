@@ -87,7 +87,9 @@ cMcliDevice::cMcliDevice (void)
 	m_camref = NULL;
 	InitMcli ();
 
+#ifdef DEBUG_RESOURCES
 	dsyslog ("Mcli::%s: DVB got device number %d\n", __FUNCTION__, CardIndex () + 1);
+#endif
 
 }
 
@@ -95,7 +97,9 @@ cMcliDevice::~cMcliDevice ()
 {
 	LOCK_THREAD;
 	StopSectionHandler ();
+#ifdef DEBUG_RESOURCES
 	dsyslog ("Mcli::%s: DVB %d gets destructed\n", __FUNCTION__, CardIndex () + 1);
+#endif
 	Cancel (0);
 	m_locked.Broadcast ();
 	ExitMcli ();

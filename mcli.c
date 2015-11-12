@@ -74,11 +74,13 @@ cOsdObject *cPluginMcli::AltMenuAction (void)
 
 			for (cMcliDeviceObject * dev = m_devs.First (); dev; dev = m_devs.Next (dev)) {
 				cMcliDevice *d = dev->d ();
+#ifdef DEBUG_TUNE
 				dsyslog("satpos: %i vpid: %i fep.freq: %i\n", satpos, vpid, fep.frequency);
+#endif
 				struct in6_addr mcg = d->GetTenData ()->mcg;
 				mcg_set_id (&mcg, 0);
 
-#if 1				//def DEBUG
+#ifdef DEBUG_TUNE
 				char str[INET6_ADDRSTRLEN];
 				inet_ntop (AF_INET6, &c->mcg, str, INET6_ADDRSTRLEN);
 				dsyslog ("MCG from MMI: %s\n", str);
@@ -329,11 +331,15 @@ int cPluginMcli::CAMPoolAdd(netceiver_info_t *nci)
 				case CA_SINGLE:
 				case CA_MULTI_SID:
 					m_cam_present = true;
+#ifdef DEBUG_RESOURCES
 					dsyslog("Found CAM");
+#endif
 					cp->max = 1;
 					break;
 				case CA_MULTI_TRANSPONDER:
+#ifdef DEBUG_RESOURCES
 					dsyslog("Found CAM");
+#endif
 					m_cam_present = true;
 					cp->max = nci->cam[j].max_sids;
 					break;
@@ -837,7 +843,9 @@ void cPluginMcli::Action (void)
 			if (!channel_switch_ok) {	// the first tuner that was found, so make VDR retune to the channel it wants...
 				cChannel *ch = Channels.GetByNumber (cDevice::CurrentChannel ());
 				if (ch) {
+#ifdef DEBUG_TUNE
 					dsyslog("Mcli::%s: cDevice::PrimaryDevice (%p)\n", __FUNCTION__, cDevice::PrimaryDevice ());
+#endif
 					channel_switch_ok = cDevice::PrimaryDevice ()->SwitchChannel (ch, true);
 				}
 			}
@@ -1009,7 +1017,9 @@ bool cPluginMcli::Service (const char *Id, void *Data)
 				strcpy (infos->name[j], nci->tuner[i].fe_info.name);
 				infos->type[j] = nci->tuner[i].fe_info.type;
 				infos->preference[j++] = nci->tuner[i].preference;
+#ifdef DEBUG_TUNE
 				dsyslog("Mcli::%s: Tuner: %s\n", __FUNCTION__, nci->tuner[i].fe_info.name);
+#endif
 			}
 		}
 		nc_unlock_list ();
