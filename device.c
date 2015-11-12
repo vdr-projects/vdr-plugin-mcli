@@ -198,7 +198,7 @@ bool cMcliDevice::SetTempDisable (bool now)
 	}
 //#endif
 //	printf("Device %d Receiving %d Priority %d\n",CardIndex () + 1, Receiving (true), Priority());
-	if(!Receiving (true) && (((time(NULL)-m_last) >= m_disabletimeout)) || now) {
+	if((!Receiving (true) && (((time(NULL)-m_last) >= m_disabletimeout)) ) || now) {
 		recv_stop (m_r);
 		m_tuned = false;
 		if(GetCaEnable()) {

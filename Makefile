@@ -23,8 +23,8 @@ TMPDIR ?= /tmp
 
 ### The compiler options:
 
-export CFLAGS   = $(call PKGCFG,cflags) -fPIC
-export CXXFLAGS = $(call PKGCFG,cxxflags)  -fPIC
+export CFLAGS   = $(call PKGCFG,cflags) -fPIC -Wall
+export CXXFLAGS = $(call PKGCFG,cxxflags) -fPIC -Wall
 
 ### The version number of VDR's plugin API:
 
