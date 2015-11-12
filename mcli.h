@@ -37,8 +37,8 @@
 
 //#define DEBUG_PIDS 
 //#define DEBUG_TUNE_EXTRA
-#define DEBUG_TUNE
-#define DEBUG_RESOURCES
+//#define DEBUG_TUNE
+//#define DEBUG_RESOURCES
 
 class cMcliDeviceObject:public cListObject
 {
