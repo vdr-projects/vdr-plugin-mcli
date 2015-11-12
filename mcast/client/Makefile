@@ -109,6 +109,7 @@ endif
 all: 
 	$(MAKE) lib$(MCLI)
 	$(MAKE) $(MCLI)-shared
+	$(MAKE) mcli
 
 static: $(MCLI)-static
 

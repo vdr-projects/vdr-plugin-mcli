@@ -67,13 +67,18 @@ OBJS = $(PLUGIN).o cam_menu.o device.o filter.o packetbuffer.o
 
 ### The main target:
 
-plug: 
+all:  lib plugin tools i18n
+
+
+plugin: i18n
 	$(MAKE) libvdr-$(PLUGIN).so
 
-all: 
+tools: lib
+	 $(MAKE) -C mcast/client/ mcli
+	 $(MAKE) -C mcast/tool/ all
+
+lib:
 	$(MAKE) libmcli.so
-	$(MAKE) libvdr-$(PLUGIN).so
-	$(MAKE) i18n
 
 libmcli.a libmcli.so:
 	$(MAKE) -C mcast/client/ libmcli
@@ -142,7 +147,7 @@ dist: clean
 	@echo Distribution package created as $(PACKAGE).tgz
 
 clean:
-	@-rm -f $(OBJS) $(DEPFILE) *.so *.tgz core* *~
+	@-rm -f $(OBJS) $(DEPFILE) *.so *.tgz core* *~  po/*.mo po/*.pot
 	$(MAKE) -C mcast/client/ clean
 	$(MAKE) -C mcast/netcv2dvbip/ clean
 	$(MAKE) -C mcast/tool/ clean
