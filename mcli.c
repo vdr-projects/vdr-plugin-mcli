@@ -122,6 +122,7 @@ cPluginMcli::cPluginMcli (void)
 	m_recv_init_done = 0;
 	m_mld_init_done = 0;
 	m_api_init_done = 0;
+        m_cam_present = false;
 	memset (m_cam_pool, 0, sizeof (cam_pool_t) * CAM_POOL_MAX);
 	for(i=0; i<CAM_POOL_MAX; i++) {
 		m_cam_pool[i].max = -1;
@@ -327,9 +328,13 @@ int cPluginMcli::CAMPoolAdd(netceiver_info_t *nci)
 			switch (nci->cam[j].flags) {
 				case CA_SINGLE:
 				case CA_MULTI_SID:
+					m_cam_present = true;
+					dsyslog("Found CAM");
 					cp->max = 1;
 					break;
 				case CA_MULTI_TRANSPONDER:
+					dsyslog("Found CAM");
+					m_cam_present = true;
 					cp->max = nci->cam[j].max_sids;
 					break;
 			}

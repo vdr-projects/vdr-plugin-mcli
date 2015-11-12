@@ -96,6 +96,7 @@ class cPluginMcli:public cPlugin, public cThread
 	int m_recv_init_done;
 	int m_mld_init_done;
 	int m_api_init_done;
+        bool m_cam_present;
 	tuner_pool_t m_tuner_pool[TUNER_POOL_MAX];
 	tuner_pool_t *TunerAvailableInt(fe_type_t type, int pos);
 	
@@ -158,6 +159,7 @@ class cPluginMcli:public cPlugin, public cThread
 	cam_pool_t *CAMAlloc (const char *uuid=NULL, int slot=-1);
 	int CAMFree (cam_pool_t *cp);
 	bool CAMSteal(const char *uuid=NULL, int slot=-1, bool force=false);
+	bool CAMPresent() { return m_cam_present; }
 
 	satellite_list_t *TunerFindSatList(const netceiver_info_t *nc_info, const char *SatelliteListName) const;
 	bool SatelitePositionLookup(const satellite_list_t *satlist, int pos) const;
