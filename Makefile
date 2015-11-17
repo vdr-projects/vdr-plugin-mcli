@@ -47,8 +47,8 @@ SOFILE = libvdr-$(PLUGIN).so
 
 .PHONY: i18n all clean
 
-XML_INC := `xml2-config --cflags`
-XML_LIB := `xml2-config --libs`
+XML_INC ?= $(shell xml2-config --cflags)
+XML_LIB ?= $(shell xml2-config --libs)
 
 ifdef MCLI_SHARED
   LIBS = -Lmcast/client -lmcli $(XML_LIB)
@@ -71,17 +71,17 @@ all:  lib plugin tools i18n
 
 
 plugin: i18n
-	$(MAKE) libvdr-$(PLUGIN).so
+	$(MAKE) XML_INC="$(XML_INC)" XML_LIB="$(XML_LIB)" libvdr-$(PLUGIN).so
 
 tools: lib
-	 $(MAKE) -C mcast/client/ mcli
-	 $(MAKE) -C mcast/tool/ all
+	 $(MAKE) XML_INC="$(XML_INC)" XML_LIB="$(XML_LIB)" -C mcast/client/ mcli
+	 $(MAKE) XML_INC="$(XML_INC)" XML_LIB="$(XML_LIB)" -C mcast/tool/ all
 
 lib:
-	$(MAKE) libmcli.so
+	$(MAKE) XML_INC="$(XML_INC)" XML_LIB="$(XML_LIB)" libmcli.so
 
 libmcli.a libmcli.so:
-	$(MAKE) -C mcast/client/ libmcli
+	$(MAKE) XML_INC="$(XML_INC)" XML_LIB="$(XML_LIB)" -C mcast/client/ libmcli
 
 ### Implicit rules:
 

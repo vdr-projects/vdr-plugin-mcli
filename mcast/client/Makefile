@@ -32,17 +32,11 @@ VDRDIR=../../../../..
 -include $(VDRDIR)/Make.config
 
 ifdef ARMEL
-  XML_INC := -I/usr/arm-linux-gnueabi/include/libxml2
-  XML_LIB := -lxml2
   CROSS = arm-linux-gnueabi-
 else
 ifeq ($(MIPSEL),1)
 DEFS:=$(DEFS) -DMIPSEL
-XML_INC:=-I../../libxml2/include
-XML_LIB:=-L../../libxml2/lib
 else
-XML_INC:=`xml2-config --cflags`
-XML_LIB:=`xml2-config --libs`
 LIBRARY_PATH=/usr/lib
 endif
 endif
