@@ -405,12 +405,12 @@ static void stop_ten_receive (recv_info_t * r)
 {
 	dbg ("->>>>>>>>>>>>>>>>>stop_ten_receive on receiver %p\n",r);
 	if (pthread_exist(r->recv_ten_thread) &&  r->ten_run) {
-		dbg ("cancel TEN receiver %p %p\n", r, r->recv_ten_thread);
+		dbg ("cancel TEN receiver %p %ld\n", r, r->recv_ten_thread);
 		
 		r->ten_run=0;
 		pthread_mutex_unlock (&lock);
 		do {
-			dbg ("wait TEN stop receiver %p %p\n", r, r->recv_ten_thread);
+			dbg ("wait TEN stop receiver %p %ld\n", r, r->recv_ten_thread);
 			usleep(10000);
 		} while (!r->ten_run);
 		pthread_mutex_lock (&lock);
@@ -437,7 +437,7 @@ static void start_ten_receive (recv_info_t * r)
 
 		int ret = pthread_create (&r->recv_ten_thread, NULL, recv_ten, r);
 		while (!ret && !r->ten_run) {
-			dbg ("wait TEN startup receiver %p %p\n", r, r->recv_ten_thread);
+			dbg ("wait TEN startup receiver %p %ld\n", r, r->recv_ten_thread);
 			usleep (10000);
 		}
 		if (ret) {
