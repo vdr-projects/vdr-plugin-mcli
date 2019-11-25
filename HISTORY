@@ -1,5 +1,7 @@
 VDR Plugin 'mcli' Revision History
 ----------------------------------
+2019-11-24
+- pbiering fix several compiler warnings and incompatibilities to vdr-2.4.1 (0.9.3 work-in-progress)
 
 2015-11-12
 - hsteinhaus debugged makefiles to ensure complete compilation, even when using parallel make jobs
