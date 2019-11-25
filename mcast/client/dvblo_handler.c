@@ -28,15 +28,22 @@ static dvblo_cacaps_t cacaps;
 
 static int special_status_mode=0;   // 1: return rotor mode and tuner slot in status
 
-static int dvblo_get_nc_addr (char *addrstr, char *uuid)
+static int dvblo_get_nc_addr (char *addrstr, char *uuid, const int addrstr_len)
 {
 	int len = strlen (uuid);
 	if (len <= 5) {
 		return -1;
-	}
-	memset (addrstr, 0, INET6_ADDRSTRLEN);
+	};
+	memset (addrstr, 0, addrstr_len);
 
-	strncpy (addrstr, uuid, len - 5);
+	strncpy (addrstr, uuid, addrstr_len);
+
+	// avoid -Wstringop-overflow
+	int len_short = len - 5;
+	if (len_short > addrstr_len -1) {
+		len_short = addrstr_len -1;
+	};
+	addrstr[len_short] = '\0';
 	return 0;
 }
 
@@ -608,7 +615,7 @@ void dvblo_handler (void)
 					continue;
 				}
 				if(dev_num >= MAX_DEVICES) {
-					dbg("Limit dev_num reached limit of "MAX_DEVICES"\n");
+					dbg("Limit dev_num reached limit of %d\n", MAX_DEVICES);
 					continue;
 				}
 				if (count_dev_by_type (&devs, type) == cmd.tuner_type_limit[type]) {
@@ -636,7 +643,7 @@ void dvblo_handler (void)
 						d->ca_enable = 1;
 						dbg ("Enabling CA support for device %d\n", dev_num);
 						char addrstr[INET6_ADDRSTRLEN];
-						dvblo_get_nc_addr (addrstr, d->uuid);
+						dvblo_get_nc_addr (addrstr, d->uuid, sizeof(addrstr));
 						dbg ("dvblo_get_nc_addr: %s %s\n", addrstr, d->uuid);
 						d->c = ci_find_dev_by_uuid (addrstr);
 						if (d->c) {
@@ -659,7 +666,7 @@ void dvblo_handler (void)
 						if (!cidev) {
 							d->cacaps = (dvblo_cacaps_t*)((void *) &nci->ci);
 							char addrstr[INET6_ADDRSTRLEN];
-							dvblo_get_nc_addr (addrstr, d->uuid);
+							dvblo_get_nc_addr (addrstr, d->uuid, sizeof(addrstr));
 							dbg ("dvblo_get_nc_addr: %s %s\n", addrstr, d->uuid);
 							d->c = ci_find_dev_by_uuid (addrstr);
 							if (d->c) {
