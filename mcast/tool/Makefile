@@ -60,10 +60,10 @@ NETCVDIAG = netcvdiag
 NETCVDIAG_OBJS = netcvdiag.o tools.o
 
 NETCVUPDATE = netcvupdate
-NETCVUPDATE_OBJS = netcvupdate.o
+NETCVUPDATE_OBJS = netcvupdate.o tools.o
 
 NETCVLOGVIEW = netcvlogview
-NETCVLOGVIEW_OBJS = netcvlogview.o mcast.o
+NETCVLOGVIEW_OBJS = netcvlogview.o mcast.o tools.o
 
 OBJS := $(NETCVDIAG_OBJS) $(NETCVUPDATE_OBJS) $(NETCVLOGVIEW_OBJS)
 
