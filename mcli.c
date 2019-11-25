@@ -75,7 +75,7 @@ cOsdObject *cPluginMcli::AltMenuAction (void)
 			for (cMcliDeviceObject * dev = m_devs.First (); dev; dev = m_devs.Next (dev)) {
 				cMcliDevice *d = dev->d ();
 #ifdef DEBUG_TUNE
-				dsyslog("satpos: %i vpid: %i fep.freq: %i\n", satpos, vpid, fep.frequency);
+				dsyslog("satpos: %i vpid: %i fep.freq: %i", satpos, vpid, fep.frequency);
 #endif
 				struct in6_addr mcg = d->GetTenData ()->mcg;
 				mcg_set_id (&mcg, 0);
@@ -83,16 +83,16 @@ cOsdObject *cPluginMcli::AltMenuAction (void)
 #ifdef DEBUG_TUNE
 				char str[INET6_ADDRSTRLEN];
 				inet_ntop (AF_INET6, &c->mcg, str, INET6_ADDRSTRLEN);
-				dsyslog ("MCG from MMI: %s\n", str);
+				dsyslog ("MCG from MMI: %s", str);
 				inet_ntop (AF_INET6, &mcg, str, INET6_ADDRSTRLEN);
-				dsyslog ("MCG from DEV: %s\n", str);
+				dsyslog ("MCG from DEV: %s", str);
 #endif
 
 				if (IN6_IS_ADDR_UNSPECIFIED (&c->mcg) || !memcmp (&c->mcg, &mcg, sizeof (struct in6_addr)))
 					return new cCamMenu (&m_cmd, &m);
 			}
 #ifdef DEBUG_TUNE
-			dsyslog ("SID/Program Number:%04x, SatPos:%d Freqency:%d\n", c->caid, satpos, fep.frequency);
+			dsyslog ("SID/Program Number:%04x, SatPos:%d Freqency:%d", c->caid, satpos, fep.frequency);
 #endif
 		}
 		if (m.caid_num && m.caids) {
@@ -390,7 +390,7 @@ cam_pool_t *cPluginMcli::CAMAvailable (const char *uuid, int slot, bool lock)
 	}
 #ifdef DEBUG_RESOURCES
 	if(ret) {
-		dsyslog("Mcli::%s: Available CAM [%s]:%d -> [%s]:%d\n", __FUNCTION__, uuid, slot, ret->uuid, ret->slot);
+		dsyslog("Mcli::%s: Available CAM [%s]:%d -> [%s]:%d", __FUNCTION__, uuid, slot, ret->uuid, ret->slot);
 	}
 #endif
 	if(lock) {
@@ -409,9 +409,9 @@ cam_pool_t *cPluginMcli::CAMAlloc (const char *uuid, int slot)
 
 #ifdef DEBUG_RESOURCES
         if(cp) {
-		dsyslog ("Mcli::%s: AllocateCAM [%s]:%d -> [%s]:%d\n", __FUNCTION__, uuid, slot, cp->uuid, cp->slot);
+		dsyslog ("Mcli::%s: AllocateCAM [%s]:%d -> [%s]:%d", __FUNCTION__, uuid, slot, cp->uuid, cp->slot);
         } else {
-		dsyslog ("Mcli::%s: AllocateCAM [%s]:%d -> FAIL\n", __FUNCTION__, uuid, slot);
+		dsyslog ("Mcli::%s: AllocateCAM [%s]:%d -> FAIL", __FUNCTION__, uuid, slot);
 	}
 #endif
 
@@ -422,7 +422,7 @@ int cPluginMcli::CAMFree (cam_pool_t *cp)
 {
 	LOCK_THREAD;
 #ifdef DEBUG_RESOURCES
-	dsyslog ("Mcli::%s: FreeCAM [%s]:%d\n", __FUNCTION__, cp->uuid, cp->slot);
+	dsyslog ("Mcli::%s: FreeCAM [%s]:%d", __FUNCTION__, cp->uuid, cp->slot);
 #endif
 	if (cp->use > 0) {
 		cp->use--;
@@ -436,12 +436,12 @@ bool cPluginMcli::CAMSteal(const char *uuid, int slot, bool force)
 			cam_pool_t *cp=d->d()->GetCAMref();
 			if(d->d()->Priority()<0 && d->d()->GetCaEnable() && (slot == -1 || slot == cp->slot)) {
 #ifdef DEBUG_RESOURCES
-				dsyslog("Mcli::%s: Can Steal CAM on slot %d from DVB %d\n", __FUNCTION__, slot, d->d()->CardIndex()+1);
+				dsyslog("Mcli::%s: Can Steal CAM on slot %d from DVB %d", __FUNCTION__, slot, d->d()->CardIndex()+1);
 #endif
 				if(force) {
 					d->d ()->SetTempDisable (true);
 #ifdef DEBUG_RESOURCES
-					dsyslog("Mcli::%s: Stole CAM on slot %d from DVB %d\n", __FUNCTION__, cp->slot, d->d()->CardIndex()+1);
+					dsyslog("Mcli::%s: Stole CAM on slot %d from DVB %d", __FUNCTION__, cp->slot, d->d()->CardIndex()+1);
 #endif
 				}
 				return true;
@@ -618,12 +618,12 @@ tuner_pool_t *cPluginMcli::TunerAvailable(fe_type_t type, int pos, bool lock)
 		Lock();
 	}
 #ifdef DEBUG_RESOURCES
-	dyslog("Mcli::%s: Testing for tuner type %d pos %d\n", __FUNCTION__, type, pos);
+	dsyslog("Mcli::%s: Testing for tuner type %d pos %d", __FUNCTION__, type, pos);
 #endif
 	if (TunerCountByType (type) == m_cmd.tuner_type_limit[type]) {
 
 #ifdef DEBUG_RESOURCES
-		dsyslog("Mcli::%s: type %d limit (%d) reached\n", __FUNCTION__, type, m_cmd.tuner_type_limit[type]);
+		dsyslog("Mcli::%s: type %d limit (%d) reached", __FUNCTION__, type, m_cmd.tuner_type_limit[type]);
 #endif
 		if(lock) {
 			Unlock();
@@ -642,14 +642,14 @@ tuner_pool_t *cPluginMcli::TunerAvailable(fe_type_t type, int pos, bool lock)
 			continue;
 		}
 #ifdef DEBUG_RESOURCES
-                dsyslog("Mcli::%s: Tuner %d(%p), type %d, inuse %d\n", __FUNCTION__, i, tp, tp->type, tp->inuse);
+                dsyslog("Mcli::%s: Tuner %d(%p), type %d, inuse %d", __FUNCTION__, i, tp, tp->type, tp->inuse);
 #endif
 		if(TunerSatelitePositionLookup(tp, pos)) {
 			if(lock) {
 				Unlock();
 			}
 #ifdef DEBUG_RESOURCES
-		        dsyslog("Mcli::%s: Tuner %d(%p) available\n", __FUNCTION__, i, tp);
+		        dsyslog("Mcli::%s: Tuner %d(%p) available", __FUNCTION__, i, tp);
 #endif
 
 			return tp;
@@ -674,7 +674,7 @@ tuner_pool_t *cPluginMcli::TunerAlloc(fe_type_t type, int pos, bool lock)
 	if(tp) {
 		tp->inuse=true;
 #ifdef DEBUG_RESOURCES
-		dsyslog("Mcli::%s: %p [%s], Type %d\n", __FUNCTION__, tp, tp->uuid, tp->type);
+		dsyslog("Mcli::%s: %p [%s], Type %d", __FUNCTION__, tp, tp->uuid, tp->type);
 #endif
 		if(lock) {
 			Unlock();
@@ -694,7 +694,7 @@ bool cPluginMcli::TunerFree(tuner_pool_t *tp, bool lock)
 	if(tp->inuse) {
 		tp->inuse=false;
 #ifdef DEBUG_RESOURCES
-		dsyslog("Mcli::%s: %p [%s], Type %d\n", __FUNCTION__, tp, tp->uuid, tp->type);
+		dsyslog("Mcli::%s: %p [%s], Type %d", __FUNCTION__, tp, tp->uuid, tp->type);
 #endif
 		if(lock) {
 			Unlock();
@@ -757,9 +757,9 @@ void cPluginMcli::Action (void)
                         if (netCVChanged) {
 				for(int j = 0; j < nci->cam_num; j++) {
 
+#ifdef DEBUG_RESOURCES
 					const char *camstate = "";
 					const char *cammode = "";
-
 					switch(nci->cam[j].status) {
 						case DVBCA_CAMSTATE_MISSING: 
 							camstate="MISSING"; break;
@@ -776,7 +776,6 @@ void cPluginMcli::Action (void)
 						case CA_MULTI_TRANSPONDER:
 							cammode="CA_MULTI_TRANSPONDER"; break;
 					}
-#ifdef DEBUG_RESOURCES
 
 					if (nci->cam[j].status != DVBCA_CAMSTATE_MISSING) {
 						dsyslog("Mcli::%s: Slot:%d CamModule '%s' State:%s Mode:%s\n", __FUNCTION__, j, nci->cam[j].menu_string, camstate, cammode);
@@ -847,10 +846,15 @@ void cPluginMcli::Action (void)
 #if 1 //ndef REELVDR
 		if (tpa) {
 			if (!channel_switch_ok) {	// the first tuner that was found, so make VDR retune to the channel it wants...
+#if VDRVERSNUM < 20400
 				cChannel *ch = Channels.GetByNumber (cDevice::CurrentChannel ());
+#else
+				LOCK_CHANNELS_READ;
+				const cChannel *ch = Channels->GetByNumber (cDevice::CurrentChannel ());
+#endif
 				if (ch) {
 #ifdef DEBUG_TUNE
-					dsyslog("Mcli::%s: cDevice::PrimaryDevice (%p)\n", __FUNCTION__, cDevice::PrimaryDevice ());
+					dsyslog("Mcli::%s: cDevice::PrimaryDevice (%p)", __FUNCTION__, cDevice::PrimaryDevice ());
 #endif
 					channel_switch_ok = cDevice::PrimaryDevice ()->SwitchChannel (ch, true);
 				}
@@ -882,7 +886,7 @@ bool cPluginMcli::Initialize (void)
 
 bool cPluginMcli::Start (void)
 {
-	isyslog("Mcli v"MCLI_PLUGIN_VERSION" started");
+	isyslog("Mcli v" MCLI_PLUGIN_VERSION " started");
 #ifdef REELVDR
     if (access("/dev/dvb/adapter0", F_OK) != 0) //TB: this line allows the client to be used with usb-sticks without conflicts
 #endif
@@ -1024,7 +1028,7 @@ bool cPluginMcli::Service (const char *Id, void *Data)
 				infos->type[j] = nci->tuner[i].fe_info.type;
 				infos->preference[j++] = nci->tuner[i].preference;
 #ifdef DEBUG_TUNE
-				dsyslog("Mcli::%s: Tuner: %s\n", __FUNCTION__, nci->tuner[i].fe_info.name);
+				dsyslog("Mcli::%s: Tuner: %s", __FUNCTION__, nci->tuner[i].fe_info.name);
 #endif
 			}
 		}
