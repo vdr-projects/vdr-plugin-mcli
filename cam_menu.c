@@ -405,9 +405,9 @@ int cCamMenu::CamFind ()
 	for (n = 0; n < nc_list->nci_num; n++) {
 		netceiver_info_t *nci = nc_list->nci + n;
 		//printf ("\nFound NetCeiver: %s \n", nci->uuid);
-		char buf[128];
+		char buf[512]; // avoid -Wformat-truncation
 		Add (new cOsdItem ("Netceiver", osUnknown, false));
-		snprintf (buf, 128, "    %s: %s", "ID", nci->uuid);
+		snprintf (buf, sizeof(buf), "    %s: %s", "ID", nci->uuid); // avoid -Wformat-truncation
 		Add (new cOsdItem (buf, osUnknown, false));
 		Add (new cOsdItem ("", osUnknown, false));
 		printf ("    CAMS [%d]: \n", nci->cam_num);
@@ -509,10 +509,11 @@ eOSState cCamMenu::ProcessKey (eKeys Key)
 			delete NCUpdate;
 			NCUpdate=NULL;
 			return osBack;
-		} else
+		} else {
 			SetStatus(NCUpdate->GetStateStr());
 			Display();
 			return osContinue;
+		};
 	} // if
 	eOSState ret = cOsdMenu::ProcessKey (Key);
 
