@@ -291,7 +291,9 @@ int cMcliPidList::GetTidFromPid (int pid)
 {
 	for (cMcliPid * p = First (); p; p = Next (p)) {
 		if (p->Pid () == pid) {
+#ifdef DEBUG_PIDS
 			dsyslog("Mcli::%s: Found pid %d -> tid %d", __FUNCTION__, pid, p->Tid());
+#endif
 			return p->Tid ();
 		}
 	}
@@ -303,7 +305,9 @@ void cMcliPidList::SetPid (int Pid, int Tid)
 	if (Tid >= 0) {
 		for (cMcliPid * p = First (); p; p = Next (p)) {
 			if (p->Pid () == Pid) {
+#ifdef DEBUG_PIDS
 				dsyslog("Mcli::%s: Change pid %d -> tid %d", __FUNCTION__, Pid, Tid);
+#endif
 				if (Tid != 0xffff) {
 					p->SetTid (Tid);
 				}
@@ -312,11 +316,15 @@ void cMcliPidList::SetPid (int Pid, int Tid)
 		}
 		cMcliPid *pid = new cMcliPid (Pid, Tid);
 		Add (pid);
+#ifdef DEBUG_PIDS
 		dsyslog("Mcli::%s: Add pid %d -> tid %d", __FUNCTION__, Pid, Tid);
+#endif
 	} else {
 		for (cMcliPid * p = First (); p; p = Next (p)) {
 			if (p->Pid () == Pid) {
+#ifdef DEBUG_PIDS
 				dsyslog("Mcli::%s: Del pid %d", __FUNCTION__, Pid);
+#endif
 				Del (p);
 				return;
 			}
