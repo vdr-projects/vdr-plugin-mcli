@@ -1027,3 +1027,13 @@ int cMcliDevice::SignalQuality(void) const
        return int(m_ten.s.snr/65536.*100.);
 }
 
+#if VDRVERSNUM >= 10713
+const cChannel *cMcliDevice::GetCurrentlyTunedTransponder(void) const
+{
+	if (!m_enable || !m_tuned) {
+		return NULL;
+	}
+	//isyslog("Mcli::%s: m_chan.Name=%s, m_chan.Number=%d", __FUNCTION__, m_chan.Name(), m_chan.Number());
+	return &m_chan;
+}
+#endif
