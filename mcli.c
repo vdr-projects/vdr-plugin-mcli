@@ -250,8 +250,11 @@ bool cPluginMcli::ProcessArgs (int argc, char *argv[])
 
 		ret = getopt_long_only (argc, argv, "", long_options, &option_index);
 		c = (char) ret;
-		if (ret == -1 || c == '?') {
+		if (ret == -1) {
 			break;
+		}
+		if (c == '?') {
+			continue;
 		}
 
 		switch (option_index) {
