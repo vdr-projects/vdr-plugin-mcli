@@ -98,7 +98,7 @@ static void *recv_ts (void *arg)
 		if (n >0 ) {
 			ptr = buf;
 			if (n % 188) {
-				warn ("Received %d bytes is not multiple of 188!\n", n);
+				warn ("Mcli::%s: Received %d bytes is not multiple of 188!\n", __FUNCTION__, n);
  			}
 			int i;
 			for (i = 0; i < (n / 188); i++) {
@@ -109,10 +109,10 @@ static void *recv_ts (void *arg)
 				int transport_error_indicator = ts[1]&0x80;
 	
 				if (pid != 8191 && (adaption_field & 1) && (((cont_old + 1) & 0xf) != cont) && cont_old >= 0) {
-					warn ("Discontinuity on receiver %p for pid %d: %d->%d at pos %d/%d\n", r, pid, cont_old, cont, i, n / 188);
+					warn ("Mcli::%s: Discontinuity on receiver %p for pid %d: %d->%d at pos %d/%d\n", __FUNCTION__, r, pid, cont_old, cont, i, n / 188);
  				}
 				if (transport_error_indicator) {
-					warn ("Transport error indicator set on receiver %p for pid %d: %d->%d at pos %d/%d\n", r, pid, cont_old, cont, i, n / 188);
+					warn ("Mcli::%s: Transport error indicator set on receiver %p for pid %d: %d->%d at pos %d/%d\n", __FUNCTION__, r, pid, cont_old, cont, i, n / 188);
  				}
 				cont_old = cont;
  			}
@@ -120,10 +120,10 @@ static void *recv_ts (void *arg)
 				while (n) {
 					res = r->handle_ts (ptr, n, r->handle_ts_context);
 					if (res != n) {
-						warn ("Not same amount of data written: res:%d<=n:%d\n", res, n);
+						warn ("Mcli::%s: Not same amount of data written: res:%d<=n:%d\n", __FUNCTION__, res, n);
 					}
 					if (res < 0) {
-						warn ("write of %d bytes returned %d\n", n, res);
+						warn ("Mcli::%s: write of %d bytes returned %d\n", __FUNCTION__, n, res);
 						perror ("Write failed");
 						break;
 					} else {
@@ -155,24 +155,24 @@ static void recv_ts_func (unsigned char *buf, int n, void *arg) {
 			int transport_error_indicator = ts[1]&0x80;
 
 			if (pid != 8191 && (adaption_field & 1) && (((p->cont_old + 1) & 0xf) != cont) && p->cont_old >= 0) {
-				warn ("Discontinuity on receiver %p for pid %d: %d->%d at pos %d/%d\n", r, pid, p->cont_old, cont, i / 188, n / 188);
+				warn ("Mcli::%s: Discontinuity on receiver %p for pid %d: %d->%d at pos %d/%d\n", __FUNCTION__, r, pid, p->cont_old, cont, i / 188, n / 188);
 			}
 			if (transport_error_indicator) {
-				warn ("Transport error indicator set on receiver %p for pid %d: %d->%d at pos %d/%d\n", r, pid, p->cont_old, cont, i / 188, n / 188);
+				warn ("Mcli::%s: Transport error indicator set on receiver %p for pid %d: %d->%d at pos %d/%d\n", __FUNCTION__, r, pid, p->cont_old, cont, i / 188, n / 188);
 			}
 			p->cont_old = cont;
 		}
 		if (i != n) {
-			warn ("Received %d bytes is not multiple of 188!\n", n);
+			warn ("Mcli::%s: Received %d bytes is not multiple of 188!\n", __FUNCTION__, n);
 		}
 		if(r->handle_ts) {
 			while (n) {
 				int res = r->handle_ts (buf, n, r->handle_ts_context);
 				if (res != n) {
-					warn ("Not same amount of data written: res:%d<=n:%d\n", res, n);
+					warn ("Mcli::%s: Not same amount of data written: res:%d<=n:%d\n", __FUNCTION__, res, n);
 				}
 				if (res < 0) {
-					warn ("write of %d bytes returned %d\n", n, res);
+					warn ("Mcli::%s: write of %d bytes returned %d\n", __FUNCTION__, n, res);
 					perror ("Write failed");
 					break;
 				} else {
