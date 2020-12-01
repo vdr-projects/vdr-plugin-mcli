@@ -143,6 +143,13 @@ static void *recv_ts (void *arg)
 #else
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 static void recv_ts_func (unsigned char *buf, int n, void *arg) {
+	static long int warn_count = 0;
+	static long int warn_count_last = 0;
+	static time_t warn_time_last;
+	time_t warn_time_now;
+	int warn_show = 0;
+	double warn_time_diff = 0;
+
 	if (n >0 ) {
 		pid_info_t *p = (pid_info_t *) arg;
 		recv_info_t *r = p->recv;
@@ -155,7 +162,25 @@ static void recv_ts_func (unsigned char *buf, int n, void *arg) {
 			int transport_error_indicator = ts[1]&0x80;
 
 			if (pid != 8191 && (adaption_field & 1) && (((p->cont_old + 1) & 0xf) != cont) && p->cont_old >= 0) {
-				warn ("Mcli::%s: Discontinuity on receiver %p for pid %d: %d->%d at pos %d/%d\n", __FUNCTION__, r, pid, p->cont_old, cont, i / 188, n / 188);
+				warn_show = 0;
+				time(&warn_time_now);
+				if (warn_count == 0) { // 1st occurance
+					warn_show = 1; // always display 1st
+				} else {
+					warn_time_diff = difftime(warn_time_now, warn_time_last);
+					if (warn_time_diff >= 2) {
+						warn_show = 1; // display after 2 sec again
+					};
+				};
+				warn_count++;
+				if (warn_show > 0) {
+					time(&warn_time_last);
+					if ((warn_count - warn_count_last) > 1) {
+						warn ("Mcli::%s: Discontinuity on receiver messages suppressed in %ld seconds: %ld\n", __FUNCTION__, warn_time_diff, (warn_count - warn_count_last));
+					};
+					warn ("Mcli::%s: Discontinuity on receiver %p for pid %d: %d->%d at pos %d/%d\n", __FUNCTION__, r, pid, p->cont_old, cont, i / 188, n / 188);
+					warn_count_last = warn_count;
+				};
 			}
 			if (transport_error_indicator) {
 				warn ("Mcli::%s: Transport error indicator set on receiver %p for pid %d: %d->%d at pos %d/%d\n", __FUNCTION__, r, pid, p->cont_old, cont, i / 188, n / 188);
