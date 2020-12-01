@@ -1030,10 +1030,15 @@ int cMcliDevice::SignalQuality(void) const
 #if VDRVERSNUM >= 10713
 const cChannel *cMcliDevice::GetCurrentlyTunedTransponder(void) const
 {
-	if (!m_enable || !m_tuned) {
+	if (!m_enable) {
+		dsyslog("Mcli::%s: m_fetype=%d not enabled", __FUNCTION__, m_fetype);
 		return NULL;
-	}
-	//isyslog("Mcli::%s: m_chan.Name=%s, m_chan.Number=%d", __FUNCTION__, m_chan.Name(), m_chan.Number());
+	};
+	if (!m_tuned) {
+		dsyslog("Mcli::%s: m_fetype=%d not tuned", __FUNCTION__, m_fetype);
+		return NULL;
+	};
+	dsyslog("Mcli::%s: m_chan.Name='%s', m_chan.Number=%d m_fetype=%d", __FUNCTION__, m_chan.Name(), m_chan.Number(), m_fetype);
 	return &m_chan;
 }
 #endif
