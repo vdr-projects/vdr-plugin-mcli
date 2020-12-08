@@ -822,7 +822,7 @@ void cPluginMcli::Action (void)
 				if (((now - nci->lastseen) > MCLI_DEVICE_TIMEOUT) || (nci->tuner[i].preference < 0) || !strlen (nci->tuner[i].uuid)) {
 					if (t) {
 						int pos=TunerPoolDel(t);
-						isyslog  ("Mcli::%s: Remove Tuner %s [%s] @ %d\n", __FUNCTION__, nci->tuner[i].fe_info.name, nci->tuner[i].uuid, pos);
+						isyslog  ("Mcli::%s: Remove Tuner(#%d) %s [%s] @ %d\n", __FUNCTION__, i, nci->tuner[i].fe_info.name, nci->tuner[i].uuid, pos);
 						//isyslog ("cPluginMcli::Action: Remove Tuner %s [%s] @ %d", nci->tuner[i].fe_info.name, nci->tuner[i].uuid, pos);
 						netCVChanged = true;
 					}
@@ -830,7 +830,7 @@ void cPluginMcli::Action (void)
 				}
 				if (!t) {
 					tpa=TunerPoolAdd(nci->tuner+i);
-					isyslog ("Mcli::%s: Add Tuner: %s [%s], Type %d @ %d\n", __FUNCTION__, nci->tuner[i].fe_info.name, nci->tuner[i].uuid, nci->tuner[i].fe_info.type, tpa);
+					isyslog ("Mcli::%s: Add Tuner(#%d): %s [%s], Type %d @ %d\n", __FUNCTION__, i, nci->tuner[i].fe_info.name, nci->tuner[i].uuid, nci->tuner[i].fe_info.type, tpa);
 					//isyslog ("cPluginMcli::Action: Add Tuner: %s [%s], Type %d @ %d", nci->tuner[i].fe_info.name, nci->tuner[i].uuid, nci->tuner[i].fe_info.type, tpa);
 					netCVChanged = true;
 				}
