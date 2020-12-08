@@ -119,7 +119,7 @@ void show_it(int show_count, int show_uuids, int show_tuners, int show_sats, int
                 	err("API version mismatch!\n");
                 }
 		if (show_uuids||show_versions) {
-			char buf[UUID_SIZE + 10]; // avoid -Wformat-overflow
+			char buf[1024]; // honor Wformat-overflow + Wformat-truncation
 			if(strlen(api_cmd->u.nc_info.Description)) {
 				snprintf(buf, sizeof(buf), "%s, ", api_cmd->u.nc_info.Description);
 			} else {
