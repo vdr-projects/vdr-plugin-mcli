@@ -176,7 +176,7 @@ static void recv_ts_func (unsigned char *buf, int n, void *arg) {
 				if (warn_show > 0) {
 					time(&warn_time_last);
 					if ((warn_count - warn_count_last) > 1) {
-						warn ("Mcli::%s: Discontinuity on receiver messages suppressed in %ld seconds: %ld\n", __FUNCTION__, warn_time_diff, (warn_count - warn_count_last));
+						warn ("Mcli::%s: Discontinuity on receiver messages suppressed in %ld seconds: %ld\n", __FUNCTION__, (long int) warn_time_diff, (warn_count - warn_count_last));
 					};
 					warn ("Mcli::%s: Discontinuity on receiver %p for pid %d: %d->%d at pos %d/%d\n", __FUNCTION__, r, pid, p->cont_old, cont, i / 188, n / 188);
 					warn_count_last = warn_count;
