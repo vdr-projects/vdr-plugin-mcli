@@ -97,6 +97,7 @@ class cPluginMcli:public cPlugin, public cThread
 	int m_mld_init_done;
 	int m_api_init_done;
         bool m_cam_present;
+	int m_tuner_max;
 	tuner_pool_t m_tuner_pool[TUNER_POOL_MAX];
 	tuner_pool_t *TunerAvailableInt(fe_type_t type, int pos);
 	

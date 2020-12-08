@@ -126,6 +126,7 @@ cPluginMcli::cPluginMcli (void)
 	m_recv_init_done = 0;
 	m_mld_init_done = 0;
 	m_api_init_done = 0;
+	m_tuner_max = MCLI_MAX_DEVICES;
         m_cam_present = false;
 	memset (m_cam_pool, 0, sizeof (cam_pool_t) * CAM_POOL_MAX);
 	for(i=0; i<CAM_POOL_MAX; i++) {
@@ -187,7 +188,7 @@ bool cPluginMcli::InitMcli (void)
 			m_mmi_init_done = 1;
 		else return false;
 	}
-	for(int i=m_devs.Count(); i < MCLI_MAX_DEVICES; i++) {
+	for(int i=m_devs.Count(); i < m_tuner_max; i++) {
 		cMcliDevice *m = NULL;
 		cPluginManager::CallAllServices ("OnNewMcliDevice-" MCLI_DEVICE_VERSION, &m);
 		if(!m) {
@@ -224,7 +225,7 @@ void cPluginMcli::ExitMcli (void)
 
 const char *cPluginMcli::CommandLineHelp (void)
 {
-	return ("  --ifname <network interface>\n" "  --port <port> (default: -port 23000)\n" "  --dvb-s <num> --dvb-c <num> --dvb-t <num> --atsc <num> --dvb-s2 <num>\n" "    limit number of device types (default: 8 of every type)\n" "  --mld-reporter-disable\n" "  --sock-path <filepath>\n" "\n");
+	return ("  --ifname <network interface>\n" "  --port <port> (default: -port 23000)\n" "  --dvb-s <num> --dvb-c <num> --dvb-t <num> --atsc <num> --dvb-s2 <num> --tuner-max <num>\n" "    limit number of device types (default: 8 of every type)\n" "  --mld-reporter-disable\n" "  --sock-path <filepath>\n" "\n");
 }
 
 bool cPluginMcli::ProcessArgs (int argc, char *argv[])
@@ -245,6 +246,7 @@ bool cPluginMcli::ProcessArgs (int argc, char *argv[])
 			{"dvb-s2", 1, 0, 0},	//6
 			{"mld-reporter-disable", 0, 0, 0},	//7
 			{"sock-path", 1, 0, 0},	//8
+			{"tuner-max", 1, 0, 0},	//9
 			{NULL, 0, 0, 0}
 		};
 
@@ -281,6 +283,9 @@ bool cPluginMcli::ProcessArgs (int argc, char *argv[])
 			break;
 		case 8:
 			strncpy (m_cmd.cmd_sock_path, optarg, _POSIX_PATH_MAX - 1);
+			break;
+		case 9:
+			m_tuner_max = atoi (optarg);
 			break;
 		default:
 			dsyslog ("?? getopt returned character code 0%o ??\n", c);
