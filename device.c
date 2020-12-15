@@ -1042,3 +1042,25 @@ const cChannel *cMcliDevice::GetCurrentlyTunedTransponder(void) const
 	return &m_chan;
 }
 #endif
+
+#if VDRVERSNUM >= 10728
+cString cMcliDevice::DeviceType(void) const
+{
+	if (!m_enable) {
+		dsyslog("Mcli::%s: m_fetype=%d not enabled", __FUNCTION__, m_fetype);
+		return "";
+	};
+	switch (m_fetype) {
+		case FE_QAM:
+			return "DVB-C";
+		case FE_OFDM:
+			return "DVB-T";
+		case FE_QPSK:
+			return "DVB-S";
+		case FE_DVBS2:
+			return "DVB-S2";
+		default:
+			return "";
+	};
+}
+#endif
