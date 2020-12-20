@@ -17,6 +17,8 @@
 
 #define RE 1
 
+#define DISCONTINUITY_SUPPRESS_SECONDS	10
+
 #if defined(RE)
 int set_redirected(recv_info_t *r, int sid);
 int check_if_already_redirected(recv_info_t *r, int sid);
@@ -168,14 +170,14 @@ static void recv_ts_func (unsigned char *buf, int n, void *arg) {
 					warn_show = 1; // always display 1st
 				} else {
 					warn_time_diff = difftime(warn_time_now, warn_time_last);
-					if (warn_time_diff >= 2) {
-						warn_show = 1; // display after 2 sec again
+					if (warn_time_diff >= DISCONTINUITY_SUPPRESS_SECONDS) {
+						warn_show = 1; // display after DISCONTINUITY_SUPPRESS_SECONDS sec again
 					};
 				};
 				warn_count++;
 				if (warn_show > 0) {
 					time(&warn_time_last);
-					if ((warn_count - warn_count_last) > 1) {
+					if ((warn_count - warn_count_last) >= DISCONTINUITY_SUPPRESS_SECONDS) {
 						warn ("Mcli::%s: Discontinuity on receiver messages suppressed in %ld seconds: %ld\n", __FUNCTION__, (long int) warn_time_diff, (warn_count - warn_count_last));
 					};
 					warn ("Mcli::%s: Discontinuity on receiver %p for pid %d: %d->%d at pos %d/%d\n", __FUNCTION__, r, pid, p->cont_old, cont, i / 188, n / 188);
