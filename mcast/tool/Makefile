@@ -117,9 +117,9 @@ $(NETCVLOGVIEW)-static: $(NETCVLOGVIEW_OBJS)
 	strip $(NETCVLOGVIEW)-static
 
 install: $(NETCVDIAG) $(NETCVUPDATE) $(NETCVLOGVIEW)
-	install -p $(NETCVDIAG) /usr/sbin/$(NETCVDIAG)
-	install -p $(NETCVUPDATE) /usr/sbin/$(NETCVUPDATE)
-	install -p $(NETCVLOGVIEW) /usr/sbin/$(NETCVLOGVIEW)
+	install -p $(NETCVDIAG) $(DESTDIR)/usr/sbin/$(NETCVDIAG)
+	install -p $(NETCVUPDATE) $(DESTDIR)/usr/sbin/$(NETCVUPDATE)
+	install -p $(NETCVLOGVIEW) $(DESTDIR)/usr/sbin/$(NETCVLOGVIEW)
 
 depend: .dependencies
 	#makedepend -Y -- $(CFLAGS)  -- *c >/dev/null 2>&1
