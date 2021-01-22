@@ -162,6 +162,12 @@ class cMcliDevice:public cDevice
 #endif
        virtual int SignalStrength(void) const;
        virtual int SignalQuality(void) const;
+#if VDRVERSNUM >= 10713
+       virtual const cChannel *GetCurrentlyTunedTransponder(void) const;
+#endif
+#if VDRVERSNUM >= 10728
+       virtual cString DeviceType(void) const;
+#endif
 };
 
 #endif // VDR_MCLI_DEVICE_H

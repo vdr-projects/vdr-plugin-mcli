@@ -1,5 +1,13 @@
 VDR Plugin 'mcli' Revision History
 ----------------------------------
+2020-12-15
+- pbiering add support for DeviceType (supported since 1.7.28)
+- pbiering add tuner-max option to limit amount of tuners in skins
+- pbiering implement rate limiter for "Discontinuity on receiver" messages
+- implement missing GetCurrentlyTunedTransponder (supported since 1.7.13)
+
+2019-11-24
+- pbiering fix several compiler warnings and incompatibilities to vdr-2.4.1 (0.9.3 work-in-progress)
 
 2015-11-12
 - hsteinhaus debugged makefiles to ensure complete compilation, even when using parallel make jobs

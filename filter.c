@@ -260,7 +260,7 @@ int cMcliFilters::CloseFilter (int Handle)
 
 int cMcliFilters::OpenFilter (u_short Pid, u_char Tid, u_char Mask)
 {
-//      printf("cMcliFilters::OpenFilter: %d %d %02x\n", Pid, Tid, Mask);
+//	dsyslog("Mcli::%s: %d %d %02x", __FUNCTION__, Pid, Tid, Mask);
 	GarbageCollect ();
 
 	if (!WantPid (Pid)) {
@@ -276,7 +276,11 @@ int cMcliFilters::OpenFilter (u_short Pid, u_char Tid, u_char Mask)
 	cMcliFilter *f = new cMcliFilter (Pid, Tid, Mask);
 	int fh = f->ReadPipe ();
 
+#if VDRVERSNUM < 20300
 	Lock ();
+#else
+	cThread::Lock ();
+#endif
 	Add (f);
 	Unlock ();
 
@@ -287,7 +291,9 @@ int cMcliPidList::GetTidFromPid (int pid)
 {
 	for (cMcliPid * p = First (); p; p = Next (p)) {
 		if (p->Pid () == pid) {
-//                      printf("Found pid %d -> tid %d\n",pid, p->Tid());
+#ifdef DEBUG_PIDS
+			dsyslog("Mcli::%s: Found pid %d -> tid %d", __FUNCTION__, pid, p->Tid());
+#endif
 			return p->Tid ();
 		}
 	}
@@ -299,7 +305,9 @@ void cMcliPidList::SetPid (int Pid, int Tid)
 	if (Tid >= 0) {
 		for (cMcliPid * p = First (); p; p = Next (p)) {
 			if (p->Pid () == Pid) {
-//                              printf("Change pid %d -> tid %d\n", Pid, Tid);
+#ifdef DEBUG_PIDS
+				dsyslog("Mcli::%s: Change pid %d -> tid %d", __FUNCTION__, Pid, Tid);
+#endif
 				if (Tid != 0xffff) {
 					p->SetTid (Tid);
 				}
@@ -308,11 +316,15 @@ void cMcliPidList::SetPid (int Pid, int Tid)
 		}
 		cMcliPid *pid = new cMcliPid (Pid, Tid);
 		Add (pid);
-//                      printf("Add pid %d -> tid %d\n", Pid, Tid);
+#ifdef DEBUG_PIDS
+		dsyslog("Mcli::%s: Add pid %d -> tid %d", __FUNCTION__, Pid, Tid);
+#endif
 	} else {
 		for (cMcliPid * p = First (); p; p = Next (p)) {
 			if (p->Pid () == Pid) {
-//                              printf("Del pid %d\n", Pid);
+#ifdef DEBUG_PIDS
+				dsyslog("Mcli::%s: Del pid %d", __FUNCTION__, Pid);
+#endif
 				Del (p);
 				return;
 			}

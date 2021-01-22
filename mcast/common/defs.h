@@ -263,7 +263,7 @@ extern pthread_mutex_t _loglock;
   #define warn(format, arg...){pthread_mutex_lock (&_loglock); sprintf(_logstr, format ,## arg); fprintf(stdout, "%s", _logstr); syslog_write(_logstr); pthread_mutex_unlock (&_loglock);}
   #define sys(format, arg...){pthread_mutex_lock (&_loglock); sprintf(_logstr, format ,## arg); syslog_write(_logstr); pthread_mutex_unlock (&_loglock);}
 #elif defined DEBUG
-  #define dbg(format, arg...) {printf("%s:%d " format , __FILE__ , __LINE__ , ## arg)}
+  #define dbg(format, arg...) {printf("%s:%d " format , __FILE__ , __LINE__ , ## arg);}
   #define err(format, arg...) {fprintf(stderr,"err:%s:%d: %s (%d): " format , __FILE__ , __LINE__ ,strerror(errno), errno, ## arg);print_trace();abort();}	
   #define info(format, arg...) printf("%s:%d: " format , __FILE__ , __LINE__ ,## arg)
   #define warn(format, arg...) fprintf(stderr,"%s:%d: " format , __FILE__ , __LINE__ ,## arg)

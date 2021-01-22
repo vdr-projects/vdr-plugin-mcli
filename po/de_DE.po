@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: vdr-mcli 1.0\n"
 "Report-Msgid-Bugs-To: <see README>\n"
-"POT-Creation-Date: 2012-08-31 10:32+0200\n"
+"POT-Creation-Date: 2019-11-24 06:40+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: German <reelbox-devel@mailings.reelbox.org>\n"
@@ -62,10 +62,6 @@ msgstr "nicht möglich wegen gemischter CAMs"
 msgid "Save"
 msgstr "Speichern"
 
-#, c-format
-msgid "Waiting for a free tuner (%s)"
-msgstr "Auf einen freien Tuner wird gewartet (%s)"
-
 msgid "DVB-C"
 msgstr "DVB-C"
 
@@ -85,3 +81,7 @@ msgstr "'%s'-Modul bereit"
 #, c-format
 msgid "Module '%s' removed"
 msgstr "'%s'-Modul entfernt"
+
+#, c-format
+msgid "Waiting for a free tuner (%s)"
+msgstr "Auf einen freien Tuner wird gewartet (%s)"

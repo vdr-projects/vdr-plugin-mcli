@@ -528,7 +528,7 @@ bool cMcliDevice::SetChannelDevice (const cChannel * Channel, bool LiveView)
 	is_scan = !strlen(Channel->Name()) && !strlen(Channel->Provider());
 	
 #ifdef DEBUG_TUNE
-	dsyslog ("Mcli::%s: DVB:%d Channel(%p):%s, Provider:%s, Source:%d, LiveView:%s, IsScan:%d, m_chan.Name:%s\n", __FUNCTION__, CardIndex () + 1, Channel, Channel->Name (), Channel->Provider (), Channel->Source (), LiveView ? "true" : "false", is_scan, m_chan.Name());
+	dsyslog ("Mcli::%s: DVB:%d Channel(%p):%s, Provider:%s, Source:%d, LiveView:%s, IsScan:%d, m_chan.Name:%s", __FUNCTION__, CardIndex () + 1, Channel, Channel->Name (), Channel->Provider (), Channel->Source (), LiveView ? "true" : "false", is_scan, m_chan.Name());
 #endif
 	if (!m_enable) {
 		return false;
@@ -545,8 +545,8 @@ bool cMcliDevice::SetChannelDevice (const cChannel * Channel, bool LiveView)
 	bool cam_force = m_mcli && m_mcli->CAMPresent() && LiveView;
 	if(cam_force && !CheckCAM(Channel, true)) {
 #ifdef DEBUG_TUNE
-		dsyslog("Mcli::%s: No CAM on DVB %d available even after tried to steal one\n", __FUNCTION__, CardIndex () + 1);
-		dsyslog("CAMPresent: %d\n", m_mcli->CAMPresent());
+		dsyslog("Mcli::%s: No CAM on DVB %d available even after tried to steal one", __FUNCTION__, CardIndex () + 1);
+		dsyslog("Mcli::%s: CAMPresent: %d", __FUNCTION__, m_mcli->CAMPresent());
 #endif
 		return false;
 	}
@@ -622,7 +622,7 @@ bool cMcliDevice::SetChannelDevice (const cChannel * Channel, bool LiveView)
 		m_chan = *Channel;
 
 #ifdef DEBUG_TUNE
-                dsyslog("Mcli::%s: Already tuned to transponder on DVB %d\n", __FUNCTION__, CardIndex () + 1);
+                dsyslog("Mcli::%s: Already tuned to transponder on DVB %d", __FUNCTION__, CardIndex () + 1);
 #endif
 		return true;
 	} else {
@@ -632,20 +632,22 @@ bool cMcliDevice::SetChannelDevice (const cChannel * Channel, bool LiveView)
 	memset (&m_fep, 0, sizeof (struct dvb_frontend_parameters));
 	m_chan = *Channel;
 
-//	printf("Really tuning on %d\n",CardIndex () + 1);
+#ifdef DEBUG_TUNE
+	dsyslog("Mcli::%s: Really tuning on %d", __FUNCTION__, CardIndex () + 1);
+#endif
 	switch (m_fetype) {
 	case FE_DVBS2:
 	case FE_QPSK:{		// DVB-S
 
-			unsigned int frequency = Channel->Frequency ();
+			int frequency = Channel->Frequency ();
 
 #if VDRVERSNUM < 10714
 			fe_sec_voltage_t volt = (Channel->Polarization () == 'v' || Channel->Polarization () == 'V' || Channel->Polarization () == 'r' || Channel->Polarization () == 'R') ? SEC_VOLTAGE_13 : SEC_VOLTAGE_18;
 #else
 			fe_sec_voltage_t volt = (dtp.Polarization () == 'v' || dtp.Polarization () == 'V' || dtp.Polarization () == 'r' || dtp.Polarization () == 'R') ? SEC_VOLTAGE_13 : SEC_VOLTAGE_18;
+			frequency =::abs (frequency);   // Allow for C-band, where the frequency is less than the LOF
 #endif		
 			m_sec.voltage = volt;
-			frequency =::abs (frequency);	// Allow for C-band, where the frequency is less than the LOF
 			m_fep.frequency = frequency * 1000UL;
 #if VDRVERSNUM < 10714			
 			m_fep.inversion = fe_spectral_inversion_t (Channel->Inversion ());
@@ -1025,3 +1027,40 @@ int cMcliDevice::SignalQuality(void) const
        return int(m_ten.s.snr/65536.*100.);
 }
 
+#if VDRVERSNUM >= 10713
+const cChannel *cMcliDevice::GetCurrentlyTunedTransponder(void) const
+{
+	if (!m_enable) {
+		dsyslog("Mcli::%s: m_fetype=%d not enabled", __FUNCTION__, m_fetype);
+		return NULL;
+	};
+	if (!m_tuned) {
+		dsyslog("Mcli::%s: m_fetype=%d not tuned", __FUNCTION__, m_fetype);
+		return NULL;
+	};
+	dsyslog("Mcli::%s: m_chan.Name='%s', m_chan.Number=%d m_fetype=%d", __FUNCTION__, m_chan.Name(), m_chan.Number(), m_fetype);
+	return &m_chan;
+}
+#endif
+
+#if VDRVERSNUM >= 10728
+cString cMcliDevice::DeviceType(void) const
+{
+	if (!m_enable) {
+		dsyslog("Mcli::%s: m_fetype=%d not enabled", __FUNCTION__, m_fetype);
+		return "";
+	};
+	switch (m_fetype) {
+		case FE_QAM:
+			return "DVB-C";
+		case FE_OFDM:
+			return "DVB-T";
+		case FE_QPSK:
+			return "DVB-S";
+		case FE_DVBS2:
+			return "DVB-S2";
+		default:
+			return "";
+	};
+}
+#endif

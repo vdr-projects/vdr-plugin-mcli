@@ -6,7 +6,7 @@
  *
  */
 
-#define MAX_DEVICES 8
+#define MAX_DEVICES (8)	// error: expected ')' before numeric constant
 
 typedef struct dvblo_dev {
 	struct list list;
