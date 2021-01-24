@@ -208,14 +208,18 @@ bool cMcliDevice::SetTempDisable (bool now)
 		if(GetCaEnable()) {
 			SetCaEnable(false);
 #ifdef DEBUG_TUNE
+			DEBUG_MASK(DEBUG_BIT_TUNE,
 			dsyslog("Mcli::%s: Releasing CAM on device %d (%s) (disable, %d)\n", __FUNCTION__, CardIndex()+1, m_chan.Name(), now);
+			)
 #endif
 			m_mcli->CAMFree(m_camref);
 			m_camref = NULL;
 		}
 		if(m_tunerref) {
 #ifdef DEBUG_TUNE
+			DEBUG_MASK(DEBUG_BIT_TUNE,
 			dsyslog("Mcli::%s: Releasing tuner on device %d (%s)\n", __FUNCTION__, CardIndex()+1, m_chan.Name());
+			)
 #endif			
 			m_mcli->TunerFree(m_tunerref, false);
 			m_tunerref = NULL;
@@ -314,7 +318,9 @@ bool cMcliDevice::ProvidesSource (int Source) const
 		}
 	} 
 #ifdef DEBUG_TUNE_EXTRA
+	DEBUG_MASK(DEBUG_BIT_TUNE-EXTRA,
 	dsyslog ("Mcli::%s: DVB:%d Type:%d Pos:%d -> %d\n", __FUNCTION__, CardIndex () + 1, type, pos, ret);
+	)
 #endif
 	return ret;
 }
@@ -366,7 +372,9 @@ bool cMcliDevice::ProvidesTransponder (const cChannel * Channel) const
 	}
 
 #ifdef DEBUG_TUNE_EXTRA
+	DEBUG_MASK(DEBUG_BIT_TUNE_EXTRA,
 	dsyslog ("Mcli::%s: DVB:%d S2:%d %s@%p -> %d\n", __FUNCTION__, CardIndex () + 1, s2, Channel->Name (), this, ret);
+	)
 #endif
 	return ret;
 }
@@ -428,38 +436,70 @@ bool cMcliDevice::ProvidesChannel (const cChannel * Channel, int Priority, bool 
 	}
 	if(!CheckCAM(Channel, false)) {
 #ifdef DEBUG_TUNE
-		dsyslog ("Mcli::%s: DVB:%d Channel(%p):%s, Prio:%d this->Prio:%d m_chan.Name:%s -> %d\n", __FUNCTION__, CardIndex () + 1, Channel, Channel->Name (), Priority, this->Priority (), m_chan.Name(), false);
+		DEBUG_MASK(DEBUG_BIT_TUNE,
+		dsyslog ("Mcli::%s: DVB:%d Channel:%s, Prio:%d this->Prio:%d m_chan.Name:%s -> %d\n", __FUNCTION__, CardIndex () + 1, Channel->Name (), Priority, this->Priority (), m_chan.Name(), false);
+		)
 #endif
 		return false;
 	}
 	if(ProvidesTransponder(Channel)) {
-		//printf ("Mcli::ProvidesChannel: DEBUG DVB:%d Channel(%p):%s * 'ProvidesTransponder(Channel)' is True\n", CardIndex () + 1, Channel, Channel->Name ());
+#ifdef DEBUG_TUNE
+		DEBUG_MASK(DEBUG_BIT_TUNE_PC,
+		dsyslog ("Mcli::ProvidesChannel: DEBUG DVB:%d Channel:%s * 'ProvidesTransponder(Channel)' is True\n", CardIndex () + 1, Channel->Name ());
+		)
+#endif
 		result = hasPriority;
 
-		//printf ("Mcli::ProvidesChannel: DEBUG result %d hasPriority %d\n", result, hasPriority);
+#ifdef DEBUG_TUNE
+		DEBUG_MASK(DEBUG_BIT_TUNE_PC,
+		dsyslog ("Mcli::ProvidesChannel: DEBUG result %d hasPriority %d\n", result, hasPriority);
+		)
+#endif
 
 		if (Priority >= 0 && Receiving (true))
 		{
-	                //printf ("Mcli::ProvidesChannel: DEBUG DVB:%d Channel(%p):%s * 'Priority >= 0 && Receiving (true)' is True\n", CardIndex () + 1, Channel, Channel->Name ());
+#ifdef DEBUG_TUNE
+			DEBUG_MASK(DEBUG_BIT_TUNE_PC,
+	                dsyslog ("Mcli::ProvidesChannel: DEBUG DVB:%d Channel:%s * 'Priority >= 0 && Receiving (true)' is True\n", CardIndex () + 1, Channel->Name ());
+			)
+#endif
 
 			if (!IsTunedToTransponder(Channel)) {
 				needsDetachReceivers = true;
-	                        //printf ("Mcli::ProvidesChannel: DEBUG DVB:%d Channel(%p):%s * '!IsTunedToTransponder(Channel)' is True\n", CardIndex () + 1, Channel, Channel->Name ());
+#ifdef DEBUG_TUNE
+				DEBUG_MASK(DEBUG_BIT_TUNE_PC,
+	                        dsyslog ("Mcli::ProvidesChannel: DEBUG DVB:%d Channel:%s * '!IsTunedToTransponder(Channel)' is True\n", CardIndex () + 1, Channel->Name ());
+				)
+#endif
 
 			} else {
 				result = true;
-                                //printf ("Mcli::ProvidesChannel: DEBUG DVB:%d Channel(%p):%s * '!IsTunedToTransponder(Channel)' is False * result = true ***** OK\n", CardIndex () + 1, Channel, Channel->Name ());
+#ifdef DEBUG_TUNE
+				DEBUG_MASK(DEBUG_BIT_TUNE_PC,
+                                dsyslog ("Mcli::ProvidesChannel: DEBUG DVB:%d Channel:%s * '!IsTunedToTransponder(Channel)' is False * result = true ***** OK\n", CardIndex () + 1, Channel->Name ());
+				)
+#endif
 			}
 
 		} else {
-                        //printf ("Mcli::ProvidesChannel: DEBUG DVB:%d Channel(%p):%s * 'Priority >= 0 && Receiving (true)' is False\n", CardIndex () + 1, Channel, Channel->Name ());
+#ifdef DEBUG_TUNE
+			DEBUG_MASK(DEBUG_BIT_TUNE_PC,
+                        dsyslog ("Mcli::ProvidesChannel: DEBUG DVB:%d Channel:%s * 'Priority >= 0 && Receiving (true)' is False\n", CardIndex () + 1, Channel->Name ());
+			)
+#endif
 		}
 	} else {
-                //printf ("Mcli::ProvidesChannel: DEBUG DVB:%d Channel(%p):%s * 'ProvidesTransponder(Channel)' is False\n", CardIndex () + 1, Channel, Channel->Name ());
+#ifdef DEBUG_TUNE
+		DEBUG_MASK(DEBUG_BIT_TUNE_PC,
+                dsyslog ("Mcli::ProvidesChannel: DEBUG DVB:%d Channel:%s * 'ProvidesTransponder(Channel)' is False\n", CardIndex () + 1, Channel->Name ());
+		)
+#endif
 	}
 
 #ifdef DEBUG_TUNE
-	dsyslog ("Mcli::%s: DVB:%d Channel(%p):%s, Prio:%d this->Prio:%d m_chan.Name:%s NeedsDetachReceivers:%d -> %d\n", __FUNCTION__, CardIndex () + 1, Channel, Channel->Name (), Priority, this->Priority (), m_chan.Name(), needsDetachReceivers, result);
+	DEBUG_MASK(DEBUG_BIT_TUNE,
+	dsyslog ("Mcli::%s: DVB:%d Channel:%s, Prio:%d this->Prio:%d NeedsDetachReceivers:%d -> %d\n", __FUNCTION__, CardIndex () + 1, Channel->Name (), Priority, this->Priority (), needsDetachReceivers, result);
+	)
 #endif
 	if (NeedsDetachReceivers) {
 		*NeedsDetachReceivers = needsDetachReceivers;
@@ -528,7 +568,9 @@ bool cMcliDevice::SetChannelDevice (const cChannel * Channel, bool LiveView)
 	is_scan = !strlen(Channel->Name()) && !strlen(Channel->Provider());
 	
 #ifdef DEBUG_TUNE
-	dsyslog ("Mcli::%s: DVB:%d Channel(%p):%s, Provider:%s, Source:%d, LiveView:%s, IsScan:%d, m_chan.Name:%s", __FUNCTION__, CardIndex () + 1, Channel, Channel->Name (), Channel->Provider (), Channel->Source (), LiveView ? "true" : "false", is_scan, m_chan.Name());
+	DEBUG_MASK(DEBUG_BIT_TUNE,
+	dsyslog ("Mcli::%s: Request tuning on DVB:%d to Channel:%s, Provider:%s, Source:%d, LiveView:%s, IsScan:%d", __FUNCTION__, CardIndex () + 1, Channel->Name (), Channel->Provider (), Channel->Source (), LiveView ? "true" : "false", is_scan);
+	)
 #endif
 	if (!m_enable) {
 		return false;
@@ -545,8 +587,10 @@ bool cMcliDevice::SetChannelDevice (const cChannel * Channel, bool LiveView)
 	bool cam_force = m_mcli && m_mcli->CAMPresent() && LiveView;
 	if(cam_force && !CheckCAM(Channel, true)) {
 #ifdef DEBUG_TUNE
+		DEBUG_MASK(DEBUG_BIT_TUNE,
 		dsyslog("Mcli::%s: No CAM on DVB %d available even after tried to steal one", __FUNCTION__, CardIndex () + 1);
 		dsyslog("Mcli::%s: CAMPresent: %d", __FUNCTION__, m_mcli->CAMPresent());
+		)
 #endif
 		return false;
 	}
@@ -560,12 +604,19 @@ bool cMcliDevice::SetChannelDevice (const cChannel * Channel, bool LiveView)
 			}
 		}
 		if(!(m_camref=m_mcli->CAMAlloc(NULL, slot))) {
+			if(cam_force || m_cam_disable) {
 #ifdef DEBUG_TUNE
-			dsyslog("Mcli::%s: failed to get CAM on DVB %d\n", __FUNCTION__, CardIndex () + 1);
+				DEBUG_MASK(DEBUG_BIT_TUNE,
+				dsyslog("Mcli::%s: CAM required, cannot tune on DVB %d (cam_force=%s, m_cam_disable=%s)\n", __FUNCTION__, CardIndex () + 1, cam_force ? "true" : "false", m_cam_disable ? "true" : "false");
 #endif
-			if(cam_force) {
-				return false;
+				)
+				return scrNotAvailable;
 			}
+#ifdef DEBUG_TUNE
+			DEBUG_MASK(DEBUG_BIT_TUNE,
+			dsyslog("Mcli::%s: failed to get CAM on DVB %d (cam_force=%s m_cam_disable=%s)\n", __FUNCTION__, CardIndex () + 1, cam_force ? "true" : "false", m_cam_disable ? "true" : "false");
+			)
+#endif
 		}
 		if(m_camref) {
 			SetCaEnable();
@@ -622,7 +673,9 @@ bool cMcliDevice::SetChannelDevice (const cChannel * Channel, bool LiveView)
 		m_chan = *Channel;
 
 #ifdef DEBUG_TUNE
+		DEBUG_MASK(DEBUG_BIT_TUNE,
                 dsyslog("Mcli::%s: Already tuned to transponder on DVB %d", __FUNCTION__, CardIndex () + 1);
+		)
 #endif
 		return true;
 	} else {
@@ -633,7 +686,9 @@ bool cMcliDevice::SetChannelDevice (const cChannel * Channel, bool LiveView)
 	m_chan = *Channel;
 
 #ifdef DEBUG_TUNE
-	dsyslog("Mcli::%s: Really tuning on %d", __FUNCTION__, CardIndex () + 1);
+	DEBUG_MASK(DEBUG_BIT_TUNE,
+	dsyslog ("Mcli::%s: Really tuning now DVB:%d to Channel:%s, Provider:%s, Source:%d, LiveView:%s, IsScan:%d", __FUNCTION__, CardIndex () + 1, Channel->Name (), Channel->Provider (), Channel->Source (), LiveView ? "true" : "false", is_scan);
+	)
 #endif
 	switch (m_fetype) {
 	case FE_DVBS2:
@@ -788,7 +843,9 @@ bool cMcliDevice::HasLock (int TimeoutMs) const
 bool cMcliDevice::SetPid (cPidHandle * Handle, int Type, bool On)
 {
 #ifdef DEBUG_TUNE
+	DEBUG_MASK(DEBUG_BIT_TUNE,
 	dsyslog ("Mcli::%s: DVB:%d Pid:%d (%s), Type:%d, On:%d, used:%d sid:%d ca_enable:%d channel_ca:%d\n", __FUNCTION__, CardIndex () + 1, Handle->pid, m_chan.Name(), Type, On, Handle->used, m_chan.Sid(), GetCaEnable(), m_chan.Ca (0));
+	)
 #endif
 	dvb_pid_t pi;
 	memset (&pi, 0, sizeof (dvb_pid_t));
@@ -1031,14 +1088,14 @@ int cMcliDevice::SignalQuality(void) const
 const cChannel *cMcliDevice::GetCurrentlyTunedTransponder(void) const
 {
 	if (!m_enable) {
-		dsyslog("Mcli::%s: m_fetype=%d not enabled", __FUNCTION__, m_fetype);
+		dsyslog("Mcli::%s: DVB:%d m_fetype=%d not enabled", __FUNCTION__, CardIndex () + 1, m_fetype);
 		return NULL;
 	};
 	if (!m_tuned) {
-		dsyslog("Mcli::%s: m_fetype=%d not tuned", __FUNCTION__, m_fetype);
+		dsyslog("Mcli::%s: DVB:%d m_fetype=%d not tuned", __FUNCTION__, CardIndex () + 1, m_fetype);
 		return NULL;
 	};
-	dsyslog("Mcli::%s: m_chan.Name='%s', m_chan.Number=%d m_fetype=%d", __FUNCTION__, m_chan.Name(), m_chan.Number(), m_fetype);
+	dsyslog("Mcli::%s: DVB:%d m_chan.Name='%s', m_chan.Number=%d m_fetype=%d", __FUNCTION__, CardIndex () + 1, m_chan.Name(), m_chan.Number(), m_fetype);
 	return &m_chan;
 }
 #endif

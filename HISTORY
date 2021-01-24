@@ -1,5 +1,10 @@
 VDR Plugin 'mcli' Revision History
 ----------------------------------
+2021-01-24
+- pbiering add debug mask option (--debug-mask) (see mcli.h)
+- pbiering fix a bunch of debug messages and turn them to be controllable by --debug-mask
+- pbiering add cam-disable mode which avoid tuning to channel which requires CAM in case CAMs are generally not in use in the system (--cam-disable)
+
 2020-12-15
 - pbiering add support for DeviceType (supported since 1.7.28)
 - pbiering add tuner-max option to limit amount of tuners in skins

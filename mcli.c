@@ -22,6 +22,8 @@
 
 
 static int reconf = 0;
+int m_debugmask;
+bool m_cam_disable;
 
 //--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -75,24 +77,30 @@ cOsdObject *cPluginMcli::AltMenuAction (void)
 			for (cMcliDeviceObject * dev = m_devs.First (); dev; dev = m_devs.Next (dev)) {
 				cMcliDevice *d = dev->d ();
 #ifdef DEBUG_TUNE
+				DEBUG_MASK(DEBUG_BIT_TUNE,
 				dsyslog("satpos: %i vpid: %i fep.freq: %i", satpos, vpid, fep.frequency);
+				)
 #endif
 				struct in6_addr mcg = d->GetTenData ()->mcg;
 				mcg_set_id (&mcg, 0);
 
 #ifdef DEBUG_TUNE
+				DEBUG_MASK(DEBUG_BIT_TUNE,
 				char str[INET6_ADDRSTRLEN];
 				inet_ntop (AF_INET6, &c->mcg, str, INET6_ADDRSTRLEN);
 				dsyslog ("MCG from MMI: %s", str);
 				inet_ntop (AF_INET6, &mcg, str, INET6_ADDRSTRLEN);
 				dsyslog ("MCG from DEV: %s", str);
+				)
 #endif
 
 				if (IN6_IS_ADDR_UNSPECIFIED (&c->mcg) || !memcmp (&c->mcg, &mcg, sizeof (struct in6_addr)))
 					return new cCamMenu (&m_cmd, &m);
 			}
 #ifdef DEBUG_TUNE
+			DEBUG_MASK(DEBUG_BIT_TUNE,
 			dsyslog ("SID/Program Number:%04x, SatPos:%d Freqency:%d", c->caid, satpos, fep.frequency);
+			)
 #endif
 		}
 		if (m.caid_num && m.caids) {
@@ -247,6 +255,8 @@ bool cPluginMcli::ProcessArgs (int argc, char *argv[])
 			{"mld-reporter-disable", 0, 0, 0},	//7
 			{"sock-path", 1, 0, 0},	//8
 			{"tuner-max", 1, 0, 0},	//9
+			{"debugmask", 1, 0, 0}, //10: debug mask for selective debugging, see mcli.h
+			{"cam-disable", 0, 0, 0}, //11: disable use of CAM (skip channels)
 			{NULL, 0, 0, 0}
 		};
 
@@ -287,8 +297,16 @@ bool cPluginMcli::ProcessArgs (int argc, char *argv[])
 		case 9:
 			m_tuner_max = atoi (optarg);
 			break;
+		case 10:
+			m_debugmask = atoi (optarg);
+			dsyslog("Mcli::%s: enable debug mask: %d (0x%02x)", __FUNCTION__, m_debugmask, m_debugmask);
+			break;
+		case 11:
+			m_cam_disable = true;
+			dsyslog("Mcli::%s: enable 'm_cam_disable')", __FUNCTION__);
+			break;
 		default:
-			dsyslog ("?? getopt returned character code 0%o ??\n", c);
+			dsyslog ("MCli::%s: ?? getopt returned character code 0%o ??\n", __FUNCTION__, c);
 		}
 	}
 	// Implement command line argument processing here if applicable.
@@ -862,7 +880,9 @@ void cPluginMcli::Action (void)
 #endif
 				if (ch) {
 #ifdef DEBUG_TUNE
+					DEBUG_MASK(DEBUG_BIT_TUNE,
 					dsyslog("Mcli::%s: cDevice::PrimaryDevice (%p)", __FUNCTION__, cDevice::PrimaryDevice ());
+					)
 #endif
 					channel_switch_ok = cDevice::PrimaryDevice ()->SwitchChannel (ch, true);
 				}
@@ -1036,7 +1056,9 @@ bool cPluginMcli::Service (const char *Id, void *Data)
 				infos->type[j] = nci->tuner[i].fe_info.type;
 				infos->preference[j++] = nci->tuner[i].preference;
 #ifdef DEBUG_TUNE
+				DEBUG_MASK(DEBUG_BIT_TUNE,
 				dsyslog("Mcli::%s: Tuner: %s", __FUNCTION__, nci->tuner[i].fe_info.name);
+				)
 #endif
 			}
 		}
