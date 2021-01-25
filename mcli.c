@@ -22,7 +22,7 @@
 
 
 static int reconf = 0;
-int m_debugmask;
+int m_debugmask = 0;
 bool m_cam_disable;
 
 //--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -298,7 +298,14 @@ bool cPluginMcli::ProcessArgs (int argc, char *argv[])
 			m_tuner_max = atoi (optarg);
 			break;
 		case 10:
-			m_debugmask = atoi (optarg);
+			if ((strlen(optarg) > 2) && (strncasecmp(optarg, "0x", 2) == 0)) {
+				// hex conversion
+				if (sscanf(optarg + 2, "%x", &m_debugmask) == 0) {
+					isyslog("Mcli::%s: can't parse hexadecimal debug mask (skip): %s", __FUNCTION__, optarg);
+				};
+			} else {
+				m_debugmask = atoi (optarg);
+			};
 			dsyslog("Mcli::%s: enable debug mask: %d (0x%02x)", __FUNCTION__, m_debugmask, m_debugmask);
 			break;
 		case 11:
@@ -360,13 +367,17 @@ int cPluginMcli::CAMPoolAdd(netceiver_info_t *nci)
 				case CA_MULTI_SID:
 					m_cam_present = true;
 #ifdef DEBUG_RESOURCES
+					DEBUG_MASK(DEBUG_BIT_RESOURCES,
 					dsyslog("Found CAM");
+					)
 #endif
 					cp->max = 1;
 					break;
 				case CA_MULTI_TRANSPONDER:
 #ifdef DEBUG_RESOURCES
+					DEBUG_MASK(DEBUG_BIT_RESOURCES,
 					dsyslog("Found CAM");
+					)
 #endif
 					m_cam_present = true;
 					cp->max = nci->cam[j].max_sids;
@@ -415,9 +426,11 @@ cam_pool_t *cPluginMcli::CAMAvailable (const char *uuid, int slot, bool lock)
 		}
 	}
 #ifdef DEBUG_RESOURCES
+	DEBUG_MASK(DEBUG_BIT_RESOURCES,
 	if(ret) {
 		dsyslog("Mcli::%s: Available CAM [%s]:%d -> [%s]:%d", __FUNCTION__, uuid, slot, ret->uuid, ret->slot);
 	}
+	)
 #endif
 	if(lock) {
 		Unlock();
@@ -434,11 +447,13 @@ cam_pool_t *cPluginMcli::CAMAlloc (const char *uuid, int slot)
 	}
 
 #ifdef DEBUG_RESOURCES
+	DEBUG_MASK(DEBUG_BIT_RESOURCES,
         if(cp) {
 		dsyslog ("Mcli::%s: AllocateCAM [%s]:%d -> [%s]:%d", __FUNCTION__, uuid, slot, cp->uuid, cp->slot);
         } else {
 		dsyslog ("Mcli::%s: AllocateCAM [%s]:%d -> FAIL", __FUNCTION__, uuid, slot);
 	}
+	)
 #endif
 
 	return cp;
@@ -448,7 +463,9 @@ int cPluginMcli::CAMFree (cam_pool_t *cp)
 {
 	LOCK_THREAD;
 #ifdef DEBUG_RESOURCES
+	DEBUG_MASK(DEBUG_BIT_RESOURCES,
 	dsyslog ("Mcli::%s: FreeCAM [%s]:%d", __FUNCTION__, cp->uuid, cp->slot);
+	)
 #endif
 	if (cp->use > 0) {
 		cp->use--;
@@ -462,12 +479,16 @@ bool cPluginMcli::CAMSteal(const char *uuid, int slot, bool force)
 			cam_pool_t *cp=d->d()->GetCAMref();
 			if(d->d()->Priority()<0 && d->d()->GetCaEnable() && (slot == -1 || slot == cp->slot)) {
 #ifdef DEBUG_RESOURCES
+				DEBUG_MASK(DEBUG_BIT_RESOURCES,
 				dsyslog("Mcli::%s: Can Steal CAM on slot %d from DVB %d", __FUNCTION__, slot, d->d()->CardIndex()+1);
+				)
 #endif
 				if(force) {
 					d->d ()->SetTempDisable (true);
 #ifdef DEBUG_RESOURCES
+					DEBUG_MASK(DEBUG_BIT_RESOURCES,
 					dsyslog("Mcli::%s: Stole CAM on slot %d from DVB %d", __FUNCTION__, cp->slot, d->d()->CardIndex()+1);
+					)
 #endif
 				}
 				return true;
@@ -644,12 +665,16 @@ tuner_pool_t *cPluginMcli::TunerAvailable(fe_type_t type, int pos, bool lock)
 		Lock();
 	}
 #ifdef DEBUG_RESOURCES
+	DEBUG_MASK(DEBUG_BIT_RESOURCES,
 	dsyslog("Mcli::%s: Testing for tuner type %d pos %d", __FUNCTION__, type, pos);
+	)
 #endif
 	if (TunerCountByType (type) == m_cmd.tuner_type_limit[type]) {
 
 #ifdef DEBUG_RESOURCES
+		DEBUG_MASK(DEBUG_BIT_RESOURCES,
 		dsyslog("Mcli::%s: type %d limit (%d) reached", __FUNCTION__, type, m_cmd.tuner_type_limit[type]);
+		)
 #endif
 		if(lock) {
 			Unlock();
@@ -668,14 +693,18 @@ tuner_pool_t *cPluginMcli::TunerAvailable(fe_type_t type, int pos, bool lock)
 			continue;
 		}
 #ifdef DEBUG_RESOURCES
+		DEBUG_MASK(DEBUG_BIT_RESOURCES,
                 dsyslog("Mcli::%s: Tuner %d(%p), type %d, inuse %d", __FUNCTION__, i, tp, tp->type, tp->inuse);
+		)
 #endif
 		if(TunerSatelitePositionLookup(tp, pos)) {
 			if(lock) {
 				Unlock();
 			}
 #ifdef DEBUG_RESOURCES
+			DEBUG_MASK(DEBUG_BIT_RESOURCES,
 		        dsyslog("Mcli::%s: Tuner %d(%p) available", __FUNCTION__, i, tp);
+			)
 #endif
 
 			return tp;
@@ -700,7 +729,9 @@ tuner_pool_t *cPluginMcli::TunerAlloc(fe_type_t type, int pos, bool lock)
 	if(tp) {
 		tp->inuse=true;
 #ifdef DEBUG_RESOURCES
+		DEBUG_MASK(DEBUG_BIT_RESOURCES,
 		dsyslog("Mcli::%s: %p [%s], Type %d", __FUNCTION__, tp, tp->uuid, tp->type);
+		)
 #endif
 		if(lock) {
 			Unlock();
@@ -720,7 +751,9 @@ bool cPluginMcli::TunerFree(tuner_pool_t *tp, bool lock)
 	if(tp->inuse) {
 		tp->inuse=false;
 #ifdef DEBUG_RESOURCES
+		DEBUG_MASK(DEBUG_BIT_RESOURCES,
 		dsyslog("Mcli::%s: %p [%s], Type %d", __FUNCTION__, tp, tp->uuid, tp->type);
+		)
 #endif
 		if(lock) {
 			Unlock();
@@ -784,6 +817,7 @@ void cPluginMcli::Action (void)
 				for(int j = 0; j < nci->cam_num; j++) {
 
 #ifdef DEBUG_RESOURCES
+					DEBUG_MASK(DEBUG_BIT_RESOURCES,
 					const char *camstate = "";
 					const char *cammode = "";
 					switch(nci->cam[j].status) {
@@ -808,6 +842,7 @@ void cPluginMcli::Action (void)
 					} else {
 						dsyslog("Mcli::%s: Slot:%d CamModule State:%s\n", __FUNCTION__, j, camstate);
 					}
+					)
 #endif
 				}
 			}

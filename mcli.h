@@ -35,18 +35,20 @@
 #define LASTSEEN_TIMEOUT (10)
 //#define ENABLE_DEVICE_PRIORITY
 
-//#define DEBUG_PIDS 
-//#define DEBUG_TUNE_EXTRA
+#define DEBUG_PIDS
+#define DEBUG_TUNE_EXTRA
 #define DEBUG_TUNE
-//#define DEBUG_RESOURCES
+#define DEBUG_RESOURCES
+#define DEBUG_FILTER
 
-#define DEBUG_BIT_PIDS 	0x01
+#define DEBUG_BIT_PIDS	 	0x01
 #define DEBUG_BIT_TUNE_EXTRA	0x02
 #define DEBUG_BIT_TUNE		0x04
 #define DEBUG_BIT_RESOURCES	0x08
+#define DEBUG_BIT_FILTER	0x10
 #define DEBUG_BIT_TUNE_PC	0x40	// ProvideChannel
 
-#define DEBUG_MASK(bit, code)	if ((m_debugmask && bit) != 0) { code };
+#define DEBUG_MASK(bit, code)	if ((m_debugmask & bit) != 0) { code };
 
 extern int m_debugmask;
 extern bool m_cam_disable;

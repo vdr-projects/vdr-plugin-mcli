@@ -88,7 +88,9 @@ cMcliDevice::cMcliDevice (void)
 	InitMcli ();
 
 #ifdef DEBUG_RESOURCES
+	DEBUG_MASK(DEBUG_BIT_RESOURCES,
 	dsyslog ("Mcli::%s: DVB got device number %d\n", __FUNCTION__, CardIndex () + 1);
+	)
 #endif
 
 }
@@ -98,7 +100,9 @@ cMcliDevice::~cMcliDevice ()
 	LOCK_THREAD;
 	StopSectionHandler ();
 #ifdef DEBUG_RESOURCES
+	DEBUG_MASK(DEBUG_BIT_RESOURCES,
 	dsyslog ("Mcli::%s: DVB %d gets destructed\n", __FUNCTION__, CardIndex () + 1);
+	)
 #endif
 	Cancel (0);
 	m_locked.Broadcast ();
@@ -318,7 +322,7 @@ bool cMcliDevice::ProvidesSource (int Source) const
 		}
 	} 
 #ifdef DEBUG_TUNE_EXTRA
-	DEBUG_MASK(DEBUG_BIT_TUNE-EXTRA,
+	DEBUG_MASK(DEBUG_BIT_TUNE_EXTRA,
 	dsyslog ("Mcli::%s: DVB:%d Type:%d Pos:%d -> %d\n", __FUNCTION__, CardIndex () + 1, type, pos, ret);
 	)
 #endif
@@ -443,14 +447,14 @@ bool cMcliDevice::ProvidesChannel (const cChannel * Channel, int Priority, bool 
 		return false;
 	}
 	if(ProvidesTransponder(Channel)) {
-#ifdef DEBUG_TUNE
+#ifdef DEBUG_TUNE_PC
 		DEBUG_MASK(DEBUG_BIT_TUNE_PC,
 		dsyslog ("Mcli::ProvidesChannel: DEBUG DVB:%d Channel:%s * 'ProvidesTransponder(Channel)' is True\n", CardIndex () + 1, Channel->Name ());
 		)
 #endif
 		result = hasPriority;
 
-#ifdef DEBUG_TUNE
+#ifdef DEBUG_TUNE_PC
 		DEBUG_MASK(DEBUG_BIT_TUNE_PC,
 		dsyslog ("Mcli::ProvidesChannel: DEBUG result %d hasPriority %d\n", result, hasPriority);
 		)
@@ -458,7 +462,7 @@ bool cMcliDevice::ProvidesChannel (const cChannel * Channel, int Priority, bool 
 
 		if (Priority >= 0 && Receiving (true))
 		{
-#ifdef DEBUG_TUNE
+#ifdef DEBUG_TUNE_PC
 			DEBUG_MASK(DEBUG_BIT_TUNE_PC,
 	                dsyslog ("Mcli::ProvidesChannel: DEBUG DVB:%d Channel:%s * 'Priority >= 0 && Receiving (true)' is True\n", CardIndex () + 1, Channel->Name ());
 			)
@@ -466,7 +470,7 @@ bool cMcliDevice::ProvidesChannel (const cChannel * Channel, int Priority, bool 
 
 			if (!IsTunedToTransponder(Channel)) {
 				needsDetachReceivers = true;
-#ifdef DEBUG_TUNE
+#ifdef DEBUG_TUNE_PC
 				DEBUG_MASK(DEBUG_BIT_TUNE_PC,
 	                        dsyslog ("Mcli::ProvidesChannel: DEBUG DVB:%d Channel:%s * '!IsTunedToTransponder(Channel)' is True\n", CardIndex () + 1, Channel->Name ());
 				)
@@ -474,7 +478,7 @@ bool cMcliDevice::ProvidesChannel (const cChannel * Channel, int Priority, bool 
 
 			} else {
 				result = true;
-#ifdef DEBUG_TUNE
+#ifdef DEBUG_TUNE_PC
 				DEBUG_MASK(DEBUG_BIT_TUNE_PC,
                                 dsyslog ("Mcli::ProvidesChannel: DEBUG DVB:%d Channel:%s * '!IsTunedToTransponder(Channel)' is False * result = true ***** OK\n", CardIndex () + 1, Channel->Name ());
 				)
@@ -482,14 +486,14 @@ bool cMcliDevice::ProvidesChannel (const cChannel * Channel, int Priority, bool 
 			}
 
 		} else {
-#ifdef DEBUG_TUNE
+#ifdef DEBUG_TUNE_PC
 			DEBUG_MASK(DEBUG_BIT_TUNE_PC,
                         dsyslog ("Mcli::ProvidesChannel: DEBUG DVB:%d Channel:%s * 'Priority >= 0 && Receiving (true)' is False\n", CardIndex () + 1, Channel->Name ());
 			)
 #endif
 		}
 	} else {
-#ifdef DEBUG_TUNE
+#ifdef DEBUG_TUNE_PC
 		DEBUG_MASK(DEBUG_BIT_TUNE_PC,
                 dsyslog ("Mcli::ProvidesChannel: DEBUG DVB:%d Channel:%s * 'ProvidesTransponder(Channel)' is False\n", CardIndex () + 1, Channel->Name ());
 		)
@@ -813,10 +817,12 @@ bool cMcliDevice::SetChannelDevice (const cChannel * Channel, bool LiveView)
 //		printf("add dummy pid 0 @ %p\n", this);
 	}
 #ifdef DEBUG_PIDS
+	DEBUG_MASK(DEBUG_BIT_PIDS,
 	dsyslog ("Mcli::%s: %p Pidsnum:%d m_pidsnum:%d\n", __FUNCTION__, m_r, m_mcpidsnum, m_pidsnum);
 	for (int i = 0; i < m_mcpidsnum; i++) {
 		dsyslog ("Pid:%d\n", m_pids[i].pid);
 	}
+	)
 #endif
 	m_ten.lastseen=m_last=time(NULL);
 	m_showtuning = true;
@@ -887,10 +893,12 @@ bool cMcliDevice::SetPid (cPidHandle * Handle, int Type, bool On)
 	}
 	m_mcpidsnum = recv_pids_get (m_r, m_pids);
 #ifdef DEBUG_PIDS
+	DEBUG_MASK(DEBUG_BIT_PIDS,
 	dsyslog ("Mcli::%s: %p Pidsnum:%d m_pidsnum:%d m_filternum:%d\n", __FUNCTION__, m_r, m_mcpidsnum, m_pidsnum, m_filternum);
 	for (int i = 0; i < m_mcpidsnum; i++) {
 		dsyslog ("Pid:%d\n", m_pids[i].pid);
 	}
+	)
 #endif
 	m_last=time(NULL);
 	return true;
@@ -980,10 +988,12 @@ int cMcliDevice::OpenFilter (u_short Pid, u_char Tid, u_char Mask)
 	recv_pid_add (m_r, &pi);
 	m_mcpidsnum = recv_pids_get (m_r, m_pids);
 #ifdef DEBUG_PIDS
+	DEBUG_MASK(DEBUG_BIT_PIDS,
 	dsyslog ("Mcli::%s: %p Pidsnum:%d m_pidsnum:%d\n", __FUNCTION__, m_r, m_mcpidsnum, m_pidsnum);
 	for (int i = 0; i < m_mcpidsnum; i++) {
 		dsyslog ("Pid:%d\n", m_pids[i].pid);
 	}
+	)
 #endif
 	return m_filters->OpenFilter (Pid, Tid, Mask);
 }
