@@ -40,13 +40,15 @@
 #define DEBUG_TUNE
 #define DEBUG_RESOURCES
 #define DEBUG_FILTER
+#define DEBUG_PIDS_ADD_DEL
 
 #define DEBUG_BIT_PIDS	 	0x01
 #define DEBUG_BIT_TUNE_EXTRA	0x02
 #define DEBUG_BIT_TUNE		0x04
 #define DEBUG_BIT_RESOURCES	0x08
-#define DEBUG_BIT_FILTER	0x10
+#define DEBUG_BIT_PIDS_ADD_DEL 	0x10
 #define DEBUG_BIT_TUNE_PC	0x40	// ProvideChannel
+#define DEBUG_BIT_FILTER	0x80
 
 #define DEBUG_MASK(bit, code)	if ((m_debugmask & bit) != 0) { code };
 

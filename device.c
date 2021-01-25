@@ -884,10 +884,18 @@ bool cMcliDevice::SetPid (cPidHandle * Handle, int Type, bool On)
 			else if(Prio == -1) // Live
 				pi.priority |= 1<<2;
 #endif
-//			printf ("Add Pid:%d Sid:%d Type:%d Prio:%d %d\n", pi.pid, pi.id, Type, pi.priority, m_chan.Ca(0));
+#ifdef DEBUG_PIDS_ADD_DEL
+			DEBUG_MASK(DEBUG_BIT_PIDS_ADD_DEL,
+			dsyslog ("Mcli::%s: DVB:%d Add Pid:%d Sid:%d Type:%d Prio:%d %d", __FUNCTION__, CardIndex () + 1, pi.pid, pi.id, Type, pi.priority, m_chan.Ca(0));
+			)
+#endif
 			recv_pid_add (m_r, &pi);
 		} else {
-//                     	printf ("Del Pid:%d\n", Handle->pid);
+#ifdef DEBUG_PIDS_ADD_DEL
+			DEBUG_MASK(DEBUG_BIT_PIDS_ADD_DEL,
+			dsyslog ("Mcli::%s: DVB:%d Del Pid:%d\n", __FUNCTION__, CardIndex () + 1, Handle->pid);
+			)
+#endif
 			recv_pid_del (m_r, Handle->pid);
 		}
 	}

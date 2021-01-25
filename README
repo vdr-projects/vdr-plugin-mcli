@@ -118,5 +118,6 @@ END
 		TUNE_EXTRA    0x02
 		TUNE          0x04
 		RESOURCES     0x08
-		FILTER        0x10
+		PIDS_ADD_DEL  0x10
 		TUNE_PC       0x40    // ProvideChannel
+		FILTER        0x80
