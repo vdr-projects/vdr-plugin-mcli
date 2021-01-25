@@ -573,12 +573,21 @@ bool cMcliDevice::SetChannelDevice (const cChannel * Channel, bool LiveView)
 	
 #ifdef DEBUG_TUNE
 	DEBUG_MASK(DEBUG_BIT_TUNE,
-	dsyslog ("Mcli::%s: Request tuning on DVB:%d to Channel:%s, Provider:%s, Source:%d, LiveView:%s, IsScan:%d", __FUNCTION__, CardIndex () + 1, Channel->Name (), Channel->Provider (), Channel->Source (), LiveView ? "true" : "false", is_scan);
+	dsyslog ("Mcli::%s: Request tuning on DVB:%d to Channel:%s, Provider:%s, Source:%d, LiveView:%s, IsScan:%d CA:%d", __FUNCTION__, CardIndex () + 1, Channel->Name (), Channel->Provider (), Channel->Source (), LiveView ? "true" : "false", is_scan, Channel->Ca());
 	)
 #endif
 	if (!m_enable) {
 		return false;
 	}
+
+	if(m_cam_disable && Channel->Ca()) {
+#ifdef DEBUG_TUNE
+		DEBUG_MASK(DEBUG_BIT_TUNE,
+		dsyslog("Mcli::%s: channel requires CAM, but disabled (m_cam_disable=%s)\n", __FUNCTION__, m_cam_disable ? "true" : "false");
+#endif
+		)
+		return scrNotAvailable;
+	};
 	LOCK_THREAD;
 
 	if(is_scan) {
@@ -691,7 +700,7 @@ bool cMcliDevice::SetChannelDevice (const cChannel * Channel, bool LiveView)
 
 #ifdef DEBUG_TUNE
 	DEBUG_MASK(DEBUG_BIT_TUNE,
-	dsyslog ("Mcli::%s: Really tuning now DVB:%d to Channel:%s, Provider:%s, Source:%d, LiveView:%s, IsScan:%d", __FUNCTION__, CardIndex () + 1, Channel->Name (), Channel->Provider (), Channel->Source (), LiveView ? "true" : "false", is_scan);
+	dsyslog ("Mcli::%s: Really tuning now DVB:%d to Channel:%s, Provider:%s, Source:%d, LiveView:%s, IsScan:%d CA:%d", __FUNCTION__, CardIndex () + 1, Channel->Name (), Channel->Provider (), Channel->Source (), LiveView ? "true" : "false", is_scan, Channel->Ca());
 	)
 #endif
 	switch (m_fetype) {
@@ -858,7 +867,7 @@ bool cMcliDevice::SetPid (cPidHandle * Handle, int Type, bool On)
 	if (!m_enable) {
 		return false;
 	}
-	LOCK_THREAD;
+	// LOCK_THREAD; // deactivated because resulting in deadlock with osdteletext and zapping
 	if (Handle->pid && (On || !Handle->used)) {
 		m_pidsnum += On ? 1 : -1;
 		if (m_pidsnum < 0) {
