@@ -348,8 +348,8 @@ int ParseLine (const char *s, channel_t * ch)
 		char *caidbuf = NULL;
 		int fields;
 #if ! (defined WIN32 || defined APPLE)
-		fields = sscanf (s, "%a[^:]:%d :%a[^:]:%a[^:] :%d :%a[^:]:"
-			"%a[^:]:%d :%a[^:]:%d :%d :%d :%d ", &namebuf, 
+		fields = sscanf (s, "%m[^:]:%d :%a[^:]:%a[^:] :%d :%m[^:]:"
+			"%m[^:]:%d :%m[^:]:%d :%d :%d :%d ", &namebuf, 
 			&ch->frequency, &parambuf, &sourcebuf, &ch->srate, 
 			&vpidbuf, &apidbuf, &ch->tpid, &caidbuf, &ch->sid, 
 			&ch->nid, &ch->tid, &ch->rid);
