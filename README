@@ -71,12 +71,12 @@ vdr-1.6.0-intcamdevices.patch (enables selection of encrypted channels
 
 On newer Linux systems allow vdr to open raw sockets:
 
-setcap cap_net_raw=pe /usr/sbin/vdr 
+setcap cap_net_raw=pe /usr/sbin/vdr
 
 
 for systemd:
 
-cat <<END >/etc/systemd/system/vdr.service.d/override.conf 
+cat <<END >/etc/systemd/system/vdr.service.d/override.conf
 [Service]
 AmbientCapabilities=CAP_NET_RAW
 END
@@ -103,7 +103,7 @@ END
 
 --sock-path <path>
 	path of socket directory, default: API_SOCK_NAMESPACE
- 
+
 --cam-disable (NEW)
 	reject tuning to channels which requiring CAM
 
