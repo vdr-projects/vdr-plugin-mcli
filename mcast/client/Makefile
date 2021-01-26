@@ -1,6 +1,6 @@
 #Comment this out to disable debugging output
 #DEBUG=1
-#VERBOSE=1
+#VERBOSE_MCLI=1
 #WIN32=1
 #API_SOCK=1
 #VERBOSE=1
@@ -58,7 +58,7 @@ ifdef API_SOCK
 CFLAGS:= $(CFLAGS) -DAPI_SOCK
 endif
 
-ifdef VERBOSE
+ifdef VERBOSE_MCLI
 CFLAGS:= $(CFLAGS) -DDEBUG
 DEBUG=1
 endif

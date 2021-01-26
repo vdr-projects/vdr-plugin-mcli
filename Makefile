@@ -17,6 +17,7 @@ VERSION = $(shell grep 'static const char \*VERSION *=' $(PLUGIN).c | awk '{ pri
 # Use package data if installed...otherwise assume we're under the VDR source directory:
 PKGCFG = $(if $(VDRDIR),$(shell pkg-config --variable=$(1) $(VDRDIR)/vdr.pc),$(shell pkg-config --variable=$(1) vdr || pkg-config --variable=$(1) ../../../vdr.pc))
 LIBDIR = $(call PKGCFG,libdir)
+LOCDIR = $(call PKGCFG,locdir)
 PLGCFG = $(call PKGCFG,plgcfg)
 #
 TMPDIR ?= /tmp
@@ -100,9 +101,8 @@ $(DEPFILE): Makefile
 ### Internationalization (I18N):
 
 PODIR     = po
-LOCALEDIR = $(VDRDIR)/locale
 I18Npo    = $(wildcard $(PODIR)/*.po)
-I18Nmsgs  = $(addprefix $(LOCALEDIR)/, $(addsuffix /LC_MESSAGES/vdr-$(PLUGIN).mo, $(notdir $(foreach file, $(I18Npo), $(basename $(file))))))
+I18Nmsgs  = $(addprefix $(DESTDIR)$(LOCDIR)/, $(addsuffix /LC_MESSAGES/vdr-$(PLUGIN).mo, $(notdir $(foreach file, $(I18Npo), $(basename $(file))))))
 I18Npot   = $(PODIR)/$(PLUGIN).pot
 
 %.mo: %.po
@@ -115,11 +115,11 @@ $(I18Npot): $(wildcard *.c)
 	msgmerge -U --no-wrap --no-location --backup=none -q $@ $<
 	@touch $@
 
-$(I18Nmsgs): $(LOCALEDIR)/%/LC_MESSAGES/vdr-$(PLUGIN).mo: $(PODIR)/%.mo
+$(I18Nmsgs): $(DESTDIR)$(LOCDIR)/%/LC_MESSAGES/vdr-$(PLUGIN).mo: $(PODIR)/%.mo
 	@mkdir -p $(dir $@)
 	cp $< $@
 
-i18n: $(I18Nmsgs) $(I18Npot)
+i18n: $(I18Npot)
 
 i18n-dist: $(I18Nmsgs)
 
@@ -127,16 +127,14 @@ i18n-dist: $(I18Nmsgs)
 $(SOFILE): $(OBJS) libmcli.a
 ifeq ($(APPLE_DARWIN), 1)
 	$(CXX) $(CXXFLAGS) $(OBJS) $(LIBS) -o $@
-	@cp $@ $(LIBDIR)/$@.$(APIVERSION)
 else
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) -shared $(OBJS) $(LIBS) -o $@
-	@cp --remove-destination $@ $(LIBDIR)/$@.$(APIVERSION)
 endif
 
 install-lib: $(SOFILE)
 	install -D $^ $(DESTDIR)$(LIBDIR)/$^.$(APIVERSION)
 
-install: install-lib
+install: install-lib i18n-dist
 
 dist: clean
 	@-rm -rf $(TMPDIR)/$(ARCHIVE)

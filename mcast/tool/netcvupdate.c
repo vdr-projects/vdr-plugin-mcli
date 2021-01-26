@@ -142,7 +142,8 @@ int generate_script(char *filename, char *tmpname, char *ip, char *iface, char *
 
 	while(!feof(f)) {
 		char line[256];
-		fgets(line,255,f);
+		char *r = fgets(line,255,f);
+		if (r == NULL) break;
 		if (script_interpreter(script,line,ip,iface,user,pwd))
 			break;
 	}
@@ -168,16 +169,16 @@ void sigground(int x)
 int run_ftp(char *tmpdir,char *script, int timeout, char *pipeout)
 {
 	FILE *f;
-	char cmd[512];
+	char cmd[1024]; // avoid -Wformat-truncation
 	int ret;
 	if (!strlen(ftp_cmd))
 		return -1;
 	signal(SIGPIPE,sigground);
 	if (strlen(tmpdir))
-//		snprintf(cmd,511,"cd %s; %s -q %i -n %s",tmpdir,ftp_cmd,timeout,verbose?"":"-V");
-		snprintf(cmd,511,"cd %s; %s  -n %s %s",tmpdir,ftp_cmd,verbose?"":"-V",pipeout);
+//		snprintf(cmd, sizeof(cmd),"cd %s; %s -q %i -n %s",tmpdir,ftp_cmd,timeout,verbose?"":"-V");
+		snprintf(cmd, sizeof(cmd),"cd %s; %s  -n %s %s",tmpdir,ftp_cmd,verbose?"":"-V",pipeout);
 	else
-		snprintf(cmd,511,"%s -q %i -n %s %s",ftp_cmd,timeout,verbose?"":"-V",pipeout);
+		snprintf(cmd, sizeof(cmd),"%s -q %i -n %s %s",ftp_cmd,timeout,verbose?"":"-V",pipeout);
 	
 	f=popen(cmd,"w");
 	if (!f)
@@ -203,7 +204,7 @@ int do_reboot(char *tmpdir, char *ip, char* iface, char *user, char* pwd)
 int do_list_fw(char *tmpdir, char *ip, char* iface, char *user, char* pwd, int maxf, int *found, char **versions)
 {
 	char tmpfile[256]="/tmp/ncvup.XXXXXX";
-	char pipeout[256];
+	char pipeout[512]; // avoid -Wformat-truncation
 	int n=0;
 	int ret=0;	
 	FILE *file;
@@ -240,7 +241,8 @@ int do_list_fw(char *tmpdir, char *ip, char* iface, char *user, char* pwd, int m
 		char line[1024];
 		char *p;
 		*line=0;
-		fgets(line, 1023,file);
+		char *r = fgets(line, 1023,file);
+		if (r == NULL) break;
 		line[1023]=0;
 		p=strstr(line,"etceivr.");
 		if (p) {
@@ -490,14 +492,14 @@ int do_download(char **uuids, int num_uuids, char *device, char *remotepath, cha
 	int n,ret=0;
 
 	for(n=0;n<num_uuids;n++) {
-		char newfile[1024];
+		char newfile[2048];
 		if (!uuids[n])
 			continue;
 
 		if (num_uuids!=1)
-			snprintf(newfile,1024,"%s-%s",file,uuids[n]);
+			snprintf(newfile,sizeof(newfile),"%s-%s",file,uuids[n]);
 		else
-			strncpy(newfile,file,1024);
+			snprintf(newfile,sizeof(newfile),"%s", file);
 
 		printf("UUID %s: Downloading %s ... ",uuids[n], newfile);
 		fflush(stdout);
