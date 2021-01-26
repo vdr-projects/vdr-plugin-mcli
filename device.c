@@ -581,11 +581,7 @@ bool cMcliDevice::SetChannelDevice (const cChannel * Channel, bool LiveView)
 	}
 
 	if(m_cam_disable && Channel->Ca()) {
-#ifdef DEBUG_TUNE
-		DEBUG_MASK(DEBUG_BIT_TUNE,
-		dsyslog("Mcli::%s: channel requires CAM, but disabled (m_cam_disable=%s)\n", __FUNCTION__, m_cam_disable ? "true" : "false");
-#endif
-		)
+		dsyslog ("Mcli::%s: Reject tuning on DVB:%d to Channel:%s (%d), Provider:%s, Source:%d, LiveView:%s, IsScan:%d CA:%d (requires CAM, but disabled by option)", __FUNCTION__, CardIndex () + 1, Channel->Name (), Channel->Number(), Channel->Provider (), Channel->Source (), LiveView ? "true" : "false", is_scan, Channel->Ca());
 		return scrNotAvailable;
 	};
 	LOCK_THREAD;
@@ -617,19 +613,14 @@ bool cMcliDevice::SetChannelDevice (const cChannel * Channel, bool LiveView)
 			}
 		}
 		if(!(m_camref=m_mcli->CAMAlloc(NULL, slot))) {
-			if(cam_force || m_cam_disable) {
-#ifdef DEBUG_TUNE
-				DEBUG_MASK(DEBUG_BIT_TUNE,
-				dsyslog("Mcli::%s: CAM required, cannot tune on DVB %d (cam_force=%s, m_cam_disable=%s)\n", __FUNCTION__, CardIndex () + 1, cam_force ? "true" : "false", m_cam_disable ? "true" : "false");
-#endif
-				)
-				return scrNotAvailable;
-			}
 #ifdef DEBUG_TUNE
 			DEBUG_MASK(DEBUG_BIT_TUNE,
-			dsyslog("Mcli::%s: failed to get CAM on DVB %d (cam_force=%s m_cam_disable=%s)\n", __FUNCTION__, CardIndex () + 1, cam_force ? "true" : "false", m_cam_disable ? "true" : "false");
+			dsyslog("Mcli::%s: failed to get CAM on DVB %d (cam_force=%s)\n", __FUNCTION__, CardIndex () + 1, cam_force ? "true" : "false");
 			)
 #endif
+			if(cam_force) {
+				return false;
+			}
 		}
 		if(m_camref) {
 			SetCaEnable();
@@ -1115,14 +1106,26 @@ int cMcliDevice::SignalQuality(void) const
 const cChannel *cMcliDevice::GetCurrentlyTunedTransponder(void) const
 {
 	if (!m_enable) {
+#ifdef DEBUG_RESOURCES
+		DEBUG_MASK(DEBUG_BIT_RESOURCES,
 		dsyslog("Mcli::%s: DVB:%d m_fetype=%d not enabled", __FUNCTION__, CardIndex () + 1, m_fetype);
+		)
+#endif
 		return NULL;
 	};
 	if (!m_tuned) {
+#ifdef DEBUG_RESOURCES
+		DEBUG_MASK(DEBUG_BIT_RESOURCES,
 		dsyslog("Mcli::%s: DVB:%d m_fetype=%d not tuned", __FUNCTION__, CardIndex () + 1, m_fetype);
+		)
+#endif
 		return NULL;
 	};
+#ifdef DEBUG_RESOURCES
+	DEBUG_MASK(DEBUG_BIT_RESOURCES,
 	dsyslog("Mcli::%s: DVB:%d m_chan.Name='%s', m_chan.Number=%d m_fetype=%d", __FUNCTION__, CardIndex () + 1, m_chan.Name(), m_chan.Number(), m_fetype);
+	)
+#endif
 	return &m_chan;
 }
 #endif
@@ -1131,7 +1134,11 @@ const cChannel *cMcliDevice::GetCurrentlyTunedTransponder(void) const
 cString cMcliDevice::DeviceType(void) const
 {
 	if (!m_enable) {
+#ifdef DEBUG_RESOURCES
+		DEBUG_MASK(DEBUG_BIT_RESOURCES,
 		dsyslog("Mcli::%s: m_fetype=%d not enabled", __FUNCTION__, m_fetype);
+		)
+#endif
 		return "";
 	};
 	switch (m_fetype) {
