@@ -190,7 +190,7 @@ depend: .dependencies
 	#makedepend -Y -- $(CFLAGS)  -- *c >/dev/null 2>&1
 
 clean:
-	rm -f $(MCLI) $(MCLI)-* *.elf *.gdb *.o *.lo *.la *~ *.so *.a *.def *.dll *.dylib out.ts
+	rm -f $(MCLI) $(MCLI)-* *.elf *.gdb *.o *.lo *.la *~ *.so *.a *.def *.dll *.dylib out.ts .dependencies
 
 mingw32:
 	rm -rf mingw/*.c mingw/*.h mingw/win32

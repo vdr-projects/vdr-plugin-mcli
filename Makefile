@@ -145,7 +145,7 @@ dist: clean
 	@echo Distribution package created as $(PACKAGE).tgz
 
 clean:
-	@-rm -f $(OBJS) $(DEPFILE) *.so *.tgz core* *~  po/*.mo po/*.pot
+	@-rm -f $(OBJS) $(DEPFILE) *.so *.tgz core* *~  po/*.mo po/*.pot .dependencies
 	$(MAKE) -C mcast/client/ clean
 	$(MAKE) -C mcast/netcv2dvbip/ clean
 	$(MAKE) -C mcast/tool/ clean

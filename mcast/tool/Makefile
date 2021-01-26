@@ -125,7 +125,7 @@ depend: .dependencies
 	#makedepend -Y -- $(CFLAGS)  -- *c >/dev/null 2>&1
 
 clean:
-	rm -f $(NETCVDIAG) $(NETCVUPDATE) $(NETCVLOGVIEW) *.elf *.gdb *.o *~
+	rm -f $(NETCVDIAG) $(NETCVUPDATE) $(NETCVLOGVIEW) *.elf *.gdb *.o *~ .dependencies
 
 %.o: %.c
 	$(CC) -c $(CFLAGS) $(INCLUDES) $(DEFINES) -o $@ $<
