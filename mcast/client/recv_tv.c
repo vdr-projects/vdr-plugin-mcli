@@ -111,7 +111,7 @@ static void *recv_ts (void *arg)
 				int transport_error_indicator = ts[1]&0x80;
 	
 				if (pid != 8191 && (adaption_field & 1) && (((cont_old + 1) & 0xf) != cont) && cont_old >= 0) {
-					warn ("Mcli::%s: Discontinuity on receiver %p for pid %d: %d->%d at pos %d/%d\n", __FUNCTION__, r, pid, cont_old, cont, i, n / 188);
+					warn ("Mcli::%s: Discontinuity on receiver for Pid:%d %d->%d at pos %d/%d\n", __FUNCTION__, pid, cont_old, cont, i, n / 188);
  				}
 				if (transport_error_indicator) {
 					warn ("Mcli::%s: Transport error indicator set on receiver %p for pid %d: %d->%d at pos %d/%d\n", __FUNCTION__, r, pid, cont_old, cont, i, n / 188);

@@ -4,12 +4,17 @@ produced by the NetCeiver-hardware.
 Project's homepage:
 http://www.baycom.de/hardware/netceiver/
 
-Latest version available via SVN at:
-https://svn.baycom.de/repos/vdr-mcli-plugin/
+Latest version available via GIT at:
+https://github.com/vdr-projects/vdr-plugin-mcli
 
 The vdr-plugin, mcli-library and associated tools&drivers
 except netcv2dvbip are
 Copyright (C) 2007-2010 by BayCom GmbH <info@baycom.de>
+
+Extensions by contributors
+Copyright (C) 2020-2021 by Peter Bieringer <pb@bieringer.de>
+
+TODO: add more (-> git changelog)
 
 netcv2dvbip is 
 Copyright (C) 2010 by Christian Cier-Zniewski <c.cier@gmx.de>
@@ -50,11 +55,69 @@ You should have received a copy of the GNU General Public License along with
 this program; if not, write to the Free Software Foundation, Inc., 51
 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
-
+**** TO BE CHECKED ****
 To properly integrate the mcli plugin into your VDR please apply these two
 patches:
 
 vdr-1.6.0-altmenuaction.patch (allows CAM messages to be displayed)
 vdr-1.6.0-intcamdevices.patch (enables selection of encrypted channels
                                without local CI stack).
- 
+
+**** Reviewed version ****
+
+- Support at least vdr >= 2.4.4
+
+== Potential requirements ==
+
+On newer Linux systems allow vdr to open raw sockets:
+
+setcap cap_net_raw=pe /usr/sbin/vdr
+
+
+for systemd:
+
+cat <<END >/etc/systemd/system/vdr.service.d/override.conf
+[Service]
+AmbientCapabilities=CAP_NET_RAW
+END
+
+
+== Plugin options ==
+
+--ifname <interface>
+	network interface of the multicast client
+		the interface where the Netceiver boxes are also connected
+
+--port <port>
+	used network port (default: 23000)
+
+--dvb-s <num>
+--dvb-c <num>
+--dvb-t <num>
+--atsc <num>
+--dvb-s2 <num>
+	limit number of devices (default: 8)
+
+--mld-reporter-disable
+	disable mld reporter
+
+--sock-path <path>
+	path of socket directory, default: API_SOCK_NAMESPACE
+
+--cam-disable (NEW)
+	reject tuning to channels which requiring CAM
+
+--tuner-max <num> (NEW)
+	limit maximum number of tuners to <num>
+		avoid that LCARS skin shows 8 tuners in a 3 tuner system
+
+ --debugmask <mask> (NEW)
+	<mask> can be hexadecimal (0x..) or decimal
+	conditionally enable debug messages
+		PIDS          0x01
+		TUNE_EXTRA    0x02
+		TUNE          0x04
+		RESOURCES     0x08
+		PIDS_ADD_DEL  0x10
+		TUNE_PC       0x40    // ProvideChannel
+		FILTER        0x80

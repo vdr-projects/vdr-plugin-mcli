@@ -161,7 +161,9 @@ bool cMcliFilter::PutSection (const uchar * Data, int Length, bool Pusi)
 
 		if (m_Used > length) {
 #ifdef DEBUG_FILTER
+			DEBUG_MASK(DEBUG_BIT_FILTER,
 			dsyslog ("cMcliFilter::PutSection: m_Used > length !  Pid %2d, Tid%2d " "(len %3d, got %d/%d)", m_Pid, m_Tid, Length, m_Used, length);
+			)
 #endif
 			if (Length < TS_SIZE - 5) {
 				// TS packet not full -> this must be last TS packet of section data -> safe to reset now
@@ -175,8 +177,10 @@ bool cMcliFilter::PutSection (const uchar * Data, int Length, bool Pusi)
 void cMcliFilter::Reset (void)
 {
 #ifdef DEBUG_FILTER
+	DEBUG_MASK(DEBUG_BIT_FILTER,
 	if (m_Used)
 		dsyslog ("cMcliFilter::Reset skipping %d bytes", m_Used);
+	)
 #endif		
 	m_Used = 0;
 }
@@ -292,7 +296,9 @@ int cMcliPidList::GetTidFromPid (int pid)
 	for (cMcliPid * p = First (); p; p = Next (p)) {
 		if (p->Pid () == pid) {
 #ifdef DEBUG_PIDS
+			DEBUG_MASK(DEBUG_BIT_PIDS,
 			dsyslog("Mcli::%s: Found pid %d -> tid %d", __FUNCTION__, pid, p->Tid());
+			)
 #endif
 			return p->Tid ();
 		}
@@ -306,7 +312,9 @@ void cMcliPidList::SetPid (int Pid, int Tid)
 		for (cMcliPid * p = First (); p; p = Next (p)) {
 			if (p->Pid () == Pid) {
 #ifdef DEBUG_PIDS
+				DEBUG_MASK(DEBUG_BIT_PIDS,
 				dsyslog("Mcli::%s: Change pid %d -> tid %d", __FUNCTION__, Pid, Tid);
+				)
 #endif
 				if (Tid != 0xffff) {
 					p->SetTid (Tid);
@@ -317,13 +325,17 @@ void cMcliPidList::SetPid (int Pid, int Tid)
 		cMcliPid *pid = new cMcliPid (Pid, Tid);
 		Add (pid);
 #ifdef DEBUG_PIDS
+		DEBUG_MASK(DEBUG_BIT_PIDS,
 		dsyslog("Mcli::%s: Add pid %d -> tid %d", __FUNCTION__, Pid, Tid);
+		)
 #endif
 	} else {
 		for (cMcliPid * p = First (); p; p = Next (p)) {
 			if (p->Pid () == Pid) {
 #ifdef DEBUG_PIDS
+				DEBUG_MASK(DEBUG_BIT_PIDS,
 				dsyslog("Mcli::%s: Del pid %d", __FUNCTION__, Pid);
+				)
 #endif
 				Del (p);
 				return;
@@ -443,7 +455,9 @@ void cMcliFilters::Action (void)
 	}
 	DELETENULL (m_PB);
 #ifdef DEBUG_FILTER
+	DEBUG_MASK(DEBUG_BIT_FILTER,
 	dsyslog ("McliFilters::Action() ended");
+	)
 #endif
 }
 
