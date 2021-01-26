@@ -104,14 +104,14 @@ END
 --sock-path <path>
 	path of socket directory, default: API_SOCK_NAMESPACE
 
---cam-disable (NEW)
+--cam-disable (NEW since 0.9.5)
 	reject tuning to channels which requiring CAM
 
---tuner-max <num> (NEW)
+--tuner-max <num> (NEW since 0.9.5)
 	limit maximum number of tuners to <num>
 		avoid that LCARS skin shows 8 tuners in a 3 tuner system
 
- --debugmask <mask> (NEW)
+--debugmask <mask> (NEW since 0.9.5)
 	<mask> can be hexadecimal (0x..) or decimal
 	conditionally enable debug messages
 		PIDS          0x01
