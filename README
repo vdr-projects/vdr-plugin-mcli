@@ -121,3 +121,15 @@ END
 		PIDS_ADD_DEL  0x10
 		TUNE_PC       0x40    // ProvideChannel
 		FILTER        0x80
+
+
+== RPM Build Support included ==
+
+# specify version:
+VERSION=0.9.5
+
+# download version with proper tar.gz name:
+wget https://github.com/vdr-projects/vdr-plugin-mcli/archive/v$VERSION/vdr-mcli-$VERSION.tar.gz
+
+# run rpm rebuild with tar.gz:
+rpmbuild -tb vdr-mcli-$VERSION.tar.gz
