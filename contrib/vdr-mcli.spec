@@ -10,7 +10,6 @@
 
 %define rel	1
 
-
 Name:           vdr-%{pname}
 Version:        0.9.5
 %if 0%{?gitcommit:1}
@@ -97,8 +96,18 @@ mkdir -p $RPM_BUILD_ROOT/usr/sbin/
 %make_install
 popd
 
-install -Dpm 644 %{SOURCE1} \
-  $RPM_BUILD_ROOT%{_sysconfdir}/sysconfig/vdr-plugins.d/%{pname}.conf
+if [ -e %{SOURCE1} ]; then
+	# use from SOURCES / local directory
+	echo "NOTICE: take default config file from SOURCES"
+	install -Dpm 644 %{SOURCE1} $RPM_BUILD_ROOT%{_sysconfdir}/sysconfig/vdr-plugins.d/%{pname}.conf
+elif [ -e contrib/$(basename "%{SOURCE1}") ]; then
+	# use from inside tgz (rpmbuild -tb build)
+	echo "NOTICE: take default config file from package"
+	install -Dpm 644 contrib/$(basename "%{SOURCE1}") $RPM_BUILD_ROOT%{_sysconfdir}/sysconfig/vdr-plugins.d/%{pname}.conf
+else
+	echo "ERROR: can't find default config file %{SOURCE1}"
+	exit 1
+fi
 
 %find_lang %{name} --all-name --with-man
 
@@ -119,7 +128,8 @@ install -Dpm 644 mcliheaders.h $RPM_BUILD_ROOT%{_includedir}/vdr
 
 %changelog
 * Tue Jan 26 2021 Peter Bieringer <pb@bieringer.de> - 0.9.5-1
-- Create subpackage devel
+- Update to new release
+- Use default config file from package in case of rpmbuild -tX
 
 * Sun Dec 20 2020 Peter Bieringer <pb@bieringer.de> - 0.9.4-2
 - Create subpackage devel

@@ -1,5 +1,8 @@
 VDR Plugin 'mcli' Revision History
 ----------------------------------
+2021-01-26: Version 0.9.5
+- pbiering add contrib directory with RPM spec and vdr-plugin config file template
+
 2021-01-25
 - pbiering cMcliDevice::SetPid: LOCK_THREAD deactivated because resulting in deadlock with osdteletext and zapping
 - pbiering honor cam-disable earlier in cMcliDevice::SetChannelDevice
