@@ -8,7 +8,7 @@
 #global gitshortcommit #(c=#{gitcommit}; echo ${c:0:7})
 #global gitdate 20210123
 
-%define rel	1
+%define rel	2
 
 Name:           vdr-%{pname}
 Version:        0.9.5
@@ -35,6 +35,7 @@ Source0:        https://github.com/vdr-projects/vdr-plugin-mcli/archive/v%{versi
 %endif
 %endif
 Source1:        %{name}.conf
+Source2:	systemd-vdr.service.d-override.conf
 
 BuildRequires:  gcc-c++
 BuildRequires:  vdr-devel >= 2.3.9
@@ -96,6 +97,7 @@ mkdir -p $RPM_BUILD_ROOT/usr/sbin/
 %make_install
 popd
 
+# plugin cofig file
 if [ -e %{SOURCE1} ]; then
 	# use from SOURCES / local directory
 	echo "NOTICE: take default config file from SOURCES"
@@ -109,6 +111,20 @@ else
 	exit 1
 fi
 
+# vdr/systemd/override.conf
+if [ -e %{SOURCE2} ]; then
+	# use from SOURCES / local directory
+	echo "NOTICE: take vdr/systemd/override.conf from SOURCES"
+	install -Dpm 644 %{SOURCE2} $RPM_BUILD_ROOT%{_sysconfdir}/systemd/system/vdr.service.d/override.conf
+elif [ -e contrib/$(basename "%{SOURCE2}") ]; then
+	# use from inside tgz (rpmbuild -tb build)
+	echo "NOTICE: take vdr/systemd/override.conf from package"
+	install -Dpm 644 contrib/$(basename "%{SOURCE2}") $RPM_BUILD_ROOT%{_sysconfdir}/systemd/system/vdr.service.d/override.conf
+else
+	echo "ERROR: can't find vdr/systemd/override.conf %{SOURCE2}"
+	exit 1
+fi
+
 %find_lang %{name} --all-name --with-man
 
 mkdir -p $RPM_BUILD_ROOT/usr/include/vdr/
@@ -119,6 +135,7 @@ install -Dpm 644 mcliheaders.h $RPM_BUILD_ROOT%{_includedir}/vdr
 %license COPYING
 %doc HISTORY README
 %config(noreplace) %{_sysconfdir}/sysconfig/vdr-plugins.d/*.conf
+%config(noreplace) %{_sysconfdir}/systemd/system/vdr.service.d/override.conf
 %{vdr_plugindir}/libvdr-*.so.%{vdr_apiversion}
 %{_sbindir}/*
 
@@ -127,6 +144,9 @@ install -Dpm 644 mcliheaders.h $RPM_BUILD_ROOT%{_includedir}/vdr
 
 
 %changelog
+* Sat Jan 30 2021 Peter Bieringer <pb@bieringer.de> - 0.9.5-2
+- Include systemd/system/vdr.service.d/override.conf
+
 * Tue Jan 26 2021 Peter Bieringer <pb@bieringer.de> - 0.9.5-1
 - Update to new release
 - Use default config file from package in case of rpmbuild -tX

@@ -1,5 +1,8 @@
 VDR Plugin 'mcli' Revision History
 ----------------------------------
+2021-01-30
+- pbiering add vdr/systemd/override.conf into RPM (via file in contrib subdirectory)
+
 2021-01-26: Version 0.9.5
 - pbiering add contrib directory with RPM spec and vdr-plugin config file template
 
