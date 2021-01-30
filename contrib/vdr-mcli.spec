@@ -45,7 +45,10 @@ Requires:       vdr(abi)%{?_isa} = %{vdr_apiversion}
 
 %description
 Multicast client plugin to access DVB-streams produced by the
-NetCeiver hardware for VDR
+ NetCeiver hardware for VDR
+Contains also systemd/override config for vdr to allow vdr to
+ open raw sockets:
+  %{_sysconfdir}/systemd/system/vdr.service.d/override.conf
 %if 0%{?fork_account:1}
 Fork: %{fork_account} / Branch: %{fork_branch}
 %else
