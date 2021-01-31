@@ -48,7 +48,7 @@ Multicast client plugin to access DVB-streams produced by the
  NetCeiver hardware for VDR
 Contains also systemd/override config for vdr to allow vdr to
  open raw sockets:
-  %{_sysconfdir}/systemd/system/vdr.service.d/override.conf
+  %{_sysconfdir}/systemd/system/vdr.service.d/vdr-mcli.conf
 %if 0%{?fork_account:1}
 Fork: %{fork_account} / Branch: %{fork_branch}
 %else
@@ -138,7 +138,7 @@ install -Dpm 644 mcliheaders.h $RPM_BUILD_ROOT%{_includedir}/vdr
 %license COPYING
 %doc HISTORY README
 %config(noreplace) %{_sysconfdir}/sysconfig/vdr-plugins.d/*.conf
-%config(noreplace) %{_sysconfdir}/systemd/system/vdr.service.d/override.conf
+%{_sysconfdir}/systemd/system/vdr.service.d/vdr-mcli.conf
 %{vdr_plugindir}/libvdr-*.so.%{vdr_apiversion}
 %{_sbindir}/*
 
@@ -146,7 +146,15 @@ install -Dpm 644 mcliheaders.h $RPM_BUILD_ROOT%{_includedir}/vdr
 %{_includedir}/vdr/*.h
 
 
+%post
+systemctl daemon-reload
+
+
 %changelog
+* Sun Jan 31 2021 Peter Bieringer <pb@bieringer.de> - 0.9.5-3
+- Change name to systemd/system/vdr.service.d/vdr-mcli.conf
+- Add on %post systemctl daemon-reload
+
 * Sat Jan 30 2021 Peter Bieringer <pb@bieringer.de> - 0.9.5-2
 - Include systemd/system/vdr.service.d/override.conf
 
