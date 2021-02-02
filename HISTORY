@@ -1,5 +1,8 @@
 VDR Plugin 'mcli' Revision History
 ----------------------------------
+2021-02-02
+- pbiering include not covered patches from https://www.minidvblinux.de/forum/index.php?topic=9526.0
+
 2021-01-30
 - pbiering add vdr/systemd/override.conf into RPM (via file in contrib subdirectory)
 
