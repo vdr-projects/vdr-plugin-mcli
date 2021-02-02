@@ -286,7 +286,9 @@ int cMcliFilters::OpenFilter (u_short Pid, u_char Tid, u_char Mask)
 	LOCK_THREAD;
 #endif
 	Add (f);
+#if VDRVERSNUM < 20300
 	Unlock ();
+#endif
 
 	return fh;
 }
