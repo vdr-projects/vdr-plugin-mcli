@@ -81,7 +81,7 @@ void update_interfaces (struct intnode *intn)
 	char buf[255];
 	/* Format "fe80000000000000029027fffe24bbab 02 0a 20 80     eth0" */
 	while (fgets (buf, sizeof (buf), file)) {
-		if (21 != sscanf (buf, "%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx %x %x %x %x %8s", &addr.s6_addr[0], &addr.s6_addr[1], &addr.s6_addr[2], &addr.s6_addr[3], &addr.s6_addr[4], &addr.s6_addr[5], &addr.s6_addr[6], &addr.s6_addr[7], &addr.s6_addr[8], &addr.s6_addr[9], &addr.s6_addr[10], &addr.s6_addr[11], &addr.s6_addr[12], &addr.s6_addr[13], &addr.s6_addr[14], &addr.s6_addr[15], &ifindex, &prefixlen, &scope, &flags, devname)) {
+		if (21 != sscanf (buf, "%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx %x %x %x %x %s", &addr.s6_addr[0], &addr.s6_addr[1], &addr.s6_addr[2], &addr.s6_addr[3], &addr.s6_addr[4], &addr.s6_addr[5], &addr.s6_addr[6], &addr.s6_addr[7], &addr.s6_addr[8], &addr.s6_addr[9], &addr.s6_addr[10], &addr.s6_addr[11], &addr.s6_addr[12], &addr.s6_addr[13], &addr.s6_addr[14], &addr.s6_addr[15], &ifindex, &prefixlen, &scope, &flags, devname)) {
 
 			warn ("/proc/net/if_inet6 in wrong format!\n");
 			continue;
