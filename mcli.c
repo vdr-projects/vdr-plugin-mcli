@@ -23,6 +23,7 @@
 
 static int reconf = 0;
 int m_debugmask = 0;
+int m_logskipmask = 0;
 bool m_cam_disable;
 
 //--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -233,7 +234,17 @@ void cPluginMcli::ExitMcli (void)
 
 const char *cPluginMcli::CommandLineHelp (void)
 {
-	return ("  --ifname <network interface>\n" "  --port <port> (default: -port 23000)\n" "  --dvb-s <num> --dvb-c <num> --dvb-t <num> --atsc <num> --dvb-s2 <num> --tuner-max <num>\n" "    limit number of device types (default: 8 of every type)\n" "  --mld-reporter-disable\n" "  --sock-path <filepath>\n" "\n");
+	return (
+		"  --ifname <network interface>\n"
+		"  --port <port> (default: -port 23000)\n"
+		"  --dvb-s <num> --dvb-c <num> --dvb-t <num> --atsc <num> --dvb-s2 <num> (limit number of device types - default: 8 of every type)\n"
+		"  --tuner-max <num> (limit number of tuners, default: 8)\n"
+		"  --mld-reporter-disable\n"
+		"  --sock-path <filepath>\n"
+		"  --debugmask <value> (decimal or hex debug mask)\n"
+		"  --logskipmask <value> (decimal or hex log skip mask)\n"
+		"\n"
+	);
 }
 
 bool cPluginMcli::ProcessArgs (int argc, char *argv[])
@@ -257,6 +268,7 @@ bool cPluginMcli::ProcessArgs (int argc, char *argv[])
 			{"tuner-max", 1, 0, 0},	//9
 			{"debugmask", 1, 0, 0}, //10: debug mask for selective debugging, see mcli.h
 			{"cam-disable", 0, 0, 0}, //11: disable use of CAM (skip channels)
+			{"logskipmask", 1, 0, 0},   //12: log mask for selective disabling of logging, see mcli.h
 			{NULL, 0, 0, 0}
 		};
 
@@ -310,7 +322,18 @@ bool cPluginMcli::ProcessArgs (int argc, char *argv[])
 			break;
 		case 11:
 			m_cam_disable = true;
-			dsyslog("Mcli::%s: enable 'm_cam_disable')", __FUNCTION__);
+			dsyslog("Mcli::%s: enable 'm_cam_disable'", __FUNCTION__);
+			break;
+		case 12:
+			if ((strlen(optarg) > 2) && (strncasecmp(optarg, "0x", 2) == 0)) {
+				// hex conversion
+				if (sscanf(optarg + 2, "%x", &m_logskipmask) == 0) {
+					isyslog("Mcli::%s: can't parse hexadecimal log mask (skip): %s", __FUNCTION__, optarg);
+				};
+			} else {
+				m_logskipmask = atoi (optarg);
+			};
+			isyslog("Mcli::%s: enable log skip mask: %d (0x%02x)", __FUNCTION__, m_logskipmask, m_logskipmask);
 			break;
 		default:
 			dsyslog ("MCli::%s: ?? getopt returned character code 0%o ??\n", __FUNCTION__, c);
@@ -368,7 +391,7 @@ int cPluginMcli::CAMPoolAdd(netceiver_info_t *nci)
 					m_cam_present = true;
 #ifdef DEBUG_RESOURCES
 					DEBUG_MASK(DEBUG_BIT_RESOURCES,
-					dsyslog("Found CAM");
+					if (!update) dsyslog("Found CAM %d", j);
 					)
 #endif
 					cp->max = 1;
@@ -376,7 +399,7 @@ int cPluginMcli::CAMPoolAdd(netceiver_info_t *nci)
 				case CA_MULTI_TRANSPONDER:
 #ifdef DEBUG_RESOURCES
 					DEBUG_MASK(DEBUG_BIT_RESOURCES,
-					dsyslog("Found CAM");
+					if (!update) dsyslog("Found CAM %d", j);
 					)
 #endif
 					m_cam_present = true;
@@ -905,7 +928,7 @@ void cPluginMcli::Action (void)
         
 //TB: reelvdr itself tunes if the first tuner appears, don't do it twice
 #if 1 //ndef REELVDR
-		if (tpa) {
+		if (tpa && (m_debugmask & 0x1000)) { // hidden test option 0x1000
 			if (!channel_switch_ok) {	// the first tuner that was found, so make VDR retune to the channel it wants...
 #if VDRVERSNUM < 20400
 				cChannel *ch = Channels.GetByNumber (cDevice::CurrentChannel ());

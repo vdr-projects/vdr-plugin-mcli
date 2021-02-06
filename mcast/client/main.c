@@ -14,6 +14,9 @@
   #include "dummy_client.h"
 #endif
 
+int m_debugmask = 0;   // dummy for compatibility with plugin feature
+int m_logskipmask = 0; // dummy for compatibility with plugin feature
+
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 int main (int argc, char **argv)
 {

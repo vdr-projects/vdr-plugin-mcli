@@ -29,6 +29,8 @@ pthread_mutex_t lock;
 
 int mld_start=0;
 
+#include "../../logging.h"
+
 int port=23000;
 char iface[IFNAMSIZ];
 
@@ -164,6 +166,9 @@ static void recv_ts_func (unsigned char *buf, int n, void *arg) {
 			int transport_error_indicator = ts[1]&0x80;
 
 			if (pid != 8191 && (adaption_field & 1) && (((p->cont_old + 1) & 0xf) != cont) && p->cont_old >= 0) {
+			    if ((pid >= 16 && pid <= 18) && (m_logskipmask & LOGSKIP_BIT_recv_ts_func_pid_Data)) {
+				// ignored by log skip mask
+			    } else {
 				warn_show = 0;
 				time(&warn_time_now);
 				if (warn_count == 0) { // 1st occurance
@@ -183,6 +188,7 @@ static void recv_ts_func (unsigned char *buf, int n, void *arg) {
 					warn ("Mcli::%s: Discontinuity on receiver %p for pid %d: %d->%d at pos %d/%d\n", __FUNCTION__, r, pid, p->cont_old, cont, i / 188, n / 188);
 					warn_count_last = warn_count;
 				};
+			    }; // LOGSKIP_BIT_recv_ts_func_pid_Data
 			}
 			if (transport_error_indicator) {
 				warn ("Mcli::%s: Transport error indicator set on receiver %p for pid %d: %d->%d at pos %d/%d\n", __FUNCTION__, r, pid, p->cont_old, cont, i / 188, n / 188);
@@ -343,7 +349,11 @@ static void deallocate_slot (recv_info_t * r, pid_info_t *p)
 
 #endif		//info ("Deallocating PID %d from slot %p\n", p->pid.pid, p);
 		p->run = 0;
-
+#ifdef DEBUG_PIDS
+	DEBUG_MASK(DEBUG_BIT_PIDS,
+	warn ("Mcli::%s: Deallocating PID %d (id %d) from Slot %p\n", __FUNCTION__, p->pid.pid, p->pid.id, p);
+	)
+#endif
 		//Do not leave multicast group if there is another dvb adapter using the same group
 		if (find_any_slot_by_mcg (r, &p->mcg)) {
 			dbg ("MCG is still in use not dropping\n");
@@ -374,8 +384,11 @@ static pid_info_t *allocate_slot (recv_info_t * r, struct in6_addr *mcg, dvb_pid
 		err ("Cannot get memory for pid\n");
 	}
 	
-	dbg ("Allocating new PID %d to Slot %p\n", pid->pid, p);
-	
+#ifdef DEBUG_PIDS
+	DEBUG_MASK(DEBUG_BIT_PIDS,
+	warn ("Mcli::%s: Allocating new PID %d (id %d) to Slot %p\n", __FUNCTION__, pid->pid, pid->id, p);
+	)
+#endif
 	memset(p, 0, sizeof(pid_info_t)); 
 	
 	p->cont_old = -1;

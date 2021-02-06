@@ -128,6 +128,11 @@ void cMcliDevice::SetTenData (tra_t * ten)
 void cMcliDevice::SetEnable (bool val)
 {
 	LOCK_THREAD;
+#ifdef DEBUG_TUNE
+	DEBUG_MASK(DEBUG_BIT_TUNE,
+	dsyslog("Mcli::%s: device %d: %d -> %d", __FUNCTION__, CardIndex()+1, m_enable, val);
+	)
+#endif
 	m_enable = val;
 	if (!m_enable) {
 		recv_stop (m_r);
@@ -581,7 +586,9 @@ bool cMcliDevice::SetChannelDevice (const cChannel * Channel, bool LiveView)
 	}
 
 	if(m_cam_disable && Channel->Ca()) {
+		LOGSKIP_MASK(LOGSKIP_BIT_SetChannelDevice_Reject,
 		dsyslog ("Mcli::%s: Reject tuning on DVB:%d to Channel:%s (%d), Provider:%s, Source:%d, LiveView:%s, IsScan:%d CA:%d (requires CAM, but disabled by option)", __FUNCTION__, CardIndex () + 1, Channel->Name (), Channel->Number(), Channel->Provider (), Channel->Source (), LiveView ? "true" : "false", is_scan, Channel->Ca());
+		)
 		return scrNotAvailable;
 	};
 	LOCK_THREAD;
@@ -820,7 +827,7 @@ bool cMcliDevice::SetChannelDevice (const cChannel * Channel, bool LiveView)
 	DEBUG_MASK(DEBUG_BIT_PIDS,
 	dsyslog ("Mcli::%s: %p Pidsnum:%d m_pidsnum:%d\n", __FUNCTION__, m_r, m_mcpidsnum, m_pidsnum);
 	for (int i = 0; i < m_mcpidsnum; i++) {
-		dsyslog ("Pid:%d\n", m_pids[i].pid);
+		dsyslog ("Pid:%d Id:%d\n", m_pids[i].pid, m_pids[i].id);
 	}
 	)
 #endif
@@ -904,7 +911,7 @@ bool cMcliDevice::SetPid (cPidHandle * Handle, int Type, bool On)
 	DEBUG_MASK(DEBUG_BIT_PIDS,
 	dsyslog ("Mcli::%s: %p Pidsnum:%d m_pidsnum:%d m_filternum:%d\n", __FUNCTION__, m_r, m_mcpidsnum, m_pidsnum, m_filternum);
 	for (int i = 0; i < m_mcpidsnum; i++) {
-		dsyslog ("Pid:%d\n", m_pids[i].pid);
+		dsyslog ("Pid:%d Id:%d\n", m_pids[i].pid, m_pids[i].id);
 	}
 	)
 #endif
@@ -999,7 +1006,7 @@ int cMcliDevice::OpenFilter (u_short Pid, u_char Tid, u_char Mask)
 	DEBUG_MASK(DEBUG_BIT_PIDS,
 	dsyslog ("Mcli::%s: %p Pidsnum:%d m_pidsnum:%d\n", __FUNCTION__, m_r, m_mcpidsnum, m_pidsnum);
 	for (int i = 0; i < m_mcpidsnum; i++) {
-		dsyslog ("Pid:%d\n", m_pids[i].pid);
+		dsyslog ("Pid:%d Id:%d\n", m_pids[i].pid, m_pids[i].id);
 	}
 	)
 #endif
@@ -1134,10 +1141,12 @@ const cChannel *cMcliDevice::GetCurrentlyTunedTransponder(void) const
 cString cMcliDevice::DeviceType(void) const
 {
 	if (!m_enable) {
+#if 0
 #ifdef DEBUG_RESOURCES
 		DEBUG_MASK(DEBUG_BIT_RESOURCES,
 		dsyslog("Mcli::%s: m_fetype=%d not enabled", __FUNCTION__, m_fetype);
 		)
+#endif
 #endif
 		return "";
 	};
