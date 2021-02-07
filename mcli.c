@@ -972,7 +972,7 @@ bool cPluginMcli::Initialize (void)
 
 bool cPluginMcli::Start (void)
 {
-	isyslog("Mcli v" MCLI_PLUGIN_VERSION " started");
+	isyslog("mcli version " MCLI_PLUGIN_VERSION " started");
 #ifdef REELVDR
     if (access("/dev/dvb/adapter0", F_OK) != 0) //TB: this line allows the client to be used with usb-sticks without conflicts
 #endif

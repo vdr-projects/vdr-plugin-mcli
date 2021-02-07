@@ -63,7 +63,7 @@ class cMcliDeviceList:public cList < cMcliDeviceObject >
 	{
 	};
 	~cMcliDeviceList () {
-		dsyslog ("Mcli: Delete my Dev list");
+		dsyslog ("mcli::%s: Delete device list", __FUNCTION__);
 	};
 };
 
