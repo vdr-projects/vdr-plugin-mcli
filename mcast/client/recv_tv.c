@@ -102,7 +102,7 @@ static void *recv_ts (void *arg)
 		if (n >0 ) {
 			ptr = buf;
 			if (n % 188) {
-				warn ("Mcli::%s: Received %d bytes is not multiple of 188!\n", __FUNCTION__, n);
+				warn ("mcli::%s: Received %d bytes is not multiple of 188!\n", __FUNCTION__, n);
  			}
 			int i;
 			for (i = 0; i < (n / 188); i++) {
@@ -113,10 +113,10 @@ static void *recv_ts (void *arg)
 				int transport_error_indicator = ts[1]&0x80;
 	
 				if (pid != 8191 && (adaption_field & 1) && (((cont_old + 1) & 0xf) != cont) && cont_old >= 0) {
-					warn ("Mcli::%s: Discontinuity on receiver for Pid:%d %d->%d at pos %d/%d\n", __FUNCTION__, pid, cont_old, cont, i, n / 188);
+					warn ("mcli::%s: Discontinuity on receiver for Pid:%d %d->%d at pos %d/%d\n", __FUNCTION__, pid, cont_old, cont, i, n / 188);
  				}
 				if (transport_error_indicator) {
-					warn ("Mcli::%s: Transport error indicator set on receiver %p for pid %d: %d->%d at pos %d/%d\n", __FUNCTION__, r, pid, cont_old, cont, i, n / 188);
+					warn ("mcli::%s: Transport error indicator set on receiver %p for pid %d: %d->%d at pos %d/%d\n", __FUNCTION__, r, pid, cont_old, cont, i, n / 188);
  				}
 				cont_old = cont;
  			}
@@ -124,10 +124,10 @@ static void *recv_ts (void *arg)
 				while (n) {
 					res = r->handle_ts (ptr, n, r->handle_ts_context);
 					if (res != n) {
-						warn ("Mcli::%s: Not same amount of data written: res:%d<=n:%d\n", __FUNCTION__, res, n);
+						warn ("mcli::%s: Not same amount of data written: res:%d<=n:%d\n", __FUNCTION__, res, n);
 					}
 					if (res < 0) {
-						warn ("Mcli::%s: write of %d bytes returned %d\n", __FUNCTION__, n, res);
+						warn ("mcli::%s: write of %d bytes returned %d\n", __FUNCTION__, n, res);
 						// perror ("Write failed");
 						break;
 					} else {
@@ -189,30 +189,30 @@ static void recv_ts_func (unsigned char *buf, int n, void *arg) {
 			            if ((m_debugmask & DEBUB_BIT_recv_ts_func_NO_LOGRATELIMIT) == 0) {
 					time(&warn_time_last);
 					if ((warn_count - warn_count_last) >= DISCONTINUITY_SUPPRESS_SECONDS) {
-						warn ("Mcli::%s: Discontinuity on receiver messages suppressed in %ld seconds: %ld\n", __FUNCTION__, (long int) warn_time_diff, (warn_count - warn_count_last));
+						warn ("mcli::%s: Discontinuity on receiver messages suppressed in %ld seconds: %ld\n", __FUNCTION__, (long int) warn_time_diff, (warn_count - warn_count_last));
 					};
 					warn_count_last = warn_count;
 				    }; // DEBUB_BIT_recv_ts_func_NO_LOGRATELIMIT
-					warn ("Mcli::%s: Discontinuity on receiver %p for pid %d: %d->%d at pos %d/%d\n", __FUNCTION__, r, pid, p->cont_old, cont, i / 188, n / 188);
+					warn ("mcli::%s: Discontinuity on receiver %p for pid %d: %d->%d at pos %d/%d\n", __FUNCTION__, r, pid, p->cont_old, cont, i / 188, n / 188);
 				};
 			    }; // LOGSKIP_BIT_recv_ts_func_pid_Data
 			}
 			if (transport_error_indicator) {
-				warn ("Mcli::%s: Transport error indicator set on receiver %p for pid %d: %d->%d at pos %d/%d\n", __FUNCTION__, r, pid, p->cont_old, cont, i / 188, n / 188);
+				warn ("mcli::%s: Transport error indicator set on receiver %p for pid %d: %d->%d at pos %d/%d\n", __FUNCTION__, r, pid, p->cont_old, cont, i / 188, n / 188);
 			}
 			p->cont_old = cont;
 		}
 		if (i != n) {
-			warn ("Mcli::%s: Received %d bytes is not multiple of 188!\n", __FUNCTION__, n);
+			warn ("mcli::%s: Received %d bytes is not multiple of 188!\n", __FUNCTION__, n);
 		}
 		if(r->handle_ts) {
 			while (n) {
 				int res = r->handle_ts (buf, n, r->handle_ts_context);
 				if (res != n) {
-					warn ("Mcli::%s: Not same amount of data written: res:%d<=n:%d\n", __FUNCTION__, res, n);
+					warn ("mcli::%s: Not same amount of data written: res:%d<=n:%d\n", __FUNCTION__, res, n);
 				}
 				if (res < 0) {
-					warn ("Mcli::%s: write of %d bytes returned %d\n", __FUNCTION__, n, res);
+					warn ("mcli::%s: write of %d bytes returned %d\n", __FUNCTION__, n, res);
 					// perror ("Write failed");
 					break;
 				} else {
@@ -358,7 +358,7 @@ static void deallocate_slot (recv_info_t * r, pid_info_t *p)
 		p->run = 0;
 #ifdef DEBUG_PIDS
 	DEBUG_MASK(DEBUG_BIT_PIDS,
-	warn ("Mcli::%s: Deallocating PID %d (id %d) from Slot %p\n", __FUNCTION__, p->pid.pid, p->pid.id, p);
+	warn ("mcli::%s: Deallocating PID %d (id %d) from Slot %p\n", __FUNCTION__, p->pid.pid, p->pid.id, p);
 	)
 #endif
 		//Do not leave multicast group if there is another dvb adapter using the same group
@@ -393,7 +393,7 @@ static pid_info_t *allocate_slot (recv_info_t * r, struct in6_addr *mcg, dvb_pid
 	
 #ifdef DEBUG_PIDS
 	DEBUG_MASK(DEBUG_BIT_PIDS,
-	warn ("Mcli::%s: Allocating new PID %d (id %d) to Slot %p\n", __FUNCTION__, pid->pid, pid->id, p);
+	warn ("mcli::%s: Allocating new PID %d (id %d) to Slot %p\n", __FUNCTION__, pid->pid, pid->id, p);
 	)
 #endif
 	memset(p, 0, sizeof(pid_info_t)); 
