@@ -79,7 +79,7 @@ cOsdObject *cPluginMcli::AltMenuAction (void)
 				cMcliDevice *d = dev->d ();
 #ifdef DEBUG_TUNE
 				DEBUG_MASK(DEBUG_BIT_TUNE,
-				dsyslog("satpos: %i vpid: %i fep.freq: %i", satpos, vpid, fep.frequency);
+				dsyslog("mcli::%s: satpos: %i vpid: %i fep.freq: %i", __FUNCTION__, satpos, vpid, fep.frequency);
 				)
 #endif
 				struct in6_addr mcg = d->GetTenData ()->mcg;
@@ -89,9 +89,9 @@ cOsdObject *cPluginMcli::AltMenuAction (void)
 				DEBUG_MASK(DEBUG_BIT_TUNE,
 				char str[INET6_ADDRSTRLEN];
 				inet_ntop (AF_INET6, &c->mcg, str, INET6_ADDRSTRLEN);
-				dsyslog ("MCG from MMI: %s", str);
+				dsyslog ("mcli::%s: MCG from MMI: %s", __FUNCTION__, str);
 				inet_ntop (AF_INET6, &mcg, str, INET6_ADDRSTRLEN);
-				dsyslog ("MCG from DEV: %s", str);
+				dsyslog ("mcli::%s: MCG from DEV: %s", __FUNCTION__, str);
 				)
 #endif
 
@@ -100,7 +100,7 @@ cOsdObject *cPluginMcli::AltMenuAction (void)
 			}
 #ifdef DEBUG_TUNE
 			DEBUG_MASK(DEBUG_BIT_TUNE,
-			dsyslog ("SID/Program Number:%04x, SatPos:%d Freqency:%d", c->caid, satpos, fep.frequency);
+			dsyslog ("mcli::%s: SID/Program Number:%04x, SatPos:%d Freqency:%d", __FUNCTION__, c->caid, satpos, fep.frequency);
 			)
 #endif
 		}
@@ -391,7 +391,7 @@ int cPluginMcli::CAMPoolAdd(netceiver_info_t *nci)
 					m_cam_present = true;
 #ifdef DEBUG_RESOURCES
 					DEBUG_MASK(DEBUG_BIT_RESOURCES,
-					if (!update) dsyslog("Found CAM %d", j);
+					if (!update) dsyslog("mcli::%s: Found CAM %d", __FUNCTION__, j);
 					)
 #endif
 					cp->max = 1;
@@ -399,7 +399,7 @@ int cPluginMcli::CAMPoolAdd(netceiver_info_t *nci)
 				case CA_MULTI_TRANSPONDER:
 #ifdef DEBUG_RESOURCES
 					DEBUG_MASK(DEBUG_BIT_RESOURCES,
-					if (!update) dsyslog("Found CAM %d", j);
+					if (!update) dsyslog("mcli::%s: Found CAM %d", __FUNCTION__, j);
 					)
 #endif
 					m_cam_present = true;
@@ -928,7 +928,7 @@ void cPluginMcli::Action (void)
         
 //TB: reelvdr itself tunes if the first tuner appears, don't do it twice
 #if 1 //ndef REELVDR
-		if (tpa && (m_debugmask & 0x1000)) { // hidden test option 0x1000
+		if (tpa && (m_debugmask & DEBUG_BIT_Action_NoRetuneFirstTuner)) {
 			if (!channel_switch_ok) {	// the first tuner that was found, so make VDR retune to the channel it wants...
 #if VDRVERSNUM < 20400
 				cChannel *ch = Channels.GetByNumber (cDevice::CurrentChannel ());

@@ -89,7 +89,7 @@ cMcliDevice::cMcliDevice (void)
 
 #ifdef DEBUG_RESOURCES
 	DEBUG_MASK(DEBUG_BIT_RESOURCES,
-	dsyslog ("Mcli::%s: DVB got device number %d\n", __FUNCTION__, CardIndex () + 1);
+	dsyslog ("Mcli::%s: DVB got device number %d", __FUNCTION__, CardIndex () + 1);
 	)
 #endif
 
@@ -101,7 +101,7 @@ cMcliDevice::~cMcliDevice ()
 	StopSectionHandler ();
 #ifdef DEBUG_RESOURCES
 	DEBUG_MASK(DEBUG_BIT_RESOURCES,
-	dsyslog ("Mcli::%s: DVB %d gets destructed\n", __FUNCTION__, CardIndex () + 1);
+	dsyslog ("Mcli::%s: DVB %d gets destructed", __FUNCTION__, CardIndex () + 1);
 	)
 #endif
 	Cancel (0);
@@ -227,7 +227,7 @@ bool cMcliDevice::SetTempDisable (bool now)
 		if(m_tunerref) {
 #ifdef DEBUG_TUNE
 			DEBUG_MASK(DEBUG_BIT_TUNE,
-			dsyslog("Mcli::%s: Releasing tuner on device %d (%s)\n", __FUNCTION__, CardIndex()+1, m_chan.Name());
+			dsyslog("Mcli::%s: Releasing tuner on device %d (%s)", __FUNCTION__, CardIndex()+1, m_chan.Name());
 			)
 #endif			
 			m_mcli->TunerFree(m_tunerref, false);
@@ -382,7 +382,7 @@ bool cMcliDevice::ProvidesTransponder (const cChannel * Channel) const
 
 #ifdef DEBUG_TUNE_EXTRA
 	DEBUG_MASK(DEBUG_BIT_TUNE_EXTRA,
-	dsyslog ("Mcli::%s: DVB:%d S2:%d %s@%p -> %d\n", __FUNCTION__, CardIndex () + 1, s2, Channel->Name (), this, ret);
+	dsyslog ("Mcli::%s: DVB:%d S2:%d %s@%p -> %d", __FUNCTION__, CardIndex () + 1, s2, Channel->Name (), this, ret);
 	)
 #endif
 	return ret;
@@ -446,7 +446,7 @@ bool cMcliDevice::ProvidesChannel (const cChannel * Channel, int Priority, bool 
 	if(!CheckCAM(Channel, false)) {
 #ifdef DEBUG_TUNE
 		DEBUG_MASK(DEBUG_BIT_TUNE,
-		dsyslog ("Mcli::%s: DVB:%d Channel:%s, Prio:%d this->Prio:%d m_chan.Name:%s -> %d\n", __FUNCTION__, CardIndex () + 1, Channel->Name (), Priority, this->Priority (), m_chan.Name(), false);
+		dsyslog ("Mcli::%s: DVB:%d Channel:%s, Prio:%d this->Prio:%d m_chan.Name:%s -> %d", __FUNCTION__, CardIndex () + 1, Channel->Name (), Priority, this->Priority (), m_chan.Name(), false);
 		)
 #endif
 		return false;
@@ -454,14 +454,14 @@ bool cMcliDevice::ProvidesChannel (const cChannel * Channel, int Priority, bool 
 	if(ProvidesTransponder(Channel)) {
 #ifdef DEBUG_TUNE_PC
 		DEBUG_MASK(DEBUG_BIT_TUNE_PC,
-		dsyslog ("Mcli::ProvidesChannel: DEBUG DVB:%d Channel:%s * 'ProvidesTransponder(Channel)' is True\n", CardIndex () + 1, Channel->Name ());
+		dsyslog ("Mcli::ProvidesChannel: DEBUG DVB:%d Channel:%s * 'ProvidesTransponder(Channel)' is True", CardIndex () + 1, Channel->Name ());
 		)
 #endif
 		result = hasPriority;
 
 #ifdef DEBUG_TUNE_PC
 		DEBUG_MASK(DEBUG_BIT_TUNE_PC,
-		dsyslog ("Mcli::ProvidesChannel: DEBUG result %d hasPriority %d\n", result, hasPriority);
+		dsyslog ("Mcli::ProvidesChannel: DEBUG result %d hasPriority %d", result, hasPriority);
 		)
 #endif
 
@@ -469,7 +469,7 @@ bool cMcliDevice::ProvidesChannel (const cChannel * Channel, int Priority, bool 
 		{
 #ifdef DEBUG_TUNE_PC
 			DEBUG_MASK(DEBUG_BIT_TUNE_PC,
-	                dsyslog ("Mcli::ProvidesChannel: DEBUG DVB:%d Channel:%s * 'Priority >= 0 && Receiving (true)' is True\n", CardIndex () + 1, Channel->Name ());
+	                dsyslog ("Mcli::ProvidesChannel: DEBUG DVB:%d Channel:%s * 'Priority >= 0 && Receiving (true)' is True", CardIndex () + 1, Channel->Name ());
 			)
 #endif
 
@@ -477,7 +477,7 @@ bool cMcliDevice::ProvidesChannel (const cChannel * Channel, int Priority, bool 
 				needsDetachReceivers = true;
 #ifdef DEBUG_TUNE_PC
 				DEBUG_MASK(DEBUG_BIT_TUNE_PC,
-	                        dsyslog ("Mcli::ProvidesChannel: DEBUG DVB:%d Channel:%s * '!IsTunedToTransponder(Channel)' is True\n", CardIndex () + 1, Channel->Name ());
+	                        dsyslog ("Mcli::ProvidesChannel: DEBUG DVB:%d Channel:%s * '!IsTunedToTransponder(Channel)' is True", CardIndex () + 1, Channel->Name ());
 				)
 #endif
 
@@ -485,7 +485,7 @@ bool cMcliDevice::ProvidesChannel (const cChannel * Channel, int Priority, bool 
 				result = true;
 #ifdef DEBUG_TUNE_PC
 				DEBUG_MASK(DEBUG_BIT_TUNE_PC,
-                                dsyslog ("Mcli::ProvidesChannel: DEBUG DVB:%d Channel:%s * '!IsTunedToTransponder(Channel)' is False * result = true ***** OK\n", CardIndex () + 1, Channel->Name ());
+                                dsyslog ("Mcli::ProvidesChannel: DEBUG DVB:%d Channel:%s * '!IsTunedToTransponder(Channel)' is False * result = true ***** OK", CardIndex () + 1, Channel->Name ());
 				)
 #endif
 			}
@@ -493,21 +493,21 @@ bool cMcliDevice::ProvidesChannel (const cChannel * Channel, int Priority, bool 
 		} else {
 #ifdef DEBUG_TUNE_PC
 			DEBUG_MASK(DEBUG_BIT_TUNE_PC,
-                        dsyslog ("Mcli::ProvidesChannel: DEBUG DVB:%d Channel:%s * 'Priority >= 0 && Receiving (true)' is False\n", CardIndex () + 1, Channel->Name ());
+                        dsyslog ("Mcli::ProvidesChannel: DEBUG DVB:%d Channel:%s * 'Priority >= 0 && Receiving (true)' is False", CardIndex () + 1, Channel->Name ());
 			)
 #endif
 		}
 	} else {
 #ifdef DEBUG_TUNE_PC
 		DEBUG_MASK(DEBUG_BIT_TUNE_PC,
-                dsyslog ("Mcli::ProvidesChannel: DEBUG DVB:%d Channel:%s * 'ProvidesTransponder(Channel)' is False\n", CardIndex () + 1, Channel->Name ());
+                dsyslog ("Mcli::ProvidesChannel: DEBUG DVB:%d Channel:%s * 'ProvidesTransponder(Channel)' is False", CardIndex () + 1, Channel->Name ());
 		)
 #endif
 	}
 
 #ifdef DEBUG_TUNE
 	DEBUG_MASK(DEBUG_BIT_TUNE,
-	dsyslog ("Mcli::%s: DVB:%d Channel:%s, Prio:%d this->Prio:%d NeedsDetachReceivers:%d -> %d\n", __FUNCTION__, CardIndex () + 1, Channel->Name (), Priority, this->Priority (), needsDetachReceivers, result);
+	dsyslog ("Mcli::%s: DVB:%d Channel:%s, Prio:%d this->Prio:%d NeedsDetachReceivers:%d -> %d", __FUNCTION__, CardIndex () + 1, Channel->Name (), Priority, this->Priority (), needsDetachReceivers, result);
 	)
 #endif
 	if (NeedsDetachReceivers) {
@@ -622,7 +622,7 @@ bool cMcliDevice::SetChannelDevice (const cChannel * Channel, bool LiveView)
 		if(!(m_camref=m_mcli->CAMAlloc(NULL, slot))) {
 #ifdef DEBUG_TUNE
 			DEBUG_MASK(DEBUG_BIT_TUNE,
-			dsyslog("Mcli::%s: failed to get CAM on DVB %d (cam_force=%s)\n", __FUNCTION__, CardIndex () + 1, cam_force ? "true" : "false");
+			dsyslog("Mcli::%s: failed to get CAM on DVB %d (cam_force=%s)", __FUNCTION__, CardIndex () + 1, cam_force ? "true" : "false");
 			)
 #endif
 			if(cam_force) {
@@ -811,7 +811,7 @@ bool cMcliDevice::SetChannelDevice (const cChannel * Channel, bool LiveView)
 		}
 		break;
 	default:
-		esyslog ("ERROR: attempt to set channel with unknown DVB frontend type");
+		esyslog ("mcli::%s: ERROR: attempt to set channel with unknown DVB frontend type", __FUNCTION__);
 		return false;
 	}
 
@@ -825,9 +825,9 @@ bool cMcliDevice::SetChannelDevice (const cChannel * Channel, bool LiveView)
 	}
 #ifdef DEBUG_PIDS
 	DEBUG_MASK(DEBUG_BIT_PIDS,
-	dsyslog ("Mcli::%s: %p Pidsnum:%d m_pidsnum:%d\n", __FUNCTION__, m_r, m_mcpidsnum, m_pidsnum);
+	dsyslog ("Mcli::%s: %p Pidsnum:%d m_pidsnum:%d", __FUNCTION__, m_r, m_mcpidsnum, m_pidsnum);
 	for (int i = 0; i < m_mcpidsnum; i++) {
-		dsyslog ("Pid:%d Id:%d\n", m_pids[i].pid, m_pids[i].id);
+		dsyslog ("mcli::%s: Pid:%d Id:%d", __FUNCTION__, m_pids[i].pid, m_pids[i].id);
 	}
 	)
 #endif
@@ -857,7 +857,7 @@ bool cMcliDevice::SetPid (cPidHandle * Handle, int Type, bool On)
 {
 #ifdef DEBUG_TUNE
 	DEBUG_MASK(DEBUG_BIT_TUNE,
-	dsyslog ("Mcli::%s: DVB:%d Pid:%d (%s), Type:%d, On:%d, used:%d sid:%d ca_enable:%d channel_ca:%d\n", __FUNCTION__, CardIndex () + 1, Handle->pid, m_chan.Name(), Type, On, Handle->used, m_chan.Sid(), GetCaEnable(), m_chan.Ca (0));
+	dsyslog ("Mcli::%s: DVB:%d Pid:%d (%s), Type:%d, On:%d, used:%d sid:%d ca_enable:%d channel_ca:%d", __FUNCTION__, CardIndex () + 1, Handle->pid, m_chan.Name(), Type, On, Handle->used, m_chan.Sid(), GetCaEnable(), m_chan.Ca (0));
 	)
 #endif
 	dvb_pid_t pi;
@@ -900,7 +900,7 @@ bool cMcliDevice::SetPid (cPidHandle * Handle, int Type, bool On)
 		} else {
 #ifdef DEBUG_PIDS_ADD_DEL
 			DEBUG_MASK(DEBUG_BIT_PIDS_ADD_DEL,
-			dsyslog ("Mcli::%s: DVB:%d Del Pid:%d\n", __FUNCTION__, CardIndex () + 1, Handle->pid);
+			dsyslog ("Mcli::%s: DVB:%d Del Pid:%d", __FUNCTION__, CardIndex () + 1, Handle->pid);
 			)
 #endif
 			recv_pid_del (m_r, Handle->pid);
@@ -909,9 +909,9 @@ bool cMcliDevice::SetPid (cPidHandle * Handle, int Type, bool On)
 	m_mcpidsnum = recv_pids_get (m_r, m_pids);
 #ifdef DEBUG_PIDS
 	DEBUG_MASK(DEBUG_BIT_PIDS,
-	dsyslog ("Mcli::%s: %p Pidsnum:%d m_pidsnum:%d m_filternum:%d\n", __FUNCTION__, m_r, m_mcpidsnum, m_pidsnum, m_filternum);
+	dsyslog ("Mcli::%s: %p Pidsnum:%d m_pidsnum:%d m_filternum:%d", __FUNCTION__, m_r, m_mcpidsnum, m_pidsnum, m_filternum);
 	for (int i = 0; i < m_mcpidsnum; i++) {
-		dsyslog ("Pid:%d Id:%d\n", m_pids[i].pid, m_pids[i].id);
+		dsyslog ("mcli::%s: Pid:%d Id:%d", __FUNCTION__, m_pids[i].pid, m_pids[i].id);
 	}
 	)
 #endif
@@ -1004,9 +1004,9 @@ int cMcliDevice::OpenFilter (u_short Pid, u_char Tid, u_char Mask)
 	m_mcpidsnum = recv_pids_get (m_r, m_pids);
 #ifdef DEBUG_PIDS
 	DEBUG_MASK(DEBUG_BIT_PIDS,
-	dsyslog ("Mcli::%s: %p Pidsnum:%d m_pidsnum:%d\n", __FUNCTION__, m_r, m_mcpidsnum, m_pidsnum);
+	dsyslog ("Mcli::%s: %p Pidsnum:%d m_pidsnum:%d", __FUNCTION__, m_r, m_mcpidsnum, m_pidsnum);
 	for (int i = 0; i < m_mcpidsnum; i++) {
-		dsyslog ("Pid:%d Id:%d\n", m_pids[i].pid, m_pids[i].id);
+		dsyslog ("mcli::%s: Pid:%d Id:%d", m_pids[i].pid, m_pids[i].id);
 	}
 	)
 #endif

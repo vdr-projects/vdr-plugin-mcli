@@ -62,7 +62,7 @@ class cCamInfo : public cOsdItem {
 			m_slot = slot;
 		}; // cCamInfo
 		int CamMenuOpen (char *iface) {
-			isyslog("Opening CAM Menu at NetCeiver %s Slot %d info %s\n", m_uuid, m_slot, m_info);
+			isyslog("mcli::%s: Opening CAM Menu at NetCeiver %s Slot %d info %s", __FUNCTION__, m_uuid, m_slot, m_info);
 			int mmi_session = 0;
 			if(m_slot != -1 && strlen(m_info)) {
 				mmi_session = mmi_open_menu_session (m_uuid, iface, 0, m_slot);
