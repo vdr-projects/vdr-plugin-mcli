@@ -1,5 +1,7 @@
 VDR Plugin 'mcli' Revision History
 ----------------------------------
+2021-02-07
+- pbiering add more header include fixes based on contribution from HelmutB
 2021-02-06
 - pbiering add additional special debug masks (see README), align/fix log prefix to "mcli::"
 

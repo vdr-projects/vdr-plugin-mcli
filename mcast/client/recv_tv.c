@@ -29,7 +29,7 @@ pthread_mutex_t lock;
 
 int mld_start=0;
 
-#include "../../logging.h"
+#include "logging.h"
 
 int port=23000;
 char iface[IFNAMSIZ];

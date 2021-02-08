@@ -41,9 +41,9 @@ LIBRARY_PATH=/usr/lib
 endif
 endif
 ifeq ($(APPLE_DARWIN), 1)
-CFLAGS:= $(CFLAGS) -fPIC -fno-common -Wall -I../common $(DEFS)
+CFLAGS:= $(CFLAGS) -fPIC -fno-common -Wall -I../common -I../.. $(DEFS)
 else
-CFLAGS:= $(CFLAGS) -fPIC -Wall -I../common $(DEFS)
+CFLAGS:= $(CFLAGS) -fPIC -Wall -I../common -I../.. $(DEFS)
 endif
 
 ifdef BACKTRACE
