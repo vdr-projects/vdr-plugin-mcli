@@ -8,7 +8,7 @@
 #global gitshortcommit #(c=#{gitcommit}; echo ${c:0:7})
 #global gitdate 20210123
 
-%define rel	2
+%define rel	4
 
 Name:           vdr-%{pname}
 Version:        0.9.5
@@ -31,11 +31,12 @@ Source0:        https://github.com/%{fork_account}/vdr-plugin-mcli/archive/%{for
 %if 0%{?gitcommit:1}
 Source0:        https://github.com/vdr-projects/vdr-plugin-mcli/archive/%{gitcommit}/%{name}-%{gitshortcommit}.tar.gz
 %else
-Source0:        https://github.com/vdr-projects/vdr-plugin-mcli/archive/v%{version}/%{name}-%{version}.tar.gz
+Source0:        https://github.com/vdr-projects/vdr-plugin-mcli/archive/v%{version}/vdr-plugin-%{pname}-%{version}.tar.gz
 %endif
 %endif
-Source1:        %{name}.conf
-Source2:	systemd-vdr.service.d-override.conf
+
+%define		file_plugin_config		%{name}.conf
+%define		file_systemd_override_config	systemd-vdr.service.d-override.conf
 
 BuildRequires:  gcc-c++
 BuildRequires:  vdr-devel >= 2.3.9
@@ -101,32 +102,11 @@ mkdir -p $RPM_BUILD_ROOT/usr/sbin/
 popd
 
 # plugin cofig file
-if [ -e %{SOURCE1} ]; then
-	# use from SOURCES / local directory
-	echo "NOTICE: take default config file from SOURCES"
-	install -Dpm 644 %{SOURCE1} $RPM_BUILD_ROOT%{_sysconfdir}/sysconfig/vdr-plugins.d/%{pname}.conf
-elif [ -e contrib/$(basename "%{SOURCE1}") ]; then
-	# use from inside tgz (rpmbuild -tb build)
-	echo "NOTICE: take default config file from package"
-	install -Dpm 644 contrib/$(basename "%{SOURCE1}") $RPM_BUILD_ROOT%{_sysconfdir}/sysconfig/vdr-plugins.d/%{pname}.conf
-else
-	echo "ERROR: can't find default config file %{SOURCE1}"
-	exit 1
-fi
+install -Dpm 644 contrib/%{file_plugin_config} $RPM_BUILD_ROOT%{_sysconfdir}/sysconfig/vdr-plugins.d/%{pname}.conf
 
 # vdr/systemd/override.conf
-if [ -e %{SOURCE2} ]; then
-	# use from SOURCES / local directory
-	echo "NOTICE: take vdr/systemd/override.conf from SOURCES"
-	install -Dpm 644 %{SOURCE2} $RPM_BUILD_ROOT%{_sysconfdir}/systemd/system/vdr.service.d/override.conf
-elif [ -e contrib/$(basename "%{SOURCE2}") ]; then
-	# use from inside tgz (rpmbuild -tb build)
-	echo "NOTICE: take vdr/systemd/override.conf from package"
-	install -Dpm 644 contrib/$(basename "%{SOURCE2}") $RPM_BUILD_ROOT%{_sysconfdir}/systemd/system/vdr.service.d/override.conf
-else
-	echo "ERROR: can't find vdr/systemd/override.conf %{SOURCE2}"
-	exit 1
-fi
+install -Dpm 644 contrib/%{file_systemd_override_config} $RPM_BUILD_ROOT%{_sysconfdir}/systemd/system/vdr.service.d/vdr-mcli.conf
+
 
 %find_lang %{name} --all-name --with-man
 
@@ -151,6 +131,9 @@ systemctl daemon-reload
 
 
 %changelog
+* Mon Feb 08 2021 Peter Bieringer <pb@bieringer.de> - 0.9.5-4
+- Use only plugin/systemd config from contrib subdirectory
+
 * Sun Jan 31 2021 Peter Bieringer <pb@bieringer.de> - 0.9.5-3
 - Change name to systemd/system/vdr.service.d/vdr-mcli.conf
 - Add on %post systemctl daemon-reload
