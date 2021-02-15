@@ -215,18 +215,22 @@ bool cPluginMcli::InitMcli (void)
 void cPluginMcli::ExitMcli (void)
 {
 	if (m_mmi_init_done) {
+		dsyslog ("mcli::%s: call mmi_broadcast_client_exit", __FUNCTION__);
 		mmi_broadcast_client_exit (m_cam_mmi);
 		m_mmi_init_done = 0;
 	}
 	if (m_api_init_done) {
+		dsyslog ("mcli::%s: call api_sock_exit", __FUNCTION__);
 		api_sock_exit ();
 		m_api_init_done = 0;
 	}
 	if (m_mld_init_done) {
+		dsyslog ("mcli::%s: call client_exit", __FUNCTION__);
 		mld_client_exit ();
 		m_mld_init_done = 0;
 	}
 	if (m_recv_init_done) {
+		dsyslog ("mcli::%s: call recv_exit", __FUNCTION__);
 		recv_exit ();
 		m_recv_init_done = 0;
 	}
@@ -983,7 +987,7 @@ bool cPluginMcli::Start (void)
 
 void cPluginMcli::Stop (void)
 {
-	cThread::Cancel (0);
+	cThread::Cancel (5);
 	for (cMcliDeviceObject * d = m_devs.First (); d; d = m_devs.Next (d)) {
 		d->d ()->SetEnable (false);
 	}
