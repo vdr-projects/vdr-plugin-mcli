@@ -987,7 +987,7 @@ bool cPluginMcli::Start (void)
 
 void cPluginMcli::Stop (void)
 {
-	cThread::Cancel (5);
+	cThread::Cancel (0);
 	for (cMcliDeviceObject * d = m_devs.First (); d; d = m_devs.Next (d)) {
 		d->d ()->SetEnable (false);
 	}
