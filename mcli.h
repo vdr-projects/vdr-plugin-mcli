@@ -80,6 +80,7 @@ typedef struct cam_pool {
 	int use;
 	int max;
 	int status;
+        bool trigger;
 } cam_pool_t;
 
 class cPluginMcli:public cPlugin, public cThread

@@ -140,6 +140,7 @@ cPluginMcli::cPluginMcli (void)
 	memset (m_cam_pool, 0, sizeof (cam_pool_t) * CAM_POOL_MAX);
 	for(i=0; i<CAM_POOL_MAX; i++) {
 		m_cam_pool[i].max = -1;
+		m_cam_pool[i].trigger = false;
 	}
 	strcpy (m_cmd.cmd_sock_path, API_SOCK_NAMESPACE);
 	memset (m_tuner_pool, 0, sizeof(tuner_pool_t)*TUNER_POOL_MAX);
@@ -388,6 +389,8 @@ int cPluginMcli::CAMPoolAdd(netceiver_info_t *nci)
 		if(!cp){
 			return ret;
 		}
+		int old_max = cp->max;
+
 		if (nci->cam[j].status) {
 			switch (nci->cam[j].flags) {
 				case CA_SINGLE:
@@ -413,6 +416,9 @@ int cPluginMcli::CAMPoolAdd(netceiver_info_t *nci)
 		} else {
 			cp->max = 0;
 		}
+		if (cp->max != old_max)
+			cp->trigger = true;
+
 		cp->status = nci->cam[j].status;
 		if(!update) {
 			cp->slot = nci->cam[j].slot;

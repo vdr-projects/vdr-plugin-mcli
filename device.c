@@ -188,7 +188,8 @@ void cMcliDevice::SetEnable (bool val)
 				}
 			}
 
-			if(m_chan.Ca() && !GetCaEnable() && m_mcli->CAMAvailable(NULL, slot) && (m_camref=m_mcli->CAMAlloc(NULL, slot))) {
+			bool triggerCam = m_debugmask & DEBUG_BIT_Action_TriggerCam;
+			if((m_chan.Ca() || triggerCam) && !GetCaEnable() && m_mcli->CAMAvailable(NULL, slot) && (m_camref=m_mcli->CAMAlloc(NULL, slot))) {
 				SetCaEnable();
 			}
 
@@ -611,7 +612,8 @@ bool cMcliDevice::SetChannelDevice (const cChannel * Channel, bool LiveView)
 		return false;
 	}
 	
-	if(!GetCaOverride() && Channel->Ca() && !GetCaEnable()) {
+	bool triggerCam = m_debugmask & DEBUG_BIT_Action_TriggerCam;
+	if(!GetCaOverride() && (m_chan.Ca() || triggerCam) && !GetCaEnable()) {
 		int slot = -1;
 		if(Channel->Ca(0)<=0xff) {
 			slot=Channel->Ca(0)&0x03;
@@ -874,11 +876,19 @@ bool cMcliDevice::SetPid (cPidHandle * Handle, int Type, bool On)
 
 		if (On) {
 			pi.pid = Handle->pid;
-			if (GetCaEnable() && m_chan.Ca (0)) {
+			if (GetCaEnable() && (m_chan.Ca(0) || (m_camref && m_camref->trigger))) {
 				pi.id= m_chan.Sid();
 				if(m_chan.Ca(0)<=0xff) {
 					pi.priority=m_chan.Ca(0)&0x03;
 				}
+#ifdef DEBUG_TUNE
+				DEBUG_MASK(DEBUG_BIT_TUNE,
+				if (!m_chan.Ca(0))
+					dsyslog("mcli::%s: FTA CAM-Trigger Pid %d Sid %d", __FUNCTION__, pi.pid, pi.id);
+				)
+#endif
+				if (m_camref)
+					m_camref->trigger = false;
 			} 
 #ifdef ENABLE_DEVICE_PRIORITY
 			int Prio = Priority();
