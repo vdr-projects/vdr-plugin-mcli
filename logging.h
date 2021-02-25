@@ -16,8 +16,8 @@
 #define DEBUG_BIT_FILTER	0x80
 
 // hidden test options
-#define DEBUG_BIT_Action_NoRetuneFirstTuner	0x1000	// do not retune first found tuner (cPluginMcli::Action)
-#define DEBUB_BIT_recv_ts_func_NO_LOGRATELIMIT	0x2000	// disable rate limiter Mcli::recv_ts_func
+#define DEBUG_BIT_Action_RetuneOnFirstTuner    0x1000  // retune if the first tuner is found (cPluginMcli::Action)
+#define DEBUG_BIT_recv_ts_func_NO_LOGRATELIMIT 0x2000  // disable rate limiter Mcli::recv_ts_func
 
 #define DEBUG_MASK(bit, code)	if ((m_debugmask & bit) != 0) { code };
 

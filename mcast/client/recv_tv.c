@@ -170,7 +170,7 @@ static void recv_ts_func (unsigned char *buf, int n, void *arg) {
 			    if ((pid >= 16 && pid <= 18) && (m_logskipmask & LOGSKIP_BIT_recv_ts_func_pid_Data)) {
 				// ignored by log skip mask
 			    } else {
-			      if ((m_debugmask & DEBUB_BIT_recv_ts_func_NO_LOGRATELIMIT) == 0) {
+			      if ((m_debugmask & DEBUG_BIT_recv_ts_func_NO_LOGRATELIMIT) == 0) {
 				warn_show = 0;
 				time(&warn_time_now);
 				if (warn_count == 0) { // 1st occurance
@@ -182,17 +182,17 @@ static void recv_ts_func (unsigned char *buf, int n, void *arg) {
 					};
 				};
 				warn_count++;
-			      } else { // DEBUB_BIT_recv_ts_func_NO_LOGRATELIMIT
+			      } else { // DEBUG_BIT_recv_ts_func_NO_LOGRATELIMIT
 				warn_show = 1;
-			      }; // DEBUB_BIT_recv_ts_func_NO_LOGRATELIMIT
+			      }; // DEBUG_BIT_recv_ts_func_NO_LOGRATELIMIT
 				if (warn_show > 0) {
-			            if ((m_debugmask & DEBUB_BIT_recv_ts_func_NO_LOGRATELIMIT) == 0) {
+			            if ((m_debugmask & DEBUG_BIT_recv_ts_func_NO_LOGRATELIMIT) == 0) {
 					time(&warn_time_last);
 					if ((warn_count - warn_count_last) >= DISCONTINUITY_SUPPRESS_SECONDS) {
 						warn ("mcli::%s: Discontinuity on receiver messages suppressed in %ld seconds: %ld\n", __FUNCTION__, (long int) warn_time_diff, (warn_count - warn_count_last));
 					};
 					warn_count_last = warn_count;
-				    }; // DEBUB_BIT_recv_ts_func_NO_LOGRATELIMIT
+				    }; // DEBUG_BIT_recv_ts_func_NO_LOGRATELIMIT
 					warn ("mcli::%s: Discontinuity on receiver %p for pid %d: %d->%d at pos %d/%d\n", __FUNCTION__, r, pid, p->cont_old, cont, i / 188, n / 188);
 				};
 			    }; // LOGSKIP_BIT_recv_ts_func_pid_Data
