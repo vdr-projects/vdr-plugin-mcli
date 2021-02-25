@@ -1,5 +1,8 @@
 VDR Plugin 'mcli' Revision History
 ----------------------------------
+2021-02-25
+- pbiering add triggerCam patch from https://www.vdr-portal.de/forum/index.php?thread/134181-mcli-error-video-data-stream-broken/&postID=1336731#post1336731
+
 2021-02-08
 - pbiering fix spec file for rpmbuild -ta
 
