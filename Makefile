@@ -75,14 +75,14 @@ plugin: i18n
 	$(MAKE) XML_INC="$(XML_INC)" XML_LIB="$(XML_LIB)" libvdr-$(PLUGIN).so
 
 tools: lib
-	 $(MAKE) XML_INC="$(XML_INC)" XML_LIB="$(XML_LIB)" -C mcast/client/ mcli
+	 $(MAKE) PLUGIN_NAME="$(PLUGIN)" XML_INC="$(XML_INC)" XML_LIB="$(XML_LIB)" -C mcast/client/ mcli
 	 $(MAKE) XML_INC="$(XML_INC)" XML_LIB="$(XML_LIB)" -C mcast/tool/ all
 
 lib:
-	$(MAKE) XML_INC="$(XML_INC)" XML_LIB="$(XML_LIB)" libmcli.so
+	$(MAKE) PLUGIN_NAME="$(PLUGIN)" XML_INC="$(XML_INC)" XML_LIB="$(XML_LIB)" libmcli.so
 
 libmcli.a libmcli.so:
-	$(MAKE) XML_INC="$(XML_INC)" XML_LIB="$(XML_LIB)" -C mcast/client/ libmcli
+	$(MAKE) PLUGIN_NAME="$(PLUGIN)" XML_INC="$(XML_INC)" XML_LIB="$(XML_LIB)" -C mcast/client/ libmcli
 
 ### Implicit rules:
 
