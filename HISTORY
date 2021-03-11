@@ -1,5 +1,8 @@
 VDR Plugin 'mcli' Revision History
 ----------------------------------
+2021-03-11 0.9.6pre1
+- pbiering introduce PreInit and PostExit to avoid crashes in case of other plugins have fatal issues and VDR has to stop instantly
+
 2021-02-25
 - pbiering add triggerCam patch from https://www.vdr-portal.de/forum/index.php?thread/134181-mcli-error-video-data-stream-broken/&postID=1336731#post1336731
 
