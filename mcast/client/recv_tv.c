@@ -167,7 +167,7 @@ static void recv_ts_func (unsigned char *buf, int n, void *arg) {
 
 			// see also https://en.wikipedia.org/wiki/MPEG_transport_stream#Packet_identifier_(PID)
 			if (pid != 8191 && (adaption_field & 1) && (((p->cont_old + 1) & 0xf) != cont) && p->cont_old >= 0) {
-			    if ((pid >= 16 && pid <= 18) && (m_logskipmask & LOGSKIP_BIT_recv_ts_func_pid_Data)) {
+			    if (((pid >= 16 && pid <= 18) || pid == 0) && (m_logskipmask & LOGSKIP_BIT_recv_ts_func_pid_Data)) {
 				// ignored by log skip mask
 			    } else {
 			      if ((m_debugmask & DEBUG_BIT_recv_ts_func_NO_LOGRATELIMIT) == 0) {
