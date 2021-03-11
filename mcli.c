@@ -151,12 +151,13 @@ cPluginMcli::cPluginMcli (void)
 
 cPluginMcli::~cPluginMcli ()
 {
-	ExitMcli ();
-
+	dsyslog ("mcli::%s: called", __FUNCTION__);
+	PostExitMcli ();
 }
 
-bool cPluginMcli::InitMcli (void)
+bool cPluginMcli::PreInitMcli (void)
 {
+	dsyslog ("mcli::%s: called", __FUNCTION__);
 	if(m_recv_init_done && (m_mld_init_done || !m_cmd.mld_start) && m_api_init_done && m_mmi_init_done) return true;
 	int ifacelen = strlen(m_cmd.iface);
 	if(ifacelen) { // Check if iface exists
@@ -181,23 +182,41 @@ bool cPluginMcli::InitMcli (void)
 	if (!m_recv_init_done) {
 		if(!recv_init (m_cmd.iface, m_cmd.port))
 			m_recv_init_done = 1;
-		else return false;
+		else {
+			esyslog ("mcli::%s: recv_init failed", __FUNCTION__);
+			return false;
+		};
 	}
 	if (!m_mld_init_done && m_cmd.mld_start) {
 		if(!mld_client_init (m_cmd.iface))
 			m_mld_init_done = 1;
-		else return false;
+		else {
+			esyslog ("mcli::%s: mld_client_init failed", __FUNCTION__);
+			return false;
+		};
 	}
 	if (!m_api_init_done) {
 		if(!api_sock_init (m_cmd.cmd_sock_path))
 			m_api_init_done = 1;
-		else return false;
+		else {
+			esyslog ("mcli::%s: api_sock_init failed", __FUNCTION__);
+			return false;
+		};
 	}
 	if(!m_mmi_init_done) {
 		if((m_cam_mmi = mmi_broadcast_client_init (m_cmd.port, m_cmd.iface)) != NULL)
 			m_mmi_init_done = 1;
-		else return false;
+		else {
+			esyslog ("mcli::%s: mmi_broadcast_client_init failed", __FUNCTION__);
+			return false;
+		};
 	}
+	return true;
+}
+
+bool cPluginMcli::InitMcli (void)
+{
+	// dsyslog ("mcli::%s: called", __FUNCTION__); // called to often
 	for(int i=m_devs.Count(); i < m_tuner_max; i++) {
 		cMcliDevice *m = NULL;
 		cPluginManager::CallAllServices ("OnNewMcliDevice-" MCLI_DEVICE_VERSION, &m);
@@ -215,6 +234,12 @@ bool cPluginMcli::InitMcli (void)
 
 void cPluginMcli::ExitMcli (void)
 {
+	dsyslog ("mcli::%s: called", __FUNCTION__);
+}
+
+void cPluginMcli::PostExitMcli (void)
+{
+	dsyslog ("mcli::%s: called", __FUNCTION__);
 	if (m_mmi_init_done) {
 		dsyslog ("mcli::%s: call mmi_broadcast_client_exit", __FUNCTION__);
 		mmi_broadcast_client_exit (m_cam_mmi);
@@ -975,7 +1000,13 @@ void cPluginMcli::TempDisableDevices(bool now)
 }
 bool cPluginMcli::Initialize (void)
 {
-	InitMcli ();
+	dsyslog ("mcli::%s: called", __FUNCTION__);
+	bool ret = PreInitMcli();
+	if (!ret) {
+		esyslog ("mcli::%s: PreInitMcli failed", __FUNCTION__);
+		return false;
+	};
+	dsyslog ("mcli::%s: successful", __FUNCTION__);
 	return true;
 }
 
@@ -984,20 +1015,29 @@ bool cPluginMcli::Start (void)
 {
 	isyslog("mcli version " MCLI_PLUGIN_VERSION " started");
 #ifdef REELVDR
-    if (access("/dev/dvb/adapter0", F_OK) != 0) //TB: this line allows the client to be used with usb-sticks without conflicts
+	if (access("/dev/dvb/adapter0", F_OK) != 0) //TB: this line allows the client to be used with usb-sticks without conflicts
 #endif
+	bool ret = InitMcli();
+	if (!ret) {
+		esyslog ("mcli::%s: InitMcli failed", __FUNCTION__);
+		return false;
+	};
+
 	cThread::Start ();
 	// Start any background activities the plugin shall perform.
+	dsyslog ("mcli::%s: successful", __FUNCTION__);
 	return true;
 }
 
 void cPluginMcli::Stop (void)
 {
-	cThread::Cancel (0);
+	dsyslog ("mcli::%s: called", __FUNCTION__);
+	cThread::Cancel(0);
 	for (cMcliDeviceObject * d = m_devs.First (); d; d = m_devs.Next (d)) {
 		d->d ()->SetEnable (false);
 	}
 	// Stop any background activities the plugin is performing.
+	ExitMcli();
 }
 
 void cPluginMcli::Housekeeping (void)

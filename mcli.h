@@ -61,9 +61,10 @@ class cMcliDeviceList:public cList < cMcliDeviceObject >
       public:
 	cMcliDeviceList (void)
 	{
+		dsyslog ("mcli::%s: create device list", __FUNCTION__);
 	};
 	~cMcliDeviceList () {
-		dsyslog ("mcli::%s: Delete device list", __FUNCTION__);
+		dsyslog ("mcli::%s: delete device list", __FUNCTION__);
 	};
 };
 
@@ -147,7 +148,9 @@ class cPluginMcli:public cPlugin, public cThread
 	virtual void Action (void);
 	
 	void ExitMcli (void);
+	void PostExitMcli (void);
 	bool InitMcli (void);
+	bool PreInitMcli (void);
 	void reconfigure (void);
 	void UpdateDevices();
 
