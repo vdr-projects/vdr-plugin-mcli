@@ -612,7 +612,7 @@ bool cMcliDevice::SetChannelDevice (const cChannel * Channel, bool LiveView)
 #endif
 		return false;
 	}
-	if(!GetCaOverride() && (m_chan.Ca() || triggerCam) && !GetCaEnable()) {
+	if(!GetCaOverride() && (Channel->Ca() || triggerCam) && !GetCaEnable()) {
 		int slot = -1;
 		if(Channel->Ca(0)<=0xff) {
 			slot=Channel->Ca(0)&0x03;
