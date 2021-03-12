@@ -586,7 +586,8 @@ bool cMcliDevice::SetChannelDevice (const cChannel * Channel, bool LiveView)
 		return false;
 	}
 
-	if(m_cam_disable && Channel->Ca()) {
+	bool triggerCam = m_debugmask & DEBUG_BIT_Action_TriggerCam;
+	if(m_cam_disable && (Channel->Ca() || triggerCam)) {
 		LOGSKIP_MASK(LOGSKIP_BIT_SetChannelDevice_Reject,
 		dsyslog ("mcli::%s: Reject tuning on DVB:%d to Channel:%s (%d), Provider:%s, Source:%d, LiveView:%s, IsScan:%d CA:%d (requires CAM, but disabled by option)", __FUNCTION__, CardIndex () + 1, Channel->Name (), Channel->Number(), Channel->Provider (), Channel->Source (), LiveView ? "true" : "false", is_scan, Channel->Ca());
 		)
@@ -611,8 +612,6 @@ bool cMcliDevice::SetChannelDevice (const cChannel * Channel, bool LiveView)
 #endif
 		return false;
 	}
-	
-	bool triggerCam = m_debugmask & DEBUG_BIT_Action_TriggerCam;
 	if(!GetCaOverride() && (m_chan.Ca() || triggerCam) && !GetCaEnable()) {
 		int slot = -1;
 		if(Channel->Ca(0)<=0xff) {
@@ -876,19 +875,19 @@ bool cMcliDevice::SetPid (cPidHandle * Handle, int Type, bool On)
 
 		if (On) {
 			pi.pid = Handle->pid;
-			if (GetCaEnable() && (m_chan.Ca(0) || (m_camref && m_camref->trigger))) {
+			if (GetCaEnable() && (m_chan.Ca(0) || (m_camref && m_camref->trigger && (!m_camref->triggerSid || m_camref->triggerSid == m_chan.Sid())))) {
 				pi.id= m_chan.Sid();
 				if(m_chan.Ca(0)<=0xff) {
 					pi.priority=m_chan.Ca(0)&0x03;
 				}
+				if (!m_chan.Ca(0)) {
+					m_camref->triggerSid = pi.id;
 #ifdef DEBUG_TUNE
-				DEBUG_MASK(DEBUG_BIT_TUNE,
-				if (!m_chan.Ca(0))
-					dsyslog("mcli::%s: FTA CAM-Trigger Pid %d Sid %d", __FUNCTION__, pi.pid, pi.id);
-				)
+					DEBUG_MASK(DEBUG_BIT_TUNE,
+					dsyslog("Mcli::%s: FTA CAM-Trigger Pid %d Sid %d", __FUNCTION__, pi.pid, pi.id);
+					)
 #endif
-				if (m_camref)
-					m_camref->trigger = false;
+				}
 			} 
 #ifdef ENABLE_DEVICE_PRIORITY
 			int Prio = Priority();
@@ -913,6 +912,8 @@ bool cMcliDevice::SetPid (cPidHandle * Handle, int Type, bool On)
 			dsyslog ("mcli::%s: DVB:%d Del Pid:%d", __FUNCTION__, CardIndex () + 1, Handle->pid);
 			)
 #endif
+			if (m_camref)
+				m_camref->trigger = false;
 			recv_pid_del (m_r, Handle->pid);
 		}
 	}
