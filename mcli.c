@@ -658,11 +658,30 @@ tuner_pool_t *cPluginMcli::TunerFindByUUID (const char *uuid)
 
 bool cPluginMcli::Ready()
 {
-	for(int i=0; i<CAM_POOL_MAX; i++)
-		if((m_cam_pool[i].max >= 0) && (DVBCA_CAMSTATE_INITIALISING == m_cam_pool[i].status)) return false;
-	for (cMcliDeviceObject * d = m_devs.First (); d; d = m_devs.Next (d))
-		if(d->d ()->HasInput()) return true;
-	return false;
+	int numCi = 0;
+	int numCam = 0;
+	int numDev = 0;
+	for(int i=0; i<CAM_POOL_MAX; i++) {
+		if (m_cam_pool[i].max >= 0) {
+			numCi++;
+			if (DVBCA_CAMSTATE_INITIALISING == m_cam_pool[i].status) return false;
+			if (m_cam_pool[i].status)
+				numCam++;
+		}
+	}
+	if (!numCi)
+		return false; // wait for netceiver-info update
+	for (cMcliDeviceObject * d = m_devs.First (); d; d = m_devs.Next (d)) {
+		if(d->d ()->HasInput())
+			numDev++;
+	}
+#ifdef DEBUG_TUNE
+	DEBUG_MASK(DEBUG_BIT_TUNE,
+	if (numDev)
+		dsyslog("Mcli::%s: %d Devices, %d/%d CAMs/Slots\n", __FUNCTION__, numDev, numCam, numCi);
+	)
+#endif
+	return numDev > 0;
 }
 
 #define MAX_TUNER_TYPE_COUNT (FE_DVBS2+1)
@@ -832,8 +851,8 @@ void cPluginMcli::Action (void)
 //	printf ("Looking for netceivers out there....\n");
 	bool channel_switch_ok = false;
 
-#define NOTIFY_CAM_CHANGE 1
-#ifdef NOTIFY_CAM_CHANGE
+#define NOTIFY_CAM_CHANGE 0
+#if NOTIFY_CAM_CHANGE
     int cam_stats[CAM_POOL_MAX] = { 0 };
     char menu_strings[CAM_POOL_MAX][MAX_MENU_STR_LEN];
     bool first_run = true;
