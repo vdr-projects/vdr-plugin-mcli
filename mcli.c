@@ -442,7 +442,7 @@ int cPluginMcli::CAMPoolAdd(netceiver_info_t *nci)
 			cp->max = 0;
 		}
 		if (cp->max != old_max) {
-			cp->trigger = m_debugmask & DEBUG_BIT_Action_TriggerCam;
+			cp->trigger = not(m_debugmask & DEBUG_BIT_Action_SkipTriggerCam);
 			cp->triggerSid = 0;
 		}
 

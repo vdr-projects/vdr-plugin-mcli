@@ -188,7 +188,7 @@ void cMcliDevice::SetEnable (bool val)
 				}
 			}
 
-			bool triggerCam = m_debugmask & DEBUG_BIT_Action_TriggerCam;
+			bool triggerCam = not(m_debugmask & DEBUG_BIT_Action_SkipTriggerCam);
 			if((m_chan.Ca() || triggerCam) && !GetCaEnable() && m_mcli->CAMAvailable(NULL, slot) && (m_camref=m_mcli->CAMAlloc(NULL, slot))) {
 				SetCaEnable();
 			}
@@ -586,7 +586,7 @@ bool cMcliDevice::SetChannelDevice (const cChannel * Channel, bool LiveView)
 		return false;
 	}
 
-	bool triggerCam = m_debugmask & DEBUG_BIT_Action_TriggerCam;
+	bool triggerCam = not(m_debugmask & DEBUG_BIT_Action_SkipTriggerCam);
 	if(m_cam_disable && (Channel->Ca() || triggerCam)) {
 		LOGSKIP_MASK(LOGSKIP_BIT_SetChannelDevice_Reject,
 		dsyslog ("mcli::%s: Reject tuning on DVB:%d to Channel:%s (%d), Provider:%s, Source:%d, LiveView:%s, IsScan:%d CA:%d (requires CAM, but disabled by option)", __FUNCTION__, CardIndex () + 1, Channel->Name (), Channel->Number(), Channel->Provider (), Channel->Source (), LiveView ? "true" : "false", is_scan, Channel->Ca());
