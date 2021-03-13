@@ -1,9 +1,14 @@
 VDR Plugin 'mcli' Revision History
 ----------------------------------
+2021-03-13 0.9.6pre4
+- pbiering in case of --cam-disable option is active, do not enable triggerCam
+
+2021-03-12 0.9.6pre3
+- pbiering apply vdr-plugin-mcli-0.9.6n_05-FixSetChannelDeviceCamAlloc.patch from https://www.vdr-portal.de/forum/index.php?thread/134181-mcli-error-video-data-stream-broken/&postID=1337625#post1337625
+
 2021-03-12 0.9.6pre2
 - pbiering apply vdr-plugin-mcli-0.9.6m_02-DeviceReadyWithCi.patch from https://www.vdr-portal.de/forum/index.php?thread/134181-mcli-error-video-data-stream-broken/&postID=1337593#post1337593
 - pbiering apply vdr-plugin-mcli-0.9.6m_01-TriggerCamAllPids.patch from https://www.vdr-portal.de/forum/index.php?thread/134181-mcli-error-video-data-stream-broken/&postID=1337593#post1337593
-- pbiering apply vdr-plugin-mcli-0.9.6n_05-FixSetChannelDeviceCamAlloc.patch from https://www.vdr-portal.de/forum/index.php?thread/134181-mcli-error-video-data-stream-broken/&postID=1337625#post1337625
 
 2021-03-11 0.9.6pre1
 - pbiering introduce PreInit and PostExit to avoid crashes in case of other plugins have fatal issues and VDR has to stop instantly
