@@ -1,5 +1,8 @@
 VDR Plugin 'mcli' Revision History
 ----------------------------------
+2021-03-16 0.9.6pre5
+- pbiering add error/debug log for PreInit related to network device
+
 2021-03-13 0.9.6pre4
 - pbiering in case of --cam-disable option is active, do not enable triggerCam
 

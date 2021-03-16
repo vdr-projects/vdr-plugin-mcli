@@ -162,7 +162,10 @@ bool cPluginMcli::PreInitMcli (void)
 	int ifacelen = strlen(m_cmd.iface);
 	if(ifacelen) { // Check if iface exists
 		FILE *file = fopen("/proc/net/if_inet6", "r");
-		if(!file) return false;
+		if(!file) {
+			esyslog ("mcli::%s: can't open /proc/net/if_inet6", __FUNCTION__);
+			return false;
+		};
 		bool found = false;
 		char buf[255];
 		while(fgets(buf, sizeof(buf), file)) {
@@ -176,7 +179,11 @@ bool cPluginMcli::PreInitMcli (void)
 			}
 		}
 		fclose(file);
-		if(!found) return false;
+		if (!found) {
+			esyslog ("mcli::%s: can't find specified device '%s' in /proc/net/if_inet6", __FUNCTION__, m_cmd.iface);
+			return false;
+		};
+		dsyslog ("mcli::%s: found specified device '%s' in /proc/net/if_inet6", __FUNCTION__, m_cmd.iface);
 	}
 	// Ok, iface exists so go on
 	if (!m_recv_init_done) {
