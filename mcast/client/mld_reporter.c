@@ -178,7 +178,7 @@ int mld_client_init (char *intf)
 	g_conf->rawsocket = socket (PF_INET6, SOCK_RAW, IPPROTO_HOPOPTS);
 #endif
 	if (g_conf->rawsocket < 0) {
-		warn ("%s: Cannot get a raw packet socket (on Linux check: setcap -r cap_net_raw=pe <binary>)\n", __FUNCTION__);
+		warn ("%s: Cannot get a raw packet socket (on Linux apply: setcap cap_net_raw=pe <VDR binary>)\n", __FUNCTION__);
 		return -1;
 	}
 #ifdef WIN32
