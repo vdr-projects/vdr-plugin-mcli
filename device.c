@@ -620,7 +620,10 @@ bool cMcliDevice::SetChannelDevice (const cChannel * Channel, bool LiveView)
 				slot--;
 			}
 		}
-		if(!(m_camref=m_mcli->CAMAlloc(NULL, slot))) {
+		if((m_camref=m_mcli->CAMAlloc(NULL, slot))) {
+			SetCaEnable();
+		}
+		else if(Channel->Ca()) {
 #ifdef DEBUG_TUNE
 			DEBUG_MASK(DEBUG_BIT_TUNE,
 			dsyslog("mcli::%s: failed to get CAM on DVB %d (cam_force=%s)", __FUNCTION__, CardIndex () + 1, cam_force ? "true" : "false");
@@ -629,9 +632,6 @@ bool cMcliDevice::SetChannelDevice (const cChannel * Channel, bool LiveView)
 			if(cam_force) {
 				return false;
 			}
-		}
-		if(m_camref) {
-			SetCaEnable();
 		}
 	}
 	TranslateTypePos(type, pos, Channel->Source());

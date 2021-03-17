@@ -24,7 +24,7 @@
 static int reconf = 0;
 int m_debugmask = 0;
 int m_logskipmask = 0;
-bool m_cam_disable;
+bool m_cam_disable = false;
 
 //--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -449,7 +449,7 @@ int cPluginMcli::CAMPoolAdd(netceiver_info_t *nci)
 			cp->max = 0;
 		}
 		if (cp->max != old_max) {
-			cp->trigger = not(m_cam_disable || (m_debugmask & DEBUG_BIT_Action_SkipTriggerCam));
+			cp->trigger = cp->max && not(m_cam_disable || (m_debugmask & DEBUG_BIT_Action_SkipTriggerCam));
 			cp->triggerSid = 0;
 		}
 

@@ -1,5 +1,8 @@
 VDR Plugin 'mcli' Revision History
 ----------------------------------
+2021-03-16 0.9.6pre6
+- pbiering apply adjusted fixes from https://www.vdr-portal.de/forum/index.php?thread/134181-mcli-error-video-data-stream-broken/&postID=1337872#post1337872
+
 2021-03-16 0.9.6pre5
 - pbiering add error/debug log for PreInit related to network device
 
