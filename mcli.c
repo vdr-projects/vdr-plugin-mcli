@@ -186,7 +186,7 @@ bool cPluginMcli::PreInitMcli (void)
 		fclose(file);
 		if (!found) {
 			dsyslog ("mcli::%s: can't find specified device '%s' in /proc/net/if_inet6 (after %d of %d sec / wait next %d sec)", __FUNCTION__, m_cmd.iface, iface_watch, IFACE_WATCH_TIMEOUT, IFACE_WATCH_STEP);
-			sleep(5);
+			sleep(IFACE_WATCH_STEP);
 			iface_watch += IFACE_WATCH_STEP;
 			continue;
 		};
