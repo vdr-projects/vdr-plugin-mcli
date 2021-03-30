@@ -670,6 +670,7 @@ void usage(void)
 		"           -Z <version>      Remove FW version\n"
 		"           -K                Restart streaming server\n"
 		"           -R                Issue reboot\n"
+		"           -h|?              This online help\n"
 		"Options:\n"
 		"           -A                Use all found NetCeivers (mcli must be running)\n"
 		"           -i <uuid>         Use specific UUID (can be used multiple times)\n"
@@ -692,7 +693,7 @@ int main(int argc, char **argv)
 	int ret=0;
 	
 	while(1) {
-		int ret = getopt(argc,argv, "U:X:Di:AlLI:E:Z:d:F:P:u:p:rRqK");
+		int ret = getopt(argc,argv, "h?U:X:Di:AlLI:E:Z:d:F:P:u:p:rRqK");
 		if (ret==-1)
 			break;
 			
@@ -766,6 +767,8 @@ int main(int argc, char **argv)
 		case 'q':
 			verbose=0;
 			break;
+		case 'h':
+		case '?':
 		default:
 			usage();
 			break;
