@@ -26,6 +26,8 @@
 #define DVB_SYSTEM_1 0
 #define DVB_SYSTEM_2 1
 
+#define MCLI_TS_BUFFER_SIZE_MB 4	// original: 4
+
 using namespace std;
 
 static int handle_ts (unsigned char *buffer, size_t len, void *p)
@@ -37,9 +39,14 @@ static int handle_ts (unsigned char *buffer, size_t len, void *p)
 
 static int handle_ten (tra_t * ten, void *p)
 {
+	static bool flag_signal = false;
+
 	cMcliDevice *m = (cMcliDevice *) p;
 	if (ten) {
-//              fprintf (stderr, "Status:%02X, Strength:%04X, SNR:%04X, BER:%04X\n", ten->s.st, ten->s.strength, ten->s.snr, ten->s.ber);
+		if (!flag_signal || (m_logskipmask & DEBUG_BIT_SIGNAL)) {
+			dsyslog("mcli::%s: Status:%02x, Strength:%04x, SNR:%04x, BER:%04x\n", __FUNCTION__, ten->s.st, ten->s.strength, ten->s.snr, ten->s.ber);
+			flag_signal = true;
+		};
 		m->SetTenData (ten);
 		if (ten->s.st & FE_HAS_LOCK) {
 			m->m_locked.Broadcast ();
@@ -48,7 +55,10 @@ static int handle_ten (tra_t * ten, void *p)
 		tra_t ten;
 		memset (&ten, 0, sizeof (tra_t));
 		m->SetTenData (&ten);
-//              fprintf (stderr, "Signal lost\n");
+		if (flag_signal || (m_logskipmask & DEBUG_BIT_SIGNAL)) {
+			dsyslog("mcli::%s: Signal lost\n", __FUNCTION__);
+			flag_signal = false;
+		};
 	}
 	return 0;
 }
@@ -59,12 +69,12 @@ cMcliDevice::cMcliDevice (void)
 	m_tuned = false;
 	StartSectionHandler ();
 #ifdef USE_VDR_PACKET_BUFFER
-	//printf ("mcli::%s: USING VDR PACKET BUFFER \n", __FUNCTION__);
-	m_PB = new cRingBufferLinear(MEGABYTE(4), TS_SIZE, false, "MCLI_TS");
+	dsyslog("mcli::%s: USING VDR PACKET BUFFER \n", __FUNCTION__);
+	m_PB = new cRingBufferLinear(MEGABYTE(MCLI_TS_BUFFER_SIZE_MB), TS_SIZE, false, "MCLI_TS");
 	m_PB->SetTimeouts (0, 100);
 	delivered = false;
 #else
-	//printf ("mcli::%s: USING INTERNAL MCLI PACKET BUFFER \n", __FUNCTION__);
+	dsyslog("mcli::%s: USING INTERNAL MCLI PACKET BUFFER \n", __FUNCTION__);
 	m_PB = new cMyPacketBuffer (10000 * TS_SIZE, 10000);
 	m_PB->SetTimeouts (0, CLOCKS_PER_SEC * 20 / 1000);
 #endif
@@ -265,9 +275,10 @@ int cMcliDevice::HandleTsData (unsigned char *buffer, size_t len)
 	}
 #else
 #ifdef USE_VDR_PACKET_BUFFER
-	if((size_t)m_PB->Free() < len) { // m_PB->Free() returns an unsigned int
+	int m_PB_Free = m_PB->Free();
+	if((size_t)m_PB_Free < len) { // m_PB->Free() returns an int
 		m_PB->Clear();
-		if(Receiving(true))  isyslog("mcli::%s: buffer overflow [%d] %s", __FUNCTION__, CardIndex()+1, m_chan.Name());
+		if(Receiving(true))  esyslog("mcli::%s: buffer overflow [tuner: %d] %s (len=%ld m_PB_Free=%d)", __FUNCTION__, CardIndex(), m_chan.Name(), len, m_PB_Free);
 	}
 	return m_PB->Put(buffer, len);
 #else

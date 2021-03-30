@@ -14,6 +14,7 @@
 #define DEBUG_BIT_PIDS_ADD_DEL 	0x10
 #define DEBUG_BIT_TUNE_PC	0x40	// ProvideChannel
 #define DEBUG_BIT_FILTER	0x80
+#define DEBUG_BIT_SIGNAL	0x100	// mcli::handle_ten
 
 // hidden test options
 #define DEBUG_BIT_Action_RetuneOnFirstTuner    0x1000  // retune if the first tuner is found (cPluginMcli::Action)
