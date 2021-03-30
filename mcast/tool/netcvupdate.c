@@ -697,7 +697,7 @@ void usage(void)
 		"Rare options:\n"
 		"           -d <device>       Set network device (default: eth0)\n"
 		"           -F <ftp-command>  Set ftp command/path\n"
-		" *** ftp command must understand the -q (timeout) option! ***\n"
+		" *** ftp command must understand the -q (timeout) option in case '-n' is not used! ***\n"
 		"           -P <path>         Set API socket\n"
 		"           -u <user>         Set username\n"
 		"           -p <password>     Set password\n"
