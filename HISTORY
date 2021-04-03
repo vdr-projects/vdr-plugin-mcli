@@ -1,5 +1,8 @@
 VDR Plugin 'mcli' Revision History
 ----------------------------------
+2021-04-03 0.9.6pre8
+- pbiering fix idle priority handling
+
 2021-03-30
 - pbiering add additional option '-n' to netcvupdate to use 'lftp' as FTP client
 
