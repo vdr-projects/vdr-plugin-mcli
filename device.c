@@ -481,7 +481,7 @@ bool cMcliDevice::ProvidesChannel (const cChannel * Channel, int Priority, bool 
 		{
 #ifdef DEBUG_TUNE_PC
 			DEBUG_MASK(DEBUG_BIT_TUNE_PC,
-	                dsyslog ("mcli::ProvidesChannel: DEBUG DVB:%d Channel:%s * 'Priority >= 0 && Receiving (true)' is True", CardIndex () + 1, Channel->Name ());
+			dsyslog ("mcli::ProvidesChannel: DEBUG DVB:%d Channel:%s * 'Priority %d > %d && Receiving()' is True", CardIndex () + 1, Channel->Name (), Priority, IDLEPRIORITY);
 			)
 #endif
 
@@ -505,7 +505,7 @@ bool cMcliDevice::ProvidesChannel (const cChannel * Channel, int Priority, bool 
 		} else {
 #ifdef DEBUG_TUNE_PC
 			DEBUG_MASK(DEBUG_BIT_TUNE_PC,
-                        dsyslog ("mcli::ProvidesChannel: DEBUG DVB:%d Channel:%s * 'Priority >= 0 && Receiving (true)' is False", CardIndex () + 1, Channel->Name ());
+			dsyslog ("mcli::ProvidesChannel: DEBUG DVB:%d Channel:%s * 'Priority %d > %d && Receiving()' is False", CardIndex () + 1, Channel->Name (), Priority, IDLEPRIORITY);
 			)
 #endif
 		}
