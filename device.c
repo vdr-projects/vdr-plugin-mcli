@@ -477,7 +477,7 @@ bool cMcliDevice::ProvidesChannel (const cChannel * Channel, int Priority, bool 
 		)
 #endif
 
-		if (Priority >= 0 && Receiving (true))
+		if (Priority > IDLEPRIORITY && Receiving (true))
 		{
 #ifdef DEBUG_TUNE_PC
 			DEBUG_MASK(DEBUG_BIT_TUNE_PC,
