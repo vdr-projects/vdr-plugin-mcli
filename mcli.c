@@ -155,18 +155,23 @@ cPluginMcli::~cPluginMcli ()
 	PostExitMcli ();
 }
 
+#define IFACE_WATCH_TIMEOUT 180
+#define IFACE_WATCH_STEP 5
 bool cPluginMcli::PreInitMcli (void)
 {
-	dsyslog ("mcli::%s: called", __FUNCTION__);
+	dsyslog ("mcli::%s: called with m_cmd.iface='%s' builtin watch-timeout=%d watch-step=%d", __FUNCTION__, m_cmd.iface, IFACE_WATCH_TIMEOUT, IFACE_WATCH_STEP);
 	if(m_recv_init_done && (m_mld_init_done || !m_cmd.mld_start) && m_api_init_done && m_mmi_init_done) return true;
 	int ifacelen = strlen(m_cmd.iface);
 	if(ifacelen) { // Check if iface exists
+	    int iface_watch = 0;
+	    bool found = false;
+
+	    while (iface_watch < IFACE_WATCH_TIMEOUT) {
 		FILE *file = fopen("/proc/net/if_inet6", "r");
 		if(!file) {
 			esyslog ("mcli::%s: can't open /proc/net/if_inet6", __FUNCTION__);
 			return false;
 		};
-		bool found = false;
 		char buf[255];
 		while(fgets(buf, sizeof(buf), file)) {
 			int buflen = strlen(buf);
@@ -180,10 +185,18 @@ bool cPluginMcli::PreInitMcli (void)
 		}
 		fclose(file);
 		if (!found) {
-			esyslog ("mcli::%s: can't find specified device '%s' in /proc/net/if_inet6", __FUNCTION__, m_cmd.iface);
-			return false;
+			dsyslog ("mcli::%s: can't find specified device '%s' in /proc/net/if_inet6 (after %d of %d sec / wait next %d sec)", __FUNCTION__, m_cmd.iface, iface_watch, IFACE_WATCH_TIMEOUT, IFACE_WATCH_STEP);
+			sleep(IFACE_WATCH_STEP);
+			iface_watch += IFACE_WATCH_STEP;
+			continue;
 		};
-		dsyslog ("mcli::%s: found specified device '%s' in /proc/net/if_inet6", __FUNCTION__, m_cmd.iface);
+		dsyslog ("mcli::%s: found specified device '%s' in /proc/net/if_inet6 (after %d sec)", __FUNCTION__, m_cmd.iface, iface_watch);
+		break;
+	    };
+	    if (!found) {
+		esyslog ("mcli::%s: can't find specified device '%s' in /proc/net/if_inet6 (after %d sec)", __FUNCTION__, m_cmd.iface, IFACE_WATCH_TIMEOUT);
+		return false;
+	    };
 	}
 	// Ok, iface exists so go on
 	if (!m_recv_init_done) {
