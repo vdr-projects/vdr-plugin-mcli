@@ -93,7 +93,7 @@ static void *recv_ts (void *arg)
 #endif
 	p->s = client_udp_open (&p->mcg, port, iface);
 	if (!p->s) {
-		warn ("mcli::%s: client_udp_open error !\n", __FUNCTION__);
+		warn ("mcli::%s: client_udp_open error on interface=%s\n", __FUNCTION__, iface);
 	} else {
 		p->run = 1;
 	}
@@ -435,7 +435,7 @@ static pid_info_t *allocate_slot (recv_info_t * r, struct in6_addr *mcg, dvb_pid
 	p->cont_old=-1;
 	p->s = client_udp_open_cb (&p->mcg, port, iface, recv_ts_func, p);
 	if (!p->s) {
-		warn ("mcli::%s: client_udp_open error !\n", __FUNCTION__);
+		warn ("mcli::%s: client_udp_open_cb error on interface=%s\n", __FUNCTION__, iface);
 		return 0;
 #endif
 	} else {
