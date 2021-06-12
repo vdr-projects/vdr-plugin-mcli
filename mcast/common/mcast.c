@@ -237,7 +237,7 @@ UDPContext *client_udp_open (const struct in6_addr *mcg, int port, const char *i
 
 	s = (UDPContext *) calloc (1, sizeof (UDPContext));
 	if (!s) {
-		err ("Cannot allocate memory !\n");
+		err ("%s: cannot allocate memory\n", __FUNCTION__);
 		goto error;
 	}
 
@@ -255,7 +255,7 @@ UDPContext *client_udp_open (const struct in6_addr *mcg, int port, const char *i
 
 	recvfd = socket (PF_INET6, SOCK_DGRAM, IPPROTO_UDP);
 	if (recvfd < 0) {
-		err ("cannot get socket\n");
+		err ("%s: cannot get socket\n", __FUNCTION__);
 	}
 #ifdef WIN32	
 # ifndef IPV6_PROTECTION_LEVEL
@@ -263,21 +263,21 @@ UDPContext *client_udp_open (const struct in6_addr *mcg, int port, const char *i
 #  endif
         n = 10 /*PROTECTION_LEVEL_UNRESTRICTED*/;
         if(setsockopt( recvfd, IPPROTO_IPV6, IPV6_PROTECTION_LEVEL, (_SOTYPE)&n, sizeof(n) ) < 0 ) {
-        	warn ("setsockopt IPV6_PROTECTION_LEVEL\n");
+        	warn ("%s: setsockopt IPV6_PROTECTION_LEVEL\n", __FUNCTION__);
         }
 #endif                                    
 	n = 1;
 	if (setsockopt (recvfd, SOL_SOCKET, SO_REUSEADDR, (_SOTYPE)&n, sizeof (n)) < 0) {
-		warn ("setsockopt REUSEADDR\n");
+		warn ("%s: setsockopt REUSEADDR\n", __FUNCTION__);
 	}
 
 #if ! (defined WIN32 || defined APPLE)
 	if (ifname && strlen (ifname) && setsockopt (recvfd, SOL_SOCKET, SO_BINDTODEVICE, ifname, strlen (ifname) + 1)) {
-		dbg ("setsockopt SO_BINDTODEVICE %s failed\n", ifname);
+		dbg ("%s: setsockopt SO_BINDTODEVICE %s failed\n", __FUNCTION__, ifname);
 	}
 #endif
 	if (bind (recvfd, (struct sockaddr *) &s->dest_addr, s->dest_addr_len) < 0) {
-		warn ("bind failed\n");
+		warn ("%s: bind failed on interface=%s for port=%d\n", __FUNCTION__, ifname, port);
 		goto error;
 	}
 #ifdef WIN32
@@ -301,7 +301,7 @@ UDPContext *client_udp_open (const struct in6_addr *mcg, int port, const char *i
 		}
 
 		if (udp_ipv6_join_multicast_group (recvfd, s->idx, (struct sockaddr *) &s->dest_addr) < 0) {
-			warn ("Cannot join multicast group !\n");
+			warn ("%s: cannot join multicast group\n", __FUNCTION__);
 			goto error;
 		}
 		s->is_multicast = 1;
@@ -309,7 +309,7 @@ UDPContext *client_udp_open (const struct in6_addr *mcg, int port, const char *i
 
 	n = UDP_RX_BUF_SIZE;
 	if (setsockopt (recvfd, SOL_SOCKET, SO_RCVBUF, (_SOTYPE)&n, sizeof (n)) < 0) {
-		warn ("setsockopt rcvbuf");
+		warn ("%s: setsockopt rcvbuf", __FUNCTION__);
 		goto error;
 	}
 
@@ -320,7 +320,7 @@ UDPContext *client_udp_open (const struct in6_addr *mcg, int port, const char *i
 
 	return s;
       error:
-	warn ("socket error !\n");
+	warn ("%s: error on interface=%s for port=%d\n", __FUNCTION__, ifname, port);
 	if (s) {
 		free (s);
 	}
@@ -512,7 +512,7 @@ UDPContext *client_udp_open_cb (const struct in6_addr *mcg, int port, const char
 
 	s = (UDPContext *) calloc (1, sizeof (UDPContext));
 	if (!s) {
-		err ("Cannot allocate memory !\n");
+		err ("%s: cannot allocate memory\n",  __FUNCTION__);
 		goto error;
 	}
 
@@ -529,7 +529,7 @@ UDPContext *client_udp_open_cb (const struct in6_addr *mcg, int port, const char
 
 	recvfd = socket (PF_INET6, SOCK_DGRAM, IPPROTO_UDP);
 	if (recvfd < 0) {
-		err ("cannot get socket\n");
+		err ("%s: cannot get socket\n", __FUNCTION__);
 	}
 #ifdef WIN32	
 # ifndef IPV6_PROTECTION_LEVEL
@@ -537,21 +537,21 @@ UDPContext *client_udp_open_cb (const struct in6_addr *mcg, int port, const char
 #  endif
         n = 10 /*PROTECTION_LEVEL_UNRESTRICTED*/;
         if(setsockopt( recvfd, IPPROTO_IPV6, IPV6_PROTECTION_LEVEL, (_SOTYPE)&n, sizeof(n) ) < 0 ) {
-        	warn ("setsockopt IPV6_PROTECTION_LEVEL\n");
+        	warn ("%s: setsockopt IPV6_PROTECTION_LEVEL\n", __FUNCTION__);
         }
 #endif                                    
 	n = 1;
 	if (setsockopt (recvfd, SOL_SOCKET, SO_REUSEADDR, (_SOTYPE)&n, sizeof (n)) < 0) {
-		warn ("setsockopt REUSEADDR\n");
+		warn ("%s: setsockopt REUSEADDR\n", __FUNCTION__);
 	}
 
 #if ! (defined WIN32 || defined APPLE)
 	if (ifname && strlen (ifname) && setsockopt (recvfd, SOL_SOCKET, SO_BINDTODEVICE, ifname, strlen (ifname) + 1)) {
-		dbg ("setsockopt SO_BINDTODEVICE %s failed\n", ifname);
+		dbg ("%s: setsockopt SO_BINDTODEVICE %s failed\n", __FUNCTION__, ifname);
 	}
 #endif
 	if (bind (recvfd, (struct sockaddr *) &s->dest_addr, s->dest_addr_len) < 0) {
-		warn ("bind failed\n");
+		warn ("%s: bind failed on interface=%s\n", __FUNCTION__, ifname);
 		goto error;
 	}
 #ifdef WIN32
@@ -575,7 +575,7 @@ UDPContext *client_udp_open_cb (const struct in6_addr *mcg, int port, const char
 		}
 
 		if (udp_ipv6_join_multicast_group (recvfd, s->idx, (struct sockaddr *) &s->dest_addr) < 0) {
-			warn ("Cannot join multicast group !\n");
+			warn ("%s: cannot join multicast group\n", __FUNCTION__);
 			goto error;
 		}
 		s->is_multicast = 1;
@@ -583,7 +583,7 @@ UDPContext *client_udp_open_cb (const struct in6_addr *mcg, int port, const char
 
 	n = cb ? UDP_PID_BUF_SIZE : UDP_RX_BUF_SIZE;
 	if (setsockopt (recvfd, SOL_SOCKET, SO_RCVBUF, (_SOTYPE)&n, sizeof (n)) < 0) {
-		warn ("setsockopt rcvbuf");
+		warn ("%s: setsockopt rcvbuf", __FUNCTION__);
 		goto error;
 	}
 
@@ -612,7 +612,7 @@ UDPContext *client_udp_open_cb (const struct in6_addr *mcg, int port, const char
 
 	return s;
       error:
-	warn ("socket error !\n");
+	warn ("%s: socket error on interface=%s\n", __FUNCTION__, ifname);
 	if (s) {
 		free (s);
 	}

@@ -29,6 +29,8 @@ pthread_mutex_t lock;
 
 int mld_start=0;
 
+#include "logging.h"
+
 int port=23000;
 char iface[IFNAMSIZ];
 
@@ -38,7 +40,7 @@ static pthread_t recv_tca_thread;
 #if ! defined WIN32 || defined __CYGWIN__
 static void sig_handler (int signal)
 {
-	dbg ("Signal: %d\n", signal);
+	dbg ("mcli::%s: Signal: %d\n", __FUNCTION__, signal);
 	
 	switch (signal) {
 	case SIGUSR1:
@@ -53,7 +55,7 @@ static void clean_recv_ts_thread (void *arg)
 {
 	pid_info_t *p = (pid_info_t *) arg;
 #ifdef DEBUG
-	dbg ("Stop stream receiving for pid %d\n", p->pid.pid);
+	dbg ("mcli::%s: Stop stream receiving for pid %d\n", __FUNCTION__, p->pid.pid);
 #endif
 
 	if (p->s) {
@@ -79,7 +81,7 @@ static void *recv_ts (void *arg)
 	if (pthread_setschedprio (p->recv_ts_thread, -15))
 #endif
 	{
-		dbg ("Cannot raise priority to -15\n");
+		dbg ("mcli::%s: Cannot raise priority to -15\n", __FUNCTION__);
 	}
 #endif
 
@@ -87,11 +89,11 @@ static void *recv_ts (void *arg)
 #ifdef DEBUG	
 	char addr_str[INET6_ADDRSTRLEN];
 	inet_ntop (AF_INET6, p->mcg.s6_addr, addr_str, INET6_ADDRSTRLEN);
-	dbg ("Start stream receiving for %s on port %d %s\n", addr_str, port, iface);
+	dbg ("mcli::%d: Start stream receiving for %s on port %d %s\n", __FUNCTION__, addr_str, port, iface);
 #endif
 	p->s = client_udp_open (&p->mcg, port, iface);
 	if (!p->s) {
-		warn ("client_udp_open error !\n");
+		warn ("mcli::%s: client_udp_open error on interface=%s\n", __FUNCTION__, iface);
 	} else {
 		p->run = 1;
 	}
@@ -100,7 +102,7 @@ static void *recv_ts (void *arg)
 		if (n >0 ) {
 			ptr = buf;
 			if (n % 188) {
-				warn ("Mcli::%s: Received %d bytes is not multiple of 188!\n", __FUNCTION__, n);
+				warn ("mcli::%s: Received %d bytes is not multiple of 188!\n", __FUNCTION__, n);
  			}
 			int i;
 			for (i = 0; i < (n / 188); i++) {
@@ -111,10 +113,10 @@ static void *recv_ts (void *arg)
 				int transport_error_indicator = ts[1]&0x80;
 	
 				if (pid != 8191 && (adaption_field & 1) && (((cont_old + 1) & 0xf) != cont) && cont_old >= 0) {
-					warn ("Mcli::%s: Discontinuity on receiver for Pid:%d %d->%d at pos %d/%d\n", __FUNCTION__, pid, cont_old, cont, i, n / 188);
+					warn ("mcli::%s: Discontinuity on receiver for Pid:%d %d->%d at pos %d/%d\n", __FUNCTION__, pid, cont_old, cont, i, n / 188);
  				}
 				if (transport_error_indicator) {
-					warn ("Mcli::%s: Transport error indicator set on receiver %p for pid %d: %d->%d at pos %d/%d\n", __FUNCTION__, r, pid, cont_old, cont, i, n / 188);
+					warn ("mcli::%s: Transport error indicator set on receiver %p for pid %d: %d->%d at pos %d/%d\n", __FUNCTION__, r, pid, cont_old, cont, i, n / 188);
  				}
 				cont_old = cont;
  			}
@@ -122,11 +124,11 @@ static void *recv_ts (void *arg)
 				while (n) {
 					res = r->handle_ts (ptr, n, r->handle_ts_context);
 					if (res != n) {
-						warn ("Mcli::%s: Not same amount of data written: res:%d<=n:%d\n", __FUNCTION__, res, n);
+						warn ("mcli::%s: Not same amount of data written: res:%d<=n:%d\n", __FUNCTION__, res, n);
 					}
 					if (res < 0) {
-						warn ("Mcli::%s: write of %d bytes returned %d\n", __FUNCTION__, n, res);
-						perror ("Write failed");
+						warn ("mcli::%s: write of %d bytes returned %d\n", __FUNCTION__, n, res);
+						// perror ("Write failed");
 						break;
 					} else {
 						ptr += res;
@@ -163,7 +165,12 @@ static void recv_ts_func (unsigned char *buf, int n, void *arg) {
 			int pid = ((ts[1] << 8) | ts[2]) & 0x1fff;
 			int transport_error_indicator = ts[1]&0x80;
 
+			// see also https://en.wikipedia.org/wiki/MPEG_transport_stream#Packet_identifier_(PID)
 			if (pid != 8191 && (adaption_field & 1) && (((p->cont_old + 1) & 0xf) != cont) && p->cont_old >= 0) {
+			    if (((pid >= 16 && pid <= 18) || pid == 0) && (m_logskipmask & LOGSKIP_BIT_recv_ts_func_pid_Data)) {
+				// ignored by log skip mask
+			    } else {
+			      if ((m_debugmask & DEBUG_BIT_recv_ts_func_NO_LOGRATELIMIT) == 0) {
 				warn_show = 0;
 				time(&warn_time_now);
 				if (warn_count == 0) { // 1st occurance
@@ -175,32 +182,38 @@ static void recv_ts_func (unsigned char *buf, int n, void *arg) {
 					};
 				};
 				warn_count++;
+			      } else { // DEBUG_BIT_recv_ts_func_NO_LOGRATELIMIT
+				warn_show = 1;
+			      }; // DEBUG_BIT_recv_ts_func_NO_LOGRATELIMIT
 				if (warn_show > 0) {
+			            if ((m_debugmask & DEBUG_BIT_recv_ts_func_NO_LOGRATELIMIT) == 0) {
 					time(&warn_time_last);
 					if ((warn_count - warn_count_last) >= DISCONTINUITY_SUPPRESS_SECONDS) {
-						warn ("Mcli::%s: Discontinuity on receiver messages suppressed in %ld seconds: %ld\n", __FUNCTION__, (long int) warn_time_diff, (warn_count - warn_count_last));
+						warn ("mcli::%s: Discontinuity on receiver messages suppressed in %ld seconds: %ld\n", __FUNCTION__, (long int) warn_time_diff, (warn_count - warn_count_last));
 					};
-					warn ("Mcli::%s: Discontinuity on receiver %p for pid %d: %d->%d at pos %d/%d\n", __FUNCTION__, r, pid, p->cont_old, cont, i / 188, n / 188);
 					warn_count_last = warn_count;
+				    }; // DEBUG_BIT_recv_ts_func_NO_LOGRATELIMIT
+					warn ("mcli::%s: Discontinuity on receiver %p for pid %d: %d->%d at pos %d/%d\n", __FUNCTION__, r, pid, p->cont_old, cont, i / 188, n / 188);
 				};
+			    }; // LOGSKIP_BIT_recv_ts_func_pid_Data
 			}
 			if (transport_error_indicator) {
-				warn ("Mcli::%s: Transport error indicator set on receiver %p for pid %d: %d->%d at pos %d/%d\n", __FUNCTION__, r, pid, p->cont_old, cont, i / 188, n / 188);
+				warn ("mcli::%s: Transport error indicator set on receiver %p for pid %d: %d->%d at pos %d/%d\n", __FUNCTION__, r, pid, p->cont_old, cont, i / 188, n / 188);
 			}
 			p->cont_old = cont;
 		}
 		if (i != n) {
-			warn ("Mcli::%s: Received %d bytes is not multiple of 188!\n", __FUNCTION__, n);
+			warn ("mcli::%s: Received %d bytes is not multiple of 188!\n", __FUNCTION__, n);
 		}
 		if(r->handle_ts) {
 			while (n) {
 				int res = r->handle_ts (buf, n, r->handle_ts_context);
 				if (res != n) {
-					warn ("Mcli::%s: Not same amount of data written: res:%d<=n:%d\n", __FUNCTION__, res, n);
+					warn ("mcli::%s: Not same amount of data written: res:%d<=n:%d\n", __FUNCTION__, res, n);
 				}
 				if (res < 0) {
-					warn ("Mcli::%s: write of %d bytes returned %d\n", __FUNCTION__, n, res);
-					perror ("Write failed");
+					warn ("mcli::%s: write of %d bytes returned %d\n", __FUNCTION__, n, res);
+					// perror ("Write failed");
 					break;
 				} else {
 					buf += res;
@@ -343,10 +356,14 @@ static void deallocate_slot (recv_info_t * r, pid_info_t *p)
 
 #endif		//info ("Deallocating PID %d from slot %p\n", p->pid.pid, p);
 		p->run = 0;
-
+#ifdef DEBUG_PIDS
+	DEBUG_MASK(DEBUG_BIT_PIDS,
+	warn ("mcli::%s: Deallocating PID %d (id %d) from Slot %p\n", __FUNCTION__, p->pid.pid, p->pid.id, p);
+	)
+#endif
 		//Do not leave multicast group if there is another dvb adapter using the same group
 		if (find_any_slot_by_mcg (r, &p->mcg)) {
-			dbg ("MCG is still in use not dropping\n");
+			dbg ("mcli::%s: MCG is still in use not dropping\n", __FUNCTION__);
 			p->s->is_multicast = 0;
 			nodrop=1;
 		} 
@@ -371,11 +388,14 @@ static pid_info_t *allocate_slot (recv_info_t * r, struct in6_addr *mcg, dvb_pid
 {
 	pid_info_t *p = (pid_info_t *)malloc(sizeof(pid_info_t));
 	if(!p) {
-		err ("Cannot get memory for pid\n");
+		err ("mcli::%s: Cannot get memory for pid\n", __FUNCTION__);
 	}
 	
-	dbg ("Allocating new PID %d to Slot %p\n", pid->pid, p);
-	
+#ifdef DEBUG_PIDS
+	DEBUG_MASK(DEBUG_BIT_PIDS,
+	warn ("mcli::%s: Allocating new PID %d (id %d) to Slot %p\n", __FUNCTION__, pid->pid, pid->id, p);
+	)
+#endif
 	memset(p, 0, sizeof(pid_info_t)); 
 	
 	p->cont_old = -1;
@@ -410,12 +430,12 @@ static pid_info_t *allocate_slot (recv_info_t * r, struct in6_addr *mcg, dvb_pid
 		usleep (10000);
 	}
 	if (ret) {
-		err ("pthread_create failed with %d\n", ret);
+		err ("mcli::%s: pthread_create failed with %d\n", __FUNCTION__, ret);
 #else
 	p->cont_old=-1;
 	p->s = client_udp_open_cb (&p->mcg, port, iface, recv_ts_func, p);
 	if (!p->s) {
-		warn ("client_udp_open error !\n");
+		warn ("mcli::%s: client_udp_open_cb error on interface=%s\n", __FUNCTION__, iface);
 		return 0;
 #endif
 	} else {
@@ -430,19 +450,19 @@ static pid_info_t *allocate_slot (recv_info_t * r, struct in6_addr *mcg, dvb_pid
 
 static void stop_ten_receive (recv_info_t * r)
 {
-	dbg ("->>>>>>>>>>>>>>>>>stop_ten_receive on receiver %p\n",r);
+	dbg ("mcli::%s: ->>>>>>>>>>>>>>>>>stop_ten_receive on receiver %p\n", __FUNCTION__,r);
 	if (pthread_exist(r->recv_ten_thread) &&  r->ten_run) {
-		dbg ("cancel TEN receiver %p %ld\n", r, r->recv_ten_thread);
+		dbg ("mcli::%s: cancel TEN receiver %p %ld\n", __FUNCTION__, r, r->recv_ten_thread);
 		
 		r->ten_run=0;
 		pthread_mutex_unlock (&lock);
 		do {
-			dbg ("wait TEN stop receiver %p %ld\n", r, r->recv_ten_thread);
+			dbg ("mcli::%s: wait TEN stop receiver %p %ld\n", __FUNCTION__, r, r->recv_ten_thread);
 			usleep(10000);
 		} while (!r->ten_run);
 		pthread_mutex_lock (&lock);
 		r->ten_run=0;
-		dbg ("cancel TEN done receiver %p\n", r);
+		dbg ("mcli::%s: cancel TEN done receiver %p\n", __FUNCTION__, r);
 		pthread_detach (r->recv_ten_thread);
 		pthread_null(r->recv_ten_thread);
 	}
@@ -458,17 +478,17 @@ static void start_ten_receive (recv_info_t * r)
 		char host[INET6_ADDRSTRLEN];
 		inet_ntop (AF_INET6, &r->mcg, (char *) host, INET6_ADDRSTRLEN);
 
-		dbg ("Start TEN for receiver %p %s\n", r, host);
+		dbg ("mcli::%s: Start TEN for receiver %p %s\n", __FUNCTION__, r, host);
 #endif
 		r->ten_run = 0;
 
 		int ret = pthread_create (&r->recv_ten_thread, NULL, recv_ten, r);
 		while (!ret && !r->ten_run) {
-			dbg ("wait TEN startup receiver %p %ld\n", r, r->recv_ten_thread);
+			dbg ("mcli::%s: wait TEN startup receiver %p %ld\n", __FUNCTION__, r, r->recv_ten_thread);
 			usleep (10000);
 		}
 		if (ret) {
-			err ("pthread_create failed with %d\n", ret);
+			err ("mcli::%s: pthread_create failed with %d\n", __FUNCTION__, ret);
 		}
 	}
 }
@@ -501,7 +521,7 @@ static void update_mcg (recv_info_t * r, int handle_ten)
 			stop_ten_receive(r);	
 		}
 	}
-	dbg("update_mcg(%p, %d)\n", r, handle_ten);
+	dbg("mcli::%s: update_mcg(%p, %d)\n", __FUNCTION__, r, handle_ten);
 	qsort(r->pids, r->pidsnum, sizeof(dvb_pid_t), cmppids);
 
 	DVBMC_LIST_FOR_EACH_ENTRY_SAFE (p, ptmp, &r->slots.list, pid_info_t, list) {
@@ -536,7 +556,7 @@ static void update_mcg (recv_info_t * r, int handle_ten)
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 static void stop_receive (recv_info_t * r, int mode)
 {
-	dbg ("stop_receive on receiver %p mode %d\n",r, mode);
+	dbg ("mcli::%s: stop_receive on receiver %p mode %d\n", __FUNCTION__,r, mode);
 	int pidsnum=r->pidsnum;
 	//Remove all PIDs
 	r->pidsnum = 0;
@@ -639,7 +659,7 @@ int recv_redirect (recv_info_t * r, struct in6_addr mcg)
 	int ret = 0;
 
 	pthread_mutex_lock (&lock);
-	dbg ("\n+++++++++++++\nIn redirect for receiver %p\n", r);
+	dbg ("mcli::%s: +++++++++++++\nIn redirect for receiver %p\n", __FUNCTION__, r);
 #if 0
 	char addr_str[INET6_ADDRSTRLEN];
 	inet_ntop (AF_INET6, &r->mcg, addr_str, INET6_ADDRSTRLEN);
@@ -666,7 +686,7 @@ int recv_redirect (recv_info_t * r, struct in6_addr mcg)
 		}
 	} 
 	
-	dbg ("Redirect done for receiver %p\n", r);
+	dbg ("mlic::%s: Redirect done for receiver %p\n", __FUNCTION__, r);
 	pthread_mutex_unlock (&lock);
 
 	return ret;
@@ -700,7 +720,7 @@ static int recv_copy_pids(dvb_pid_t *dst, dvb_pid_t *src)
 		dst[i]=src[i];
 	}
 	if(i==(RECV_MAX_PIDS-1)) {
-		warn("Cannot receive more than %d pids\n", RECV_MAX_PIDS-1);
+		warn("mcli::%s: Cannot receive more than %d pids\n", __FUNCTION__, RECV_MAX_PIDS-1);
 	}
 	return i;
 }
@@ -787,7 +807,7 @@ int recv_pid_del (recv_info_t * r, int pid)
 int recv_tune (recv_info_t * r, fe_type_t type, int satpos, recv_sec_t *sec, struct dvb_frontend_parameters *fe_parms, dvb_pid_t *pids)
 {
 	pthread_mutex_lock (&lock);
-	dbg ("kick_tune receiver %p\n", r);
+	dbg ("mcli::%s: kick_tune receiver %p\n", __FUNCTION__, r);
 
 	stop_receive (r, 1);
 	if(fe_parms) {
@@ -806,7 +826,7 @@ int recv_tune (recv_info_t * r, fe_type_t type, int satpos, recv_sec_t *sec, str
 	update_mcg (r, 1);
 
 	pthread_mutex_unlock (&lock);
-	dbg ("kick_tune done receiver %p\n", r);
+	dbg ("mcli::%s: kick_tune done receiver %p\n", __FUNCTION__, r);
 	return 0;
 }
 
@@ -816,7 +836,7 @@ recv_info_t *recv_add (void)
 {
 	recv_info_t *r=(recv_info_t *)malloc(sizeof(recv_info_t));
 	if(!r) {
-		err ("Cannot get memory for receiver\n");
+		err ("mcli::%s: Cannot get memory for receiver\n", __FUNCTION__);
 	}
 	memset (r, 0, sizeof (recv_info_t));
 	r->head=&receivers;
@@ -846,7 +866,7 @@ int recv_init(char *intf, int p)
 #ifdef WIN32
 	WSADATA wsaData;
 	if (WSAStartup (MAKEWORD (2, 2), &wsaData) != 0) {
-		err ("WSAStartup failed\n");
+		err ("mcli::%s: WSAStartup failed\n", __FUNCTION__);
 	}
 #endif
 
@@ -861,7 +881,7 @@ int recv_init(char *intf, int p)
 
 	g_conf = (struct conf*) malloc (sizeof (struct conf));
 	if (!g_conf) {
-		err ("Cannot get memory for configuration\n");
+		err ("mcli::%s: Cannot get memory for configuration\n", __FUNCTION__);
 		exit (-1);
 	}
 
@@ -873,7 +893,7 @@ int recv_init(char *intf, int p)
 		if (intn) {
 			strcpy (iface, intn->name);
 		} else {
-			warn ("Cannot find any usable network interface\n");
+			warn ("mcli::%s: Cannot find any usable network interface\n", __FUNCTION__);
 			if(g_conf->ints) {
 				free (g_conf->ints);
 			}

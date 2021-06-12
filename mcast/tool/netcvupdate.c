@@ -29,7 +29,7 @@
 #define NC_CONFFILE "netceiver.conf"
 
 char ftp_cmd[512]=FTP_CMD;
-int verbose=0;
+int verbose=1;
 int no_reboot=0;
 char username[256]="root";
 char password[256]="root";
@@ -38,6 +38,8 @@ char *uuids[256]={0};
 char *versions[256]={0};
 int num_uuids=0;
 char socket_path[256]=API_SOCK_NAMESPACE;
+int ftp_client_lftp = 0;
+int debug = 0;
 
 #ifdef USE_MCLI_API
 /*------------------------------------------------------------------------*/
@@ -174,15 +176,31 @@ int run_ftp(char *tmpdir,char *script, int timeout, char *pipeout)
 	if (!strlen(ftp_cmd))
 		return -1;
 	signal(SIGPIPE,sigground);
-	if (strlen(tmpdir))
+	if (strlen(tmpdir)) {
 //		snprintf(cmd, sizeof(cmd),"cd %s; %s -q %i -n %s",tmpdir,ftp_cmd,timeout,verbose?"":"-V");
-		snprintf(cmd, sizeof(cmd),"cd %s; %s  -n %s %s",tmpdir,ftp_cmd,verbose?"":"-V",pipeout);
-	else
-		snprintf(cmd, sizeof(cmd),"%s -q %i -n %s %s",ftp_cmd,timeout,verbose?"":"-V",pipeout);
+		if (ftp_client_lftp == 1) {
+			snprintf(cmd, sizeof(cmd),"cd %s; %s --norc %s %s",tmpdir,ftp_cmd, (verbose == 0) ? "" : "-d", pipeout);
+		} else {
+			snprintf(cmd, sizeof(cmd),"cd %s; %s -n %s %s",tmpdir,ftp_cmd, (verbose == 0) ? "" : "-V", pipeout);
+		};
+	} else {
+		if (ftp_client_lftp == 1) {
+			snprintf(cmd, sizeof(cmd),"%s --norc %s %s",ftp_cmd,(verbose == 0) ? "" : "-d", pipeout);
+		} else {
+			snprintf(cmd, sizeof(cmd),"%s -q %i -n %s %s",ftp_cmd,timeout, (verbose == 0) ? "" : "-V", pipeout);
+		};
+	};
+
+	if (debug > 0) {
+		fprintf(stderr, "\nDEBUG : execute FTP command: %s\n", cmd);
+	};
 	
 	f=popen(cmd,"w");
 	if (!f)
 		return -1;
+	if (debug > 0) {
+		fprintf(stderr, "DEBUG : execute FTP script\n------\n%s\n------\n", script);
+	}
 	fputs(script,f);
 	ret=pclose(f);
 	return ret;
@@ -285,7 +303,7 @@ int do_single_update(char *tmpdir, char *uuid, char *device)
 		return -1;
 //  	puts(script);
 
-	printf("Upload update... ");
+	printf("Upload update... \n");
 	fflush(stdout);
 
 	ret=run_ftp(tmpdir, script, 600,"");
@@ -474,7 +492,7 @@ int do_upload(char **uuids, int num_uuids, char *device, char *optarg)
 		if (!uuids[n])
 			continue;
 
-		printf("UUID %s: Uploading %s ... ",uuids[n], optarg);
+		printf("UUID %s: Uploading %s ... \n",uuids[n], optarg);
 		fflush(stdout);
 		ret=do_single_upload(uuids[n], device, "/mmc/etc/", optarg, NC_CONFFILE);
 		if (!ret)
@@ -501,11 +519,11 @@ int do_download(char **uuids, int num_uuids, char *device, char *remotepath, cha
 		else
 			snprintf(newfile,sizeof(newfile),"%s", file);
 
-		printf("UUID %s: Downloading %s ... ",uuids[n], newfile);
+		printf("UUID %s: Downloading %s ... \n",uuids[n], newfile);
 		fflush(stdout);
 		ret=do_single_download(uuids[n], device, remotepath, file);
 		if (!ret) {
-			printf("Done\n");
+			printf("Download done\n");
 			if (num_uuids!=1)
 				rename(file,newfile);
 		}
@@ -673,15 +691,18 @@ void usage(void)
 		"Options:\n"
 		"           -A                Use all found NetCeivers (mcli must be running)\n"
 		"           -i <uuid>         Use specific UUID (can be used multiple times)\n"
+		"           -e                Enable debugging\n"
+		"           -h|?              This online help\n"
 		"  *** Either -A or -i must be given for most actions! ***\n"
 		"Rare options:\n"
 		"           -d <device>       Set network device (default: eth0)\n"
 		"           -F <ftp-command>  Set ftp command/path\n"
-		" *** ftp command must understand the -q (timeout) option! ***\n"                
+		" *** ftp command must understand the -q (timeout) option in case '-n' is not used! ***\n"
 		"           -P <path>         Set API socket\n"
 		"           -u <user>         Set username\n"
 		"           -p <password>     Set password\n"
 		"           -r                No reboot after update\n"
+		"           -n                Use next-generation FTP client 'lftp'\n"
 		"           -q                Be more quiet\n"
 		);
 	exit(0);
@@ -692,7 +713,7 @@ int main(int argc, char **argv)
 	int ret=0;
 	
 	while(1) {
-		int ret = getopt(argc,argv, "U:X:Di:AlLI:E:Z:d:F:P:u:p:rRqK");
+		int ret = getopt(argc,argv, "h?U:X:Di:AlLI:E:Z:d:F:P:u:p:rRqKne");
 		if (ret==-1)
 			break;
 			
@@ -764,8 +785,20 @@ int main(int argc, char **argv)
 			do_fw_actions(uuids, num_uuids, 2, optarg);
 			break;			
 		case 'q':
-			verbose=0;
+			verbose = 0;
+			fprintf(stderr, "INFO  : disable verbose mode\n");
 			break;
+		case 'n':
+			ftp_client_lftp = 1;
+			snprintf(ftp_cmd, sizeof(ftp_cmd), "%s", "lftp");
+			fprintf(stderr, "INFO  : enable options for FTP client 'lftp'\n");
+			break;
+		case 'e':
+			debug = 1;
+			fprintf(stderr, "DEBUG : enable debugging\n");
+			break;
+		case 'h':
+		case '?':
 		default:
 			usage();
 			break;

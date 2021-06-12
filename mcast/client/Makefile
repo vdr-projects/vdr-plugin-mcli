@@ -17,6 +17,10 @@ MIPSEL = $(shell echo $(ARCH) | grep -q 'mipsel' && echo "1" || echo "0")
 
 DEFS=-DCLIENT -DLIBRARY -D_REENTRANT -D_GNU_SOURCE
 
+ifdef PLUGIN_NAME
+  DEFS:= $(DEFS) -DPLUGIN_NAME=\"$(PLUGIN_NAME)\"
+endif
+
 ifeq ($(CYGWIN), 1)
 WIN32=1
 else
@@ -41,9 +45,9 @@ LIBRARY_PATH=/usr/lib
 endif
 endif
 ifeq ($(APPLE_DARWIN), 1)
-CFLAGS:= $(CFLAGS) -fPIC -fno-common -Wall -I../common $(DEFS)
+CFLAGS:= $(CFLAGS) -fPIC -fno-common -Wall -I../common -I../.. $(DEFS)
 else
-CFLAGS:= $(CFLAGS) -fPIC -Wall -I../common $(DEFS)
+CFLAGS:= $(CFLAGS) -fPIC -Wall -I../common -I../.. $(DEFS)
 endif
 
 ifdef BACKTRACE

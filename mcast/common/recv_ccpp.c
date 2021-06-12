@@ -496,7 +496,7 @@ void *recv_ten (void *arg)
 	c.s = client_udp_open_buff (&ten, port, iface, XML_BUFLEN);
 #endif
 	if (!c.s) {
-		warn ("client_udp_open error !\n");
+		warn ("%s: client_udp_open error on interface=%s\n", __FUNCTION__, iface);
 	} else {
 #ifdef DEBUG	
 		char host[INET6_ADDRSTRLEN];
@@ -550,7 +550,7 @@ void *recv_ten (void *arg)
 									c.s = client_udp_open_buff (&ten, port, iface, XML_BUFLEN);
 #endif
 									if (!c.s) {
-										warn ("client_udp_open error !\n");
+										warn ("%s: client_udp_open error on interface=%s\n", __FUNCTION__, iface);
 										break;
 									}
 								}
@@ -619,7 +619,7 @@ void *recv_tra (void *arg)
 	c.s = client_udp_open_buff (&tra, port, iface, XML_BUFLEN);
 #endif
 	if (!c.s) {
-		warn ("client_udp_open error !\n");
+		warn ("%s: client_udp_open error on interface=%s\n", __FUNCTION__, iface);
 	} else {
 		c.run=1;
 #ifdef DEBUG
@@ -1298,7 +1298,7 @@ void *recv_tca (void *arg)
 	c.s = client_udp_open_buff (&tca, port, iface, XML_BUFLEN);
 #endif
 	if (!c.s) {
-		warn ("client_udp_open error !\n");
+		warn ("%s: client_udp_open error on interface=%s\n", __FUNCTION__, iface);
 	} else {
 		c.run=1;
 #ifdef DEBUG

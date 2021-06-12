@@ -163,7 +163,7 @@ int mld_client_init (char *intf)
 		if (intn) {
 			strcpy (iface, intn->name);
 		} else {
-			warn ("Cannot find any usable network interface\n");
+			warn ("%s: Cannot find any usable network interface\n", __FUNCTION__);
 			return -1;
 		}
 	}
@@ -178,7 +178,7 @@ int mld_client_init (char *intf)
 	g_conf->rawsocket = socket (PF_INET6, SOCK_RAW, IPPROTO_HOPOPTS);
 #endif
 	if (g_conf->rawsocket < 0) {
-		warn ("Cannot get a packet socket\n");
+		warn ("%s: Cannot get a raw packet socket (on Linux apply: setcap cap_net_raw=pe <VDR binary>)\n", __FUNCTION__);
 		return -1;
 	}
 #ifdef WIN32

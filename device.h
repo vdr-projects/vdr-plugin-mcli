@@ -10,7 +10,7 @@
 #define VDR_MCLI_DEVICE_H
 
 #include <vdr/device.h>
-#include <mcliheaders.h>
+#include "mcliheaders.h"
 
 #include "packetbuffer.h"
 

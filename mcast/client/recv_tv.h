@@ -10,7 +10,7 @@
  */
 
 #ifndef __RECV_TV_H__
-#define __RECV_TV__H__
+#define __RECV_TV_H__
 
 #define REP_TIME 1000000
 #define MAX_DROP_NUM 5

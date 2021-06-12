@@ -23,7 +23,8 @@
 
 static int reconf = 0;
 int m_debugmask = 0;
-bool m_cam_disable;
+int m_logskipmask = 0;
+bool m_cam_disable = false;
 
 //--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -78,7 +79,7 @@ cOsdObject *cPluginMcli::AltMenuAction (void)
 				cMcliDevice *d = dev->d ();
 #ifdef DEBUG_TUNE
 				DEBUG_MASK(DEBUG_BIT_TUNE,
-				dsyslog("satpos: %i vpid: %i fep.freq: %i", satpos, vpid, fep.frequency);
+				dsyslog("mcli::%s: satpos: %i vpid: %i fep.freq: %i", __FUNCTION__, satpos, vpid, fep.frequency);
 				)
 #endif
 				struct in6_addr mcg = d->GetTenData ()->mcg;
@@ -88,9 +89,9 @@ cOsdObject *cPluginMcli::AltMenuAction (void)
 				DEBUG_MASK(DEBUG_BIT_TUNE,
 				char str[INET6_ADDRSTRLEN];
 				inet_ntop (AF_INET6, &c->mcg, str, INET6_ADDRSTRLEN);
-				dsyslog ("MCG from MMI: %s", str);
+				dsyslog ("mcli::%s: MCG from MMI: %s", __FUNCTION__, str);
 				inet_ntop (AF_INET6, &mcg, str, INET6_ADDRSTRLEN);
-				dsyslog ("MCG from DEV: %s", str);
+				dsyslog ("mcli::%s: MCG from DEV: %s", __FUNCTION__, str);
 				)
 #endif
 
@@ -99,7 +100,7 @@ cOsdObject *cPluginMcli::AltMenuAction (void)
 			}
 #ifdef DEBUG_TUNE
 			DEBUG_MASK(DEBUG_BIT_TUNE,
-			dsyslog ("SID/Program Number:%04x, SatPos:%d Freqency:%d", c->caid, satpos, fep.frequency);
+			dsyslog ("mcli::%s: SID/Program Number:%04x, SatPos:%d Freqency:%d", __FUNCTION__, c->caid, satpos, fep.frequency);
 			)
 #endif
 		}
@@ -139,6 +140,7 @@ cPluginMcli::cPluginMcli (void)
 	memset (m_cam_pool, 0, sizeof (cam_pool_t) * CAM_POOL_MAX);
 	for(i=0; i<CAM_POOL_MAX; i++) {
 		m_cam_pool[i].max = -1;
+		m_cam_pool[i].trigger = false;
 	}
 	strcpy (m_cmd.cmd_sock_path, API_SOCK_NAMESPACE);
 	memset (m_tuner_pool, 0, sizeof(tuner_pool_t)*TUNER_POOL_MAX);
@@ -149,18 +151,27 @@ cPluginMcli::cPluginMcli (void)
 
 cPluginMcli::~cPluginMcli ()
 {
-	ExitMcli ();
-
+	dsyslog ("mcli::%s: called", __FUNCTION__);
+	PostExitMcli ();
 }
 
-bool cPluginMcli::InitMcli (void)
+#define IFACE_WATCH_TIMEOUT 180
+#define IFACE_WATCH_STEP 5
+bool cPluginMcli::PreInitMcli (void)
 {
+	dsyslog ("mcli::%s: called with m_cmd.iface='%s' builtin watch-timeout=%d watch-step=%d", __FUNCTION__, m_cmd.iface, IFACE_WATCH_TIMEOUT, IFACE_WATCH_STEP);
 	if(m_recv_init_done && (m_mld_init_done || !m_cmd.mld_start) && m_api_init_done && m_mmi_init_done) return true;
 	int ifacelen = strlen(m_cmd.iface);
 	if(ifacelen) { // Check if iface exists
+	    int iface_watch = 0;
+	    bool found = false;
+
+	    while (iface_watch < IFACE_WATCH_TIMEOUT) {
 		FILE *file = fopen("/proc/net/if_inet6", "r");
-		if(!file) return false;
-		bool found = false;
+		if(!file) {
+			esyslog ("mcli::%s: can't open /proc/net/if_inet6", __FUNCTION__);
+			return false;
+		};
 		char buf[255];
 		while(fgets(buf, sizeof(buf), file)) {
 			int buflen = strlen(buf);
@@ -173,29 +184,59 @@ bool cPluginMcli::InitMcli (void)
 			}
 		}
 		fclose(file);
-		if(!found) return false;
+		if (!found) {
+			dsyslog ("mcli::%s: can't find specified device '%s' in /proc/net/if_inet6 (after %d of %d sec / wait next %d sec)", __FUNCTION__, m_cmd.iface, iface_watch, IFACE_WATCH_TIMEOUT, IFACE_WATCH_STEP);
+			sleep(IFACE_WATCH_STEP);
+			iface_watch += IFACE_WATCH_STEP;
+			continue;
+		};
+		dsyslog ("mcli::%s: found specified device '%s' in /proc/net/if_inet6 (after %d sec)", __FUNCTION__, m_cmd.iface, iface_watch);
+		break;
+	    };
+	    if (!found) {
+		esyslog ("mcli::%s: can't find specified device '%s' in /proc/net/if_inet6 (after %d sec)", __FUNCTION__, m_cmd.iface, IFACE_WATCH_TIMEOUT);
+		return false;
+	    };
 	}
 	// Ok, iface exists so go on
 	if (!m_recv_init_done) {
 		if(!recv_init (m_cmd.iface, m_cmd.port))
 			m_recv_init_done = 1;
-		else return false;
+		else {
+			esyslog ("mcli::%s: recv_init failed", __FUNCTION__);
+			return false;
+		};
 	}
 	if (!m_mld_init_done && m_cmd.mld_start) {
 		if(!mld_client_init (m_cmd.iface))
 			m_mld_init_done = 1;
-		else return false;
+		else {
+			esyslog ("mcli::%s: mld_client_init failed", __FUNCTION__);
+			return false;
+		};
 	}
 	if (!m_api_init_done) {
 		if(!api_sock_init (m_cmd.cmd_sock_path))
 			m_api_init_done = 1;
-		else return false;
+		else {
+			esyslog ("mcli::%s: api_sock_init failed", __FUNCTION__);
+			return false;
+		};
 	}
 	if(!m_mmi_init_done) {
 		if((m_cam_mmi = mmi_broadcast_client_init (m_cmd.port, m_cmd.iface)) != NULL)
 			m_mmi_init_done = 1;
-		else return false;
+		else {
+			esyslog ("mcli::%s: mmi_broadcast_client_init failed", __FUNCTION__);
+			return false;
+		};
 	}
+	return true;
+}
+
+bool cPluginMcli::InitMcli (void)
+{
+	// dsyslog ("mcli::%s: called", __FUNCTION__); // called to often
 	for(int i=m_devs.Count(); i < m_tuner_max; i++) {
 		cMcliDevice *m = NULL;
 		cPluginManager::CallAllServices ("OnNewMcliDevice-" MCLI_DEVICE_VERSION, &m);
@@ -213,19 +254,29 @@ bool cPluginMcli::InitMcli (void)
 
 void cPluginMcli::ExitMcli (void)
 {
+	dsyslog ("mcli::%s: called", __FUNCTION__);
+}
+
+void cPluginMcli::PostExitMcli (void)
+{
+	dsyslog ("mcli::%s: called", __FUNCTION__);
 	if (m_mmi_init_done) {
+		dsyslog ("mcli::%s: call mmi_broadcast_client_exit", __FUNCTION__);
 		mmi_broadcast_client_exit (m_cam_mmi);
 		m_mmi_init_done = 0;
 	}
 	if (m_api_init_done) {
+		dsyslog ("mcli::%s: call api_sock_exit", __FUNCTION__);
 		api_sock_exit ();
 		m_api_init_done = 0;
 	}
 	if (m_mld_init_done) {
+		dsyslog ("mcli::%s: call client_exit", __FUNCTION__);
 		mld_client_exit ();
 		m_mld_init_done = 0;
 	}
 	if (m_recv_init_done) {
+		dsyslog ("mcli::%s: call recv_exit", __FUNCTION__);
 		recv_exit ();
 		m_recv_init_done = 0;
 	}
@@ -233,7 +284,17 @@ void cPluginMcli::ExitMcli (void)
 
 const char *cPluginMcli::CommandLineHelp (void)
 {
-	return ("  --ifname <network interface>\n" "  --port <port> (default: -port 23000)\n" "  --dvb-s <num> --dvb-c <num> --dvb-t <num> --atsc <num> --dvb-s2 <num> --tuner-max <num>\n" "    limit number of device types (default: 8 of every type)\n" "  --mld-reporter-disable\n" "  --sock-path <filepath>\n" "\n");
+	return (
+		"  --ifname <network interface>\n"
+		"  --port <port> (default: -port 23000)\n"
+		"  --dvb-s <num> --dvb-c <num> --dvb-t <num> --atsc <num> --dvb-s2 <num> (limit number of device types - default: 8 of every type)\n"
+		"  --tuner-max <num> (limit number of tuners, default: 8)\n"
+		"  --mld-reporter-disable\n"
+		"  --sock-path <filepath>\n"
+		"  --debugmask <value> (decimal or hex debug mask)\n"
+		"  --logskipmask <value> (decimal or hex log skip mask)\n"
+		"\n"
+	);
 }
 
 bool cPluginMcli::ProcessArgs (int argc, char *argv[])
@@ -257,6 +318,7 @@ bool cPluginMcli::ProcessArgs (int argc, char *argv[])
 			{"tuner-max", 1, 0, 0},	//9
 			{"debugmask", 1, 0, 0}, //10: debug mask for selective debugging, see mcli.h
 			{"cam-disable", 0, 0, 0}, //11: disable use of CAM (skip channels)
+			{"logskipmask", 1, 0, 0},   //12: log mask for selective disabling of logging, see mcli.h
 			{NULL, 0, 0, 0}
 		};
 
@@ -301,16 +363,27 @@ bool cPluginMcli::ProcessArgs (int argc, char *argv[])
 			if ((strlen(optarg) > 2) && (strncasecmp(optarg, "0x", 2) == 0)) {
 				// hex conversion
 				if (sscanf(optarg + 2, "%x", &m_debugmask) == 0) {
-					isyslog("Mcli::%s: can't parse hexadecimal debug mask (skip): %s", __FUNCTION__, optarg);
+					isyslog("mcli::%s: can't parse hexadecimal debug mask (skip): %s", __FUNCTION__, optarg);
 				};
 			} else {
 				m_debugmask = atoi (optarg);
 			};
-			dsyslog("Mcli::%s: enable debug mask: %d (0x%02x)", __FUNCTION__, m_debugmask, m_debugmask);
+			dsyslog("mcli::%s: enable debug mask: %d (0x%02x)", __FUNCTION__, m_debugmask, m_debugmask);
 			break;
 		case 11:
 			m_cam_disable = true;
-			dsyslog("Mcli::%s: enable 'm_cam_disable')", __FUNCTION__);
+			dsyslog("mcli::%s: enable 'm_cam_disable'", __FUNCTION__);
+			break;
+		case 12:
+			if ((strlen(optarg) > 2) && (strncasecmp(optarg, "0x", 2) == 0)) {
+				// hex conversion
+				if (sscanf(optarg + 2, "%x", &m_logskipmask) == 0) {
+					isyslog("mcli::%s: can't parse hexadecimal log mask (skip): %s", __FUNCTION__, optarg);
+				};
+			} else {
+				m_logskipmask = atoi (optarg);
+			};
+			isyslog("mcli::%s: enable log skip mask: %d (0x%02x)", __FUNCTION__, m_logskipmask, m_logskipmask);
 			break;
 		default:
 			dsyslog ("MCli::%s: ?? getopt returned character code 0%o ??\n", __FUNCTION__, c);
@@ -361,6 +434,8 @@ int cPluginMcli::CAMPoolAdd(netceiver_info_t *nci)
 		if(!cp){
 			return ret;
 		}
+		int old_max = cp->max;
+
 		if (nci->cam[j].status) {
 			switch (nci->cam[j].flags) {
 				case CA_SINGLE:
@@ -368,7 +443,7 @@ int cPluginMcli::CAMPoolAdd(netceiver_info_t *nci)
 					m_cam_present = true;
 #ifdef DEBUG_RESOURCES
 					DEBUG_MASK(DEBUG_BIT_RESOURCES,
-					dsyslog("Found CAM");
+					if (!update) dsyslog("mcli::%s: Found CAM %d", __FUNCTION__, j);
 					)
 #endif
 					cp->max = 1;
@@ -376,7 +451,7 @@ int cPluginMcli::CAMPoolAdd(netceiver_info_t *nci)
 				case CA_MULTI_TRANSPONDER:
 #ifdef DEBUG_RESOURCES
 					DEBUG_MASK(DEBUG_BIT_RESOURCES,
-					dsyslog("Found CAM");
+					if (!update) dsyslog("mcli::%s: Found CAM %d", __FUNCTION__, j);
 					)
 #endif
 					m_cam_present = true;
@@ -386,6 +461,11 @@ int cPluginMcli::CAMPoolAdd(netceiver_info_t *nci)
 		} else {
 			cp->max = 0;
 		}
+		if (cp->max != old_max) {
+			cp->trigger = cp->max && not(m_cam_disable || (m_debugmask & DEBUG_BIT_Action_SkipTriggerCam));
+			cp->triggerSid = 0;
+		}
+
 		cp->status = nci->cam[j].status;
 		if(!update) {
 			cp->slot = nci->cam[j].slot;
@@ -428,7 +508,7 @@ cam_pool_t *cPluginMcli::CAMAvailable (const char *uuid, int slot, bool lock)
 #ifdef DEBUG_RESOURCES
 	DEBUG_MASK(DEBUG_BIT_RESOURCES,
 	if(ret) {
-		dsyslog("Mcli::%s: Available CAM [%s]:%d -> [%s]:%d", __FUNCTION__, uuid, slot, ret->uuid, ret->slot);
+		dsyslog("mcli::%s: Available CAM [%s]:%d -> [%s]:%d", __FUNCTION__, uuid, slot, ret->uuid, ret->slot);
 	}
 	)
 #endif
@@ -449,9 +529,9 @@ cam_pool_t *cPluginMcli::CAMAlloc (const char *uuid, int slot)
 #ifdef DEBUG_RESOURCES
 	DEBUG_MASK(DEBUG_BIT_RESOURCES,
         if(cp) {
-		dsyslog ("Mcli::%s: AllocateCAM [%s]:%d -> [%s]:%d", __FUNCTION__, uuid, slot, cp->uuid, cp->slot);
+		dsyslog ("mcli::%s: AllocateCAM [%s]:%d -> [%s]:%d", __FUNCTION__, uuid, slot, cp->uuid, cp->slot);
         } else {
-		dsyslog ("Mcli::%s: AllocateCAM [%s]:%d -> FAIL", __FUNCTION__, uuid, slot);
+		dsyslog ("mcli::%s: AllocateCAM [%s]:%d -> FAIL", __FUNCTION__, uuid, slot);
 	}
 	)
 #endif
@@ -464,7 +544,7 @@ int cPluginMcli::CAMFree (cam_pool_t *cp)
 	LOCK_THREAD;
 #ifdef DEBUG_RESOURCES
 	DEBUG_MASK(DEBUG_BIT_RESOURCES,
-	dsyslog ("Mcli::%s: FreeCAM [%s]:%d", __FUNCTION__, cp->uuid, cp->slot);
+	dsyslog ("mcli::%s: FreeCAM [%s]:%d", __FUNCTION__, cp->uuid, cp->slot);
 	)
 #endif
 	if (cp->use > 0) {
@@ -480,14 +560,14 @@ bool cPluginMcli::CAMSteal(const char *uuid, int slot, bool force)
 			if(d->d()->Priority()<0 && d->d()->GetCaEnable() && (slot == -1 || slot == cp->slot)) {
 #ifdef DEBUG_RESOURCES
 				DEBUG_MASK(DEBUG_BIT_RESOURCES,
-				dsyslog("Mcli::%s: Can Steal CAM on slot %d from DVB %d", __FUNCTION__, slot, d->d()->CardIndex()+1);
+				dsyslog("mcli::%s: Can Steal CAM on slot %d from DVB %d", __FUNCTION__, slot, d->d()->CardIndex()+1);
 				)
 #endif
 				if(force) {
 					d->d ()->SetTempDisable (true);
 #ifdef DEBUG_RESOURCES
 					DEBUG_MASK(DEBUG_BIT_RESOURCES,
-					dsyslog("Mcli::%s: Stole CAM on slot %d from DVB %d", __FUNCTION__, cp->slot, d->d()->CardIndex()+1);
+					dsyslog("mcli::%s: Stole CAM on slot %d from DVB %d", __FUNCTION__, cp->slot, d->d()->CardIndex()+1);
 					)
 #endif
 				}
@@ -504,7 +584,7 @@ satellite_list_t *cPluginMcli::TunerFindSatList(const netceiver_info_t *nc_info,
 	}
 
 	//for (int i = 0; i < nc_info->sat_list_num; i++) {
-	//	printf("Mcli::%s: Satlist Name %s\n", __FUNCTION__, nc_info->sat_list[i].Name);
+	//	printf("mcli::%s: Satlist Name %s\n", __FUNCTION__, nc_info->sat_list[i].Name);
 	//}	
 
 	for (int i = 0; i < nc_info->sat_list_num; i++) {
@@ -525,7 +605,7 @@ bool cPluginMcli::SatelitePositionLookup(const satellite_list_t *satlist, int po
 	for(int i=0; i<satlist->sat_num;i ++) {
 		satellite_info_t *s=satlist->sat+i;
 
-		//printf("Mcli::%s: Satlist Pos %d s->type %d s->Name %s s->SatPos %d LNB%d UNI%d ROT%d\n", __FUNCTION__, pos, s->type, s->Name,  s->SatPos, SAT_SRC_LNB, SAT_SRC_UNI, SAT_SRC_ROTOR);
+		//printf("mcli::%s: Satlist Pos %d s->type %d s->Name %s s->SatPos %d LNB%d UNI%d ROT%d\n", __FUNCTION__, pos, s->type, s->Name,  s->SatPos, SAT_SRC_LNB, SAT_SRC_UNI, SAT_SRC_ROTOR);
 
 		switch(s->type){
 			case SAT_SRC_LNB:
@@ -573,12 +653,12 @@ bool cPluginMcli::TunerSatelitePositionLookup(tuner_pool_t *tp, int pos) const
 	}
 	bool ret;
 	if(satlist == NULL) {
-                esyslog("Mcli::%s: No Satlist found \n", __FUNCTION__);
+                esyslog("mcli::%s: No Satlist found \n", __FUNCTION__);
 		ret = false;
 	} else {
 		ret=SatelitePositionLookup(satlist, pos);
 		if (!ret) {
-			esyslog("Mcli::%s: Pos %d not found in Satlist \n", __FUNCTION__, pos);
+			esyslog("mcli::%s: Pos %d not found in Satlist \n", __FUNCTION__, pos);
 		}		
 	}
 	nc_unlock_list ();
@@ -598,11 +678,30 @@ tuner_pool_t *cPluginMcli::TunerFindByUUID (const char *uuid)
 
 bool cPluginMcli::Ready()
 {
-	for(int i=0; i<CAM_POOL_MAX; i++)
-		if((m_cam_pool[i].max >= 0) && (DVBCA_CAMSTATE_INITIALISING == m_cam_pool[i].status)) return false;
-	for (cMcliDeviceObject * d = m_devs.First (); d; d = m_devs.Next (d))
-		if(d->d ()->HasInput()) return true;
-	return false;
+	int numCi = 0;
+	int numCam = 0;
+	int numDev = 0;
+	for(int i=0; i<CAM_POOL_MAX; i++) {
+		if (m_cam_pool[i].max >= 0) {
+			numCi++;
+			if (DVBCA_CAMSTATE_INITIALISING == m_cam_pool[i].status) return false;
+			if (m_cam_pool[i].status)
+				numCam++;
+		}
+	}
+	if (!numCi)
+		return false; // wait for netceiver-info update
+	for (cMcliDeviceObject * d = m_devs.First (); d; d = m_devs.Next (d)) {
+		if(d->d ()->HasInput())
+			numDev++;
+	}
+#ifdef DEBUG_TUNE
+	DEBUG_MASK(DEBUG_BIT_TUNE,
+	if (numDev)
+		dsyslog("Mcli::%s: %d Devices, %d/%d CAMs/Slots\n", __FUNCTION__, numDev, numCam, numCi);
+	)
+#endif
+	return numDev > 0;
 }
 
 #define MAX_TUNER_TYPE_COUNT (FE_DVBS2+1)
@@ -666,14 +765,14 @@ tuner_pool_t *cPluginMcli::TunerAvailable(fe_type_t type, int pos, bool lock)
 	}
 #ifdef DEBUG_RESOURCES
 	DEBUG_MASK(DEBUG_BIT_RESOURCES,
-	dsyslog("Mcli::%s: Testing for tuner type %d pos %d", __FUNCTION__, type, pos);
+	dsyslog("mcli::%s: Testing for tuner type %d pos %d", __FUNCTION__, type, pos);
 	)
 #endif
 	if (TunerCountByType (type) == m_cmd.tuner_type_limit[type]) {
 
 #ifdef DEBUG_RESOURCES
 		DEBUG_MASK(DEBUG_BIT_RESOURCES,
-		dsyslog("Mcli::%s: type %d limit (%d) reached", __FUNCTION__, type, m_cmd.tuner_type_limit[type]);
+		dsyslog("mcli::%s: type %d limit (%d) reached", __FUNCTION__, type, m_cmd.tuner_type_limit[type]);
 		)
 #endif
 		if(lock) {
@@ -694,7 +793,7 @@ tuner_pool_t *cPluginMcli::TunerAvailable(fe_type_t type, int pos, bool lock)
 		}
 #ifdef DEBUG_RESOURCES
 		DEBUG_MASK(DEBUG_BIT_RESOURCES,
-                dsyslog("Mcli::%s: Tuner %d(%p), type %d, inuse %d", __FUNCTION__, i, tp, tp->type, tp->inuse);
+                dsyslog("mcli::%s: Tuner %d(%p), type %d, inuse %d", __FUNCTION__, i, tp, tp->type, tp->inuse);
 		)
 #endif
 		if(TunerSatelitePositionLookup(tp, pos)) {
@@ -703,7 +802,7 @@ tuner_pool_t *cPluginMcli::TunerAvailable(fe_type_t type, int pos, bool lock)
 			}
 #ifdef DEBUG_RESOURCES
 			DEBUG_MASK(DEBUG_BIT_RESOURCES,
-		        dsyslog("Mcli::%s: Tuner %d(%p) available", __FUNCTION__, i, tp);
+		        dsyslog("mcli::%s: Tuner %d(%p) available", __FUNCTION__, i, tp);
 			)
 #endif
 
@@ -714,7 +813,7 @@ tuner_pool_t *cPluginMcli::TunerAvailable(fe_type_t type, int pos, bool lock)
 		Unlock();
 	}
 
-        esyslog("Mcli::%s: No tuner available\n", __FUNCTION__);
+        esyslog("mcli::%s: No tuner available\n", __FUNCTION__);
 
 	return NULL;
 }
@@ -730,7 +829,7 @@ tuner_pool_t *cPluginMcli::TunerAlloc(fe_type_t type, int pos, bool lock)
 		tp->inuse=true;
 #ifdef DEBUG_RESOURCES
 		DEBUG_MASK(DEBUG_BIT_RESOURCES,
-		dsyslog("Mcli::%s: %p [%s], Type %d", __FUNCTION__, tp, tp->uuid, tp->type);
+		dsyslog("mcli::%s: %p [%s], Type %d", __FUNCTION__, tp, tp->uuid, tp->type);
 		)
 #endif
 		if(lock) {
@@ -752,7 +851,7 @@ bool cPluginMcli::TunerFree(tuner_pool_t *tp, bool lock)
 		tp->inuse=false;
 #ifdef DEBUG_RESOURCES
 		DEBUG_MASK(DEBUG_BIT_RESOURCES,
-		dsyslog("Mcli::%s: %p [%s], Type %d", __FUNCTION__, tp, tp->uuid, tp->type);
+		dsyslog("mcli::%s: %p [%s], Type %d", __FUNCTION__, tp, tp->uuid, tp->type);
 		)
 #endif
 		if(lock) {
@@ -772,8 +871,8 @@ void cPluginMcli::Action (void)
 //	printf ("Looking for netceivers out there....\n");
 	bool channel_switch_ok = false;
 
-#define NOTIFY_CAM_CHANGE 1
-#ifdef NOTIFY_CAM_CHANGE
+#define NOTIFY_CAM_CHANGE 0
+#if NOTIFY_CAM_CHANGE
     int cam_stats[CAM_POOL_MAX] = { 0 };
     char menu_strings[CAM_POOL_MAX][MAX_MENU_STR_LEN];
     bool first_run = true;
@@ -802,13 +901,13 @@ void cPluginMcli::Action (void)
 
 			if ((now - nci->lastseen) > MCLI_DEVICE_TIMEOUT) {
 				if(CAMPoolDel(nci->uuid)) {
-					isyslog  ("Mcli::%s: Remove CAMs from NetCeiver: [%s]\n", __FUNCTION__, nci->uuid);
+					isyslog  ("mcli::%s: Remove CAMs from NetCeiver: [%s]\n", __FUNCTION__, nci->uuid);
 					netCVChanged = true;
 				}
 			} else {
 				int cpa = CAMPoolAdd(nci);
 				if(cpa==1) {
-					isyslog ("Mcli::%s: Add CAMs from NetCeiver: [%s] -> %d\n", __FUNCTION__, nci->uuid, cpa);
+					isyslog ("mcli::%s: Add CAMs from NetCeiver: [%s] -> %d\n", __FUNCTION__, nci->uuid, cpa);
 					netCVChanged = true;
 				}
 			}
@@ -838,9 +937,9 @@ void cPluginMcli::Action (void)
 					}
 
 					if (nci->cam[j].status != DVBCA_CAMSTATE_MISSING) {
-						dsyslog("Mcli::%s: Slot:%d CamModule '%s' State:%s Mode:%s\n", __FUNCTION__, j, nci->cam[j].menu_string, camstate, cammode);
+						dsyslog("mcli::%s: Slot:%d CamModule '%s' State:%s Mode:%s\n", __FUNCTION__, j, nci->cam[j].menu_string, camstate, cammode);
 					} else {
-						dsyslog("Mcli::%s: Slot:%d CamModule State:%s\n", __FUNCTION__, j, camstate);
+						dsyslog("mcli::%s: Slot:%d CamModule State:%s\n", __FUNCTION__, j, camstate);
 					}
 					)
 #endif
@@ -880,7 +979,7 @@ void cPluginMcli::Action (void)
 				if (((now - nci->lastseen) > MCLI_DEVICE_TIMEOUT) || (nci->tuner[i].preference < 0) || !strlen (nci->tuner[i].uuid)) {
 					if (t) {
 						int pos=TunerPoolDel(t);
-						isyslog  ("Mcli::%s: Remove Tuner(#%d) %s [%s] @ %d\n", __FUNCTION__, i, nci->tuner[i].fe_info.name, nci->tuner[i].uuid, pos);
+						isyslog  ("mcli::%s: Remove Tuner(#%d) %s [%s] @ %d\n", __FUNCTION__, i, nci->tuner[i].fe_info.name, nci->tuner[i].uuid, pos);
 						//isyslog ("cPluginMcli::Action: Remove Tuner %s [%s] @ %d", nci->tuner[i].fe_info.name, nci->tuner[i].uuid, pos);
 						netCVChanged = true;
 					}
@@ -888,7 +987,7 @@ void cPluginMcli::Action (void)
 				}
 				if (!t) {
 					tpa=TunerPoolAdd(nci->tuner+i);
-					isyslog ("Mcli::%s: Add Tuner(#%d): %s [%s], Type %d @ %d\n", __FUNCTION__, i, nci->tuner[i].fe_info.name, nci->tuner[i].uuid, nci->tuner[i].fe_info.type, tpa);
+					isyslog ("mcli::%s: Add Tuner(#%d): %s [%s], Type %d @ %d\n", __FUNCTION__, i, nci->tuner[i].fe_info.name, nci->tuner[i].uuid, nci->tuner[i].fe_info.type, tpa);
 					//isyslog ("cPluginMcli::Action: Add Tuner: %s [%s], Type %d @ %d", nci->tuner[i].fe_info.name, nci->tuner[i].uuid, nci->tuner[i].fe_info.type, tpa);
 					netCVChanged = true;
 				}
@@ -905,7 +1004,7 @@ void cPluginMcli::Action (void)
         
 //TB: reelvdr itself tunes if the first tuner appears, don't do it twice
 #if 1 //ndef REELVDR
-		if (tpa) {
+		if (tpa && (m_debugmask & DEBUG_BIT_Action_RetuneOnFirstTuner)) {
 			if (!channel_switch_ok) {	// the first tuner that was found, so make VDR retune to the channel it wants...
 #if VDRVERSNUM < 20400
 				cChannel *ch = Channels.GetByNumber (cDevice::CurrentChannel ());
@@ -916,7 +1015,7 @@ void cPluginMcli::Action (void)
 				if (ch) {
 #ifdef DEBUG_TUNE
 					DEBUG_MASK(DEBUG_BIT_TUNE,
-					dsyslog("Mcli::%s: cDevice::PrimaryDevice (%p)", __FUNCTION__, cDevice::PrimaryDevice ());
+					dsyslog("mcli::%s: cDevice::PrimaryDevice (%p)", __FUNCTION__, cDevice::PrimaryDevice ());
 					)
 #endif
 					channel_switch_ok = cDevice::PrimaryDevice ()->SwitchChannel (ch, true);
@@ -942,29 +1041,44 @@ void cPluginMcli::TempDisableDevices(bool now)
 }
 bool cPluginMcli::Initialize (void)
 {
-	InitMcli ();
+	dsyslog ("mcli::%s: called", __FUNCTION__);
+	bool ret = PreInitMcli();
+	if (!ret) {
+		esyslog ("mcli::%s: PreInitMcli failed", __FUNCTION__);
+		return false;
+	};
+	dsyslog ("mcli::%s: successful", __FUNCTION__);
 	return true;
 }
 
 
 bool cPluginMcli::Start (void)
 {
-	isyslog("Mcli v" MCLI_PLUGIN_VERSION " started");
+	isyslog("mcli version " MCLI_PLUGIN_VERSION " started");
 #ifdef REELVDR
-    if (access("/dev/dvb/adapter0", F_OK) != 0) //TB: this line allows the client to be used with usb-sticks without conflicts
+	if (access("/dev/dvb/adapter0", F_OK) != 0) //TB: this line allows the client to be used with usb-sticks without conflicts
 #endif
+	bool ret = InitMcli();
+	if (!ret) {
+		esyslog ("mcli::%s: InitMcli failed", __FUNCTION__);
+		return false;
+	};
+
 	cThread::Start ();
 	// Start any background activities the plugin shall perform.
+	dsyslog ("mcli::%s: successful", __FUNCTION__);
 	return true;
 }
 
 void cPluginMcli::Stop (void)
 {
-	cThread::Cancel (0);
+	dsyslog ("mcli::%s: called", __FUNCTION__);
+	cThread::Cancel(0);
 	for (cMcliDeviceObject * d = m_devs.First (); d; d = m_devs.Next (d)) {
 		d->d ()->SetEnable (false);
 	}
 	// Stop any background activities the plugin is performing.
+	ExitMcli();
 }
 
 void cPluginMcli::Housekeeping (void)
@@ -1092,7 +1206,7 @@ bool cPluginMcli::Service (const char *Id, void *Data)
 				infos->preference[j++] = nci->tuner[i].preference;
 #ifdef DEBUG_TUNE
 				DEBUG_MASK(DEBUG_BIT_TUNE,
-				dsyslog("Mcli::%s: Tuner: %s", __FUNCTION__, nci->tuner[i].fe_info.name);
+				dsyslog("mcli::%s: Tuner: %s", __FUNCTION__, nci->tuner[i].fe_info.name);
 				)
 #endif
 			}

@@ -264,7 +264,7 @@ int cMcliFilters::CloseFilter (int Handle)
 
 int cMcliFilters::OpenFilter (u_short Pid, u_char Tid, u_char Mask)
 {
-//	dsyslog("Mcli::%s: %d %d %02x", __FUNCTION__, Pid, Tid, Mask);
+//	dsyslog("mcli::%s: %d %d %02x", __FUNCTION__, Pid, Tid, Mask);
 	GarbageCollect ();
 
 	if (!WantPid (Pid)) {
@@ -299,7 +299,7 @@ int cMcliPidList::GetTidFromPid (int pid)
 		if (p->Pid () == pid) {
 #ifdef DEBUG_PIDS
 			DEBUG_MASK(DEBUG_BIT_PIDS,
-			dsyslog("Mcli::%s: Found pid %d -> tid %d", __FUNCTION__, pid, p->Tid());
+			dsyslog("mcli::%s: Found pid %d -> tid %d", __FUNCTION__, pid, p->Tid());
 			)
 #endif
 			return p->Tid ();
@@ -315,7 +315,7 @@ void cMcliPidList::SetPid (int Pid, int Tid)
 			if (p->Pid () == Pid) {
 #ifdef DEBUG_PIDS
 				DEBUG_MASK(DEBUG_BIT_PIDS,
-				dsyslog("Mcli::%s: Change pid %d -> tid %d", __FUNCTION__, Pid, Tid);
+				dsyslog("mcli::%s: Change pid %d -> tid %d", __FUNCTION__, Pid, Tid);
 				)
 #endif
 				if (Tid != 0xffff) {
@@ -328,7 +328,7 @@ void cMcliPidList::SetPid (int Pid, int Tid)
 		Add (pid);
 #ifdef DEBUG_PIDS
 		DEBUG_MASK(DEBUG_BIT_PIDS,
-		dsyslog("Mcli::%s: Add pid %d -> tid %d", __FUNCTION__, Pid, Tid);
+		dsyslog("mcli::%s: Add pid %d -> tid %d", __FUNCTION__, Pid, Tid);
 		)
 #endif
 	} else {
@@ -336,7 +336,7 @@ void cMcliPidList::SetPid (int Pid, int Tid)
 			if (p->Pid () == Pid) {
 #ifdef DEBUG_PIDS
 				DEBUG_MASK(DEBUG_BIT_PIDS,
-				dsyslog("Mcli::%s: Del pid %d", __FUNCTION__, Pid);
+				dsyslog("mcli::%s: Del pid %d", __FUNCTION__, Pid);
 				)
 #endif
 				Del (p);
