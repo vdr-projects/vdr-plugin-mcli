@@ -101,7 +101,7 @@ mkdir -p $RPM_BUILD_ROOT/usr/sbin/
 %make_install
 popd
 
-# plugin cofig file
+# plugin config file
 install -Dpm 644 contrib/%{file_plugin_config} $RPM_BUILD_ROOT%{_sysconfdir}/sysconfig/vdr-plugins.d/%{pname}.conf
 
 # vdr/systemd/override.conf
