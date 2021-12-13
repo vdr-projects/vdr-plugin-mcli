@@ -44,7 +44,7 @@ static int handle_ten (tra_t * ten, void *p)
 	cMcliDevice *m = (cMcliDevice *) p;
 	if (ten) {
 		if (!flag_signal || (m_logskipmask & DEBUG_BIT_SIGNAL)) {
-			dsyslog("mcli::%s: Status:%02x, Strength:%04x, SNR:%04x, BER:%04x\n", __FUNCTION__, ten->s.st, ten->s.strength, ten->s.snr, ten->s.ber);
+			dsyslog("mcli::%s: m_chan.Name='%s' m_chan.Number=%d: Status:%02x Strength:0x%04x SNR:0x%04x BER:0x%04x\n", __FUNCTION__, m->CurChan()->Name(), m->CurChan()->Number(), ten->s.st, ten->s.strength, ten->s.snr, ten->s.ber);
 			flag_signal = true;
 		};
 		m->SetTenData (ten);
@@ -56,7 +56,8 @@ static int handle_ten (tra_t * ten, void *p)
 		memset (&ten, 0, sizeof (tra_t));
 		m->SetTenData (&ten);
 		if (flag_signal || (m_logskipmask & DEBUG_BIT_SIGNAL)) {
-			dsyslog("mcli::%s: Signal lost\n", __FUNCTION__);
+			//const cChannel *m_chan = m->CurChan();
+			dsyslog("mcli::%s: m_chan.Name='%s' m_chan.Number=%d: Signal lost\n", __FUNCTION__, m->CurChan()->Name(), m->CurChan()->Number());
 			flag_signal = false;
 		};
 	}
