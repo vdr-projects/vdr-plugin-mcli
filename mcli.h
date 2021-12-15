@@ -18,7 +18,7 @@
 #include "logging.h"
 
 #define MCLI_DEVICE_VERSION "0.9.6"
-#define MCLI_PLUGIN_VERSION "0.9.6"
+#define MCLI_PLUGIN_VERSION "0.9.6.99.alpha.1"
 #define MCLI_PLUGIN_DESCRIPTION trNOOP ("NetCeiver Client Application")
 #define MCLI_SETUPMENU_DESCRIPTION trNOOP ("NetCeiver Client Application")
 #define MCLI_MAINMENU_DESCRIPTION trNOOP ("Common Interface")
