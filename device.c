@@ -279,7 +279,7 @@ int cMcliDevice::HandleTsData (unsigned char *buffer, size_t len)
 	int m_PB_Free = m_PB->Free();
 	if((size_t)m_PB_Free < len) { // m_PB->Free() returns an int
 		m_PB->Clear();
-		if(Receiving(true))  esyslog("mcli::%s: buffer overflow [tuner: %d] %s (len=%ld m_PB_Free=%d)", __FUNCTION__, CardIndex(), m_chan.Name(), len, m_PB_Free);
+		if(Receiving(true)) esyslog("mcli::%s: buffer overflow DVB:%d m_chan.Name='%s' m_chan.Number=%d (len=%ld m_PB_Free=%d)", __FUNCTION__, CardIndex(), m_chan.Name(), m_chan.Number(), len, m_PB_Free);
 	}
 	return m_PB->Put(buffer, len);
 #else
