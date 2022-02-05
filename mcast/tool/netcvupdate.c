@@ -335,10 +335,11 @@ int do_single_upload( char *uuid, char *device, char *remote_path, char *fname, 
 		"open %s%%%s\n"
 		"user %s %s\n"
 		"cd %s\n"
-		"put %s %s\n"
+		"put %s %s%s\n"
 //		"site exec killall -HUP mserv\n"
 		"quit",
-		uuid,device,username,password,remote_path,fname,remote_file);
+		uuid,device,username,password,remote_path,fname,((ftp_client_lftp == 1) ? "-o ": ""),remote_file);
+	printf("Execute ftp scriptlet\n%s\n",script);
 	ret=run_ftp("", script, 120,"");
 	return ret;
 }
