@@ -175,7 +175,7 @@ class cNCUpdate : public cThread {
 					} // case 3
 					case 4: { 
 						m_statestr = cString::sprintf(tr("Saving configuration for Netceiver %s"), uuid);
-						cString c = cString::sprintf("netcvupdate -i %s%s%s -U %s -K%s", uuid, m_iface ? " -d " : "", m_iface ? m_iface : "", TMP_FILE, m_use_lftp ? "-n" : "");
+						cString c = cString::sprintf("netcvupdate -i %s%s%s -U %s -K%s", uuid, m_iface ? " -d " : "", m_iface ? m_iface : "", TMP_FILE, m_use_lftp ? " -n" : "");
 						dsyslog("EXEC2 %s", (const char *)c);
 						if(SystemExec(c)) {
 							m_statestr = cString::sprintf(tr("Failed to save configuration for Netceiver %s"), uuid);
