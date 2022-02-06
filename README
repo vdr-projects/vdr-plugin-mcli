@@ -134,7 +134,7 @@ END
 	add "lftp" specific option to "netcvupdate" calls
 
 --netcvupdate-enable-debug
-	add debug specific option to "netcvupdate" calls
+	add debug option to "netcvupdate" calls
 
 
 == RPM Build Support included ==
