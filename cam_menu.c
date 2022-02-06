@@ -29,7 +29,8 @@
 #define TMP_PATH "/tmp"
 #define TMP_FILE TMP_PATH"/netceiver.conf"
 
-extern bool m_use_lftp;
+extern bool m_netcvupdate_use_lftp;
+extern bool m_netcvupdate_enable_debug;
 
 class cCamMtd : public cMenuEditIntItem {
 	friend class cNCUpdate;
@@ -139,7 +140,7 @@ class cNCUpdate : public cThread {
 					} // case 1
 					case 2: {
 						m_statestr = cString::sprintf(tr("Getting configuration from Netceiver %s"), uuid);
-						cString c = cString::sprintf("rm -f %s; cd %s; netcvupdate -i %s%s%s -D%s", TMP_FILE, TMP_PATH, uuid, m_iface ? " -d " : "", m_iface ? m_iface : "", m_use_lftp ? " -n" : "");
+						cString c = cString::sprintf("rm -f %s; cd %s; netcvupdate -i %s%s%s -D%s%s", TMP_FILE, TMP_PATH, uuid, m_iface ? " -d " : "", m_iface ? m_iface : "", m_netcvupdate_use_lftp ? " -n" : "", m_netcvupdate_enable_debug ? " -e" : "");
 						dsyslog("EXEC1 %s", (const char *)c);
 						if(SystemExec(c)) {
 							m_statestr = cString::sprintf(tr("Failed to get configuration from Netceiver %s"), uuid);
@@ -175,7 +176,7 @@ class cNCUpdate : public cThread {
 					} // case 3
 					case 4: { 
 						m_statestr = cString::sprintf(tr("Saving configuration for Netceiver %s"), uuid);
-						cString c = cString::sprintf("netcvupdate -i %s%s%s -U %s -K%s", uuid, m_iface ? " -d " : "", m_iface ? m_iface : "", TMP_FILE, m_use_lftp ? " -n" : "");
+						cString c = cString::sprintf("netcvupdate -i %s%s%s -U %s -K%s%s", uuid, m_iface ? " -d " : "", m_iface ? m_iface : "", TMP_FILE, m_netcvupdate_use_lftp ? " -n" : "", m_netcvupdate_enable_debug ? " -e" : "");
 						dsyslog("EXEC2 %s", (const char *)c);
 						if(SystemExec(c)) {
 							m_statestr = cString::sprintf(tr("Failed to save configuration for Netceiver %s"), uuid);

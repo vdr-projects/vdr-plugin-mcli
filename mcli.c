@@ -25,7 +25,8 @@ static int reconf = 0;
 int m_debugmask = 0;
 int m_logskipmask = 0;
 bool m_cam_disable = false;
-bool m_use_lftp = false;
+bool m_netcvupdate_use_lftp = false;
+bool m_netcvupdate_enable_debug = false;
 
 //--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -294,7 +295,8 @@ const char *cPluginMcli::CommandLineHelp (void)
 		"  --sock-path <filepath>\n"
 		"  --debugmask <value> (decimal or hex debug mask)\n"
 		"  --logskipmask <value> (decimal or hex log skip mask)\n"
-		"  --use-lftp (for netcvupdate)\n"
+		"  --netcvupdate-use-lftp\n"
+		"  --netcvupdate-enable-debug\n"
 		"\n"
 	);
 }
@@ -321,7 +323,8 @@ bool cPluginMcli::ProcessArgs (int argc, char *argv[])
 			{"debugmask", 1, 0, 0}, //10: debug mask for selective debugging, see mcli.h
 			{"cam-disable", 0, 0, 0}, //11: disable use of CAM (skip channels)
 			{"logskipmask", 1, 0, 0},   //12: log mask for selective disabling of logging, see mcli.h
-			{"use-lftp", 0, 0, 0},	//13
+			{"netcvupdate-use-lftp", 0, 0, 0},	//13
+			{"netcvupdate-enable-debug", 0, 0, 0},	//14
 			{NULL, 0, 0, 0}
 		};
 
@@ -389,7 +392,10 @@ bool cPluginMcli::ProcessArgs (int argc, char *argv[])
 			isyslog("mcli::%s: enable log skip mask: %d (0x%02x)", __FUNCTION__, m_logskipmask, m_logskipmask);
 			break;
 		case 13:
-			m_use_lftp = true;
+			m_netcvupdate_use_lftp = true;
+			break;
+		case 14:
+			m_netcvupdate_enable_debug = true;
 			break;
 		default:
 			dsyslog ("MCli::%s: ?? getopt returned character code 0%o ??\n", __FUNCTION__, c);
