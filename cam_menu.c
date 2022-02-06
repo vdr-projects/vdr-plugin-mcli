@@ -140,14 +140,14 @@ class cNCUpdate : public cThread {
 					} // case 1
 					case 2: {
 						m_statestr = cString::sprintf(tr("Getting configuration from Netceiver %s"), uuid);
-						cString c = cString::sprintf("rm -f %s; cd %s; netcvupdate -i %s%s%s -D%s%s"
+						cString c = cString::sprintf("rm -f %s; cd %s; netcvupdate%s%s -i %s%s%s -D"
 							, TMP_FILE
 							, TMP_PATH
+							, m_netcvupdate_use_lftp ? " -n" : ""
+							, m_netcvupdate_enable_debug ? " -e" : ""
 							, uuid
 							, m_iface ? " -d " : ""
 							, m_iface ? m_iface : ""
-							, m_netcvupdate_use_lftp ? " -n" : ""
-							, m_netcvupdate_enable_debug ? " -e" : ""
 							);
 						dsyslog("EXEC1 %s", (const char *)c);
 						if(SystemExec(c)) {
@@ -184,13 +184,13 @@ class cNCUpdate : public cThread {
 					} // case 3
 					case 4: { 
 						m_statestr = cString::sprintf(tr("Saving configuration for Netceiver %s"), uuid);
-						cString c = cString::sprintf("netcvupdate -i %s%s%s -U %s -K%s%s"
+						cString c = cString::sprintf("netcvupdate%s%s -i %s%s%s -U %s -K"
+							, m_netcvupdate_use_lftp ? " -n" : ""
+							, m_netcvupdate_enable_debug ? " -e" : ""
 							, uuid
 							, m_iface ? " -d " : ""
 							, m_iface ? m_iface : ""
 							, TMP_FILE
-							, m_netcvupdate_use_lftp ? " -n" : ""
-							, m_netcvupdate_enable_debug ? " -e" : ""
 							);
 						dsyslog("EXEC2 %s", (const char *)c);
 						if(SystemExec(c)) {
