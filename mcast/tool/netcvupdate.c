@@ -93,8 +93,8 @@ void add_download(char* cmd, char *remotepath, char *remotefile)
 	char tmp[1024];
 	sprintf(tmp,
 		"cd %s\n"
-		"get %s\n",
-		remotepath,remotefile);
+		"get %s%s\n",
+		remotepath,((ftp_client_lftp == 1) ? "-e ": ""),remotefile);
 	strcat(cmd,tmp);
 }
 /*------------------------------------------------------------------------*/
@@ -362,10 +362,10 @@ int do_single_download( char *uuid, char *device, char *remote_path, char *fname
 		"open %s%%%s\n"
 		"user %s %s\n"
 		"cd %s\n"
-		"get %s\n"
+		"get %s%s\n"
 		"quit",
 		((ftp_client_lftp == 1) ? lftp_standard_options : ""),
-		uuid,device,username,password,remote_path,fname);
+		uuid,device,username,password,remote_path,((ftp_client_lftp == 1) ? "-e ": ""),fname);
 	ret=run_ftp("", script, 120,"");
 	return ret;
 }
