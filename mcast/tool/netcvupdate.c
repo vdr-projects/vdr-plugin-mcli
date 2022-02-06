@@ -347,7 +347,6 @@ int do_single_upload( char *uuid, char *device, char *remote_path, char *fname, 
 		"user %s %s\n"
 		"cd %s\n"
 		"put %s %s%s\n"
-//		"site exec killall -HUP mserv\n"
 		"quit",
 		((ftp_client_lftp == 1) ? lftp_standard_options : ""),
 		uuid,device,username,password,remote_path,fname,((ftp_client_lftp == 1) ? "-o ": ""),remote_file);
