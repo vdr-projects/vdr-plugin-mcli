@@ -4,3 +4,9 @@
 *.a
 *.so
 *.pot
+mcast/client/mcli
+mcast/tool/netcvdiag
+mcast/tool/netcvlogview
+mcast/tool/netcvupdate
+mcast/tool/netcvdiag-static
+mcast/tool/netcvupdate-static

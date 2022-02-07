@@ -87,12 +87,12 @@ class cMcliDevice:public cDevice
 		return (m_fetype == FE_DVBS2)?2:1;
 	}
   
-#ifdef REELVDR
+//#ifdef REELVDR
 	const cChannel *CurChan () const
 	{
 		return &m_chan;
 	};
-#endif
+//#endif
 	unsigned int FrequencyToHz (unsigned int f)
 	{
 		while (f && f < 1000000)

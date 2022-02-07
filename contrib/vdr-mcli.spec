@@ -11,7 +11,7 @@
 %define rel	4
 
 Name:           vdr-%{pname}
-Version:        0.9.6
+Version:        0.9.7
 %if 0%{?gitcommit:1}
 Release:        %{rel}.git.%{gitshortcommit}.%{gitdate}%{?dist}
 %else
@@ -131,6 +131,9 @@ systemctl daemon-reload
 
 
 %changelog
+* Mon Feb 07 2022 Peter Bieringer <pb@bieringer.de> - 0.9.7-4
+- Update to new release
+
 * Mon Feb 08 2021 Peter Bieringer <pb@bieringer.de> - 0.9.5-4
 - Use only plugin/systemd config from contrib subdirectory
 

@@ -41,6 +41,8 @@ char socket_path[256]=API_SOCK_NAMESPACE;
 int ftp_client_lftp = 0;
 int debug = 0;
 
+const char* lftp_standard_options = "set ftp:use-site-utime off\nset ftp:use-site-utime2 off\nset ftp:use-feat off\nset ftp:ssl-allow false\n";
+
 #ifdef USE_MCLI_API
 /*------------------------------------------------------------------------*/
 #define API_WAIT_RESPONSE(cmd) { cmd->state=API_REQUEST; \
@@ -75,11 +77,13 @@ int api_init(char *path)
 /*------------------------------------------------------------------------*/
 void add_upload(char* cmd, char* localfile, char *remotepath, char *remotefile)
 {
-	char tmp[1024];
+	char tmp[2048];
 	sprintf(tmp,
+		"%s"					// lftp: set various flags
 		"cd %s\n"
 		"site exec rm -f /tmp/update/%s\n"
-		"put %s\n",		
+		"put %s\n",
+		((ftp_client_lftp == 1) ? lftp_standard_options : ""),
 		remotepath, remotefile, localfile);
 	strcat(cmd,tmp);
 }
@@ -89,8 +93,8 @@ void add_download(char* cmd, char *remotepath, char *remotefile)
 	char tmp[1024];
 	sprintf(tmp,
 		"cd %s\n"
-		"get %s\n",
-		remotepath,remotefile);
+		"get %s%s\n",
+		remotepath,((ftp_client_lftp == 1) ? "-e ": ""),remotefile);
 	strcat(cmd,tmp);
 }
 /*------------------------------------------------------------------------*/
@@ -209,11 +213,13 @@ int run_ftp(char *tmpdir,char *script, int timeout, char *pipeout)
 int do_reboot(char *tmpdir, char *ip, char* iface, char *user, char* pwd)
 {
 	sprintf(script,
+		"%s"					// lftp: set various flags
 		"open %s%%%s\n"
 		"user %s %s\n"
 		"site exec reboot -d 5\n"
 		"quit\n"
 		,
+		((ftp_client_lftp == 1) ? lftp_standard_options : ""),
 		ip,iface,user,pwd);
 	return run_ftp(tmpdir, script, 15,"");
 }
@@ -235,11 +241,13 @@ int do_list_fw(char *tmpdir, char *ip, char* iface, char *user, char* pwd, int m
 	}
 
 	sprintf(script,
+		"%s"					// lftp: set various flags
 		"open %s%%%s\n"
 		"user %s %s\n"
 		"ls /mmc/\n"
 		"quit\n"
 		,
+		((ftp_client_lftp == 1) ? lftp_standard_options : ""),
 		ip,iface,user,pwd);
 	sprintf(pipeout," > %s",tmpfile);
 	ret=run_ftp(tmpdir, script, 15, pipeout);
@@ -284,11 +292,13 @@ int do_list_fw(char *tmpdir, char *ip, char* iface, char *user, char* pwd, int m
 int do_kill(char *tmpdir, char *ip, char* iface, char *user, char* pwd)
 {
 	sprintf(script,
+		"%s"					// lftp: set various flags
 		"open %s%%%s\n"
 		"user %s %s\n" 
 		"site exec killall -9 mserv\n"  
 		"quit\n"
 		,
+		((ftp_client_lftp == 1) ? lftp_standard_options : ""),
 		ip,iface,user,pwd);
 	return run_ftp(tmpdir, script, 15,"");
 }
@@ -332,13 +342,14 @@ int do_single_upload( char *uuid, char *device, char *remote_path, char *fname, 
 {
 	int ret;
 	sprintf(script,
+		"%s"					// lftp: set various flags
 		"open %s%%%s\n"
 		"user %s %s\n"
 		"cd %s\n"
-		"put %s %s\n"
-//		"site exec killall -HUP mserv\n"
+		"put %s %s%s\n"
 		"quit",
-		uuid,device,username,password,remote_path,fname,remote_file);
+		((ftp_client_lftp == 1) ? lftp_standard_options : ""),
+		uuid,device,username,password,remote_path,fname,((ftp_client_lftp == 1) ? "-o ": ""),remote_file);
 	ret=run_ftp("", script, 120,"");
 	return ret;
 }
@@ -347,12 +358,14 @@ int do_single_download( char *uuid, char *device, char *remote_path, char *fname
 {
 	int ret;
 	sprintf(script,
+		"%s"					// lftp: set various flags
 		"open %s%%%s\n"
 		"user %s %s\n"
 		"cd %s\n"
-		"get %s\n"
+		"get %s%s\n"
 		"quit",
-		uuid,device,username,password,remote_path,fname);
+		((ftp_client_lftp == 1) ? lftp_standard_options : ""),
+		uuid,device,username,password,remote_path,((ftp_client_lftp == 1) ? "-e ": ""),fname);
 	ret=run_ftp("", script, 120,"");
 	return ret;
 }
@@ -363,11 +376,13 @@ int fw_action(char *uuid, char* iface, char *user, char* pwd, int mode, char *ve
 	if (mode==0) { // inactivate
 		printf("Inactivating version %s\n",version);
 		sprintf(script,
+			"%s"					// lftp: set various flags
 			"open %s%%%s\n"
 	                "user %s %s\n"
         	        "cd /mmc\n"
 			"rename netceivr.%s xetceivr.%s\n"
         	        "quit",
+			((ftp_client_lftp == 1) ? lftp_standard_options : ""),
 			uuid,device,username,password,version,version);
 		ret=run_ftp("", script, 120,"");
 		return ret;
@@ -375,11 +390,13 @@ int fw_action(char *uuid, char* iface, char *user, char* pwd, int mode, char *ve
 	else if (mode==1) { // enable
 		printf("Enabling version %s\n",version);
 		sprintf(script,
+			"%s"					// lftp: set various flags
 			"open %s%%%s\n"
 	                "user %s %s\n"
         	        "cd /mmc\n"
 			"rename xetceivr.%s netceivr.%s\n"
         	        "quit",
+			((ftp_client_lftp == 1) ? lftp_standard_options : ""),
 			uuid,device,username,password,version,version);
 		ret=run_ftp("", script, 120,"");
 		return ret;
@@ -387,11 +404,13 @@ int fw_action(char *uuid, char* iface, char *user, char* pwd, int mode, char *ve
 	else if (mode==2) { // delete
 		printf("Removing version %s\n",version);
 		sprintf(script,
+			"%s"					// lftp: set various flags
 			"open %s%%%s\n"
 	                "user %s %s\n"
 			"site exec rm -rf /mmc/netceivr.%s\n"
 			"site exec rm -rf /mmc/xetceivr.%s\n"
         	        "quit",
+			((ftp_client_lftp == 1) ? lftp_standard_options : ""),
 			uuid,device,username,password,version,version);
 		ret=run_ftp("", script, 120,"");
 		return ret;
