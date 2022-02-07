@@ -144,7 +144,7 @@ class cNCUpdate : public cThread {
 							, TMP_FILE
 							, TMP_PATH
 							, m_netcvupdate_use_lftp ? " -n" : ""
-							, m_netcvupdate_enable_debug ? " -e" : ""
+							, m_netcvupdate_enable_debug ? " -e" : " -q" // either enable debugging or be even quiet
 							, uuid
 							, m_iface ? " -d " : ""
 							, m_iface ? m_iface : ""
@@ -186,7 +186,7 @@ class cNCUpdate : public cThread {
 						m_statestr = cString::sprintf(tr("Saving configuration for Netceiver %s"), uuid);
 						cString c = cString::sprintf("netcvupdate%s%s -i %s%s%s -U %s -K"
 							, m_netcvupdate_use_lftp ? " -n" : ""
-							, m_netcvupdate_enable_debug ? " -e" : ""
+							, m_netcvupdate_enable_debug ? " -e" : " -q" // either enable debugging or be even quiet
 							, uuid
 							, m_iface ? " -d " : ""
 							, m_iface ? m_iface : ""
