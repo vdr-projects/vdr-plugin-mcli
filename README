@@ -139,11 +139,17 @@ END
 
 == RPM Build Support included ==
 
+# download vdr-devel, rpm build environment and required dependencies:
+dnf install vdr-devel rpm-build gcc-c++ libxml2-devel zlib-devel
+
 # specify version:
-VERSION=0.9.5
+VERSION=0.9.7
 
 # download version with proper tar.gz name:
-wget https://github.com/vdr-projects/vdr-plugin-mcli/archive/v$VERSION/vdr-mcli-$VERSION.tar.gz
+wget https://github.com/vdr-projects/vdr-plugin-mcli/archive/v$VERSION/vdr-plugin-mcli-$VERSION.tar.gz
 
 # run rpm rebuild with tar.gz:
-rpmbuild -tb vdr-mcli-$VERSION.tar.gz
+rpmbuild -tb vdr-plugin-mcli-$VERSION.tar.gz
+
+# install (example, here 0.9.7 on Fedora 36)
+dnf localinstall $HOME/rpmbuild/RPMS/x86_64/vdr-mcli-0.9.7-4.fc36.x86_64.rpm
