@@ -16,6 +16,7 @@
 #include "device.h"
 #include "cam_menu.h"
 #include "logging.h"
+#include "netcv/logging.h"
 
 #define MCLI_DEVICE_VERSION "0.9.7"
 #define MCLI_PLUGIN_VERSION "0.9.7"

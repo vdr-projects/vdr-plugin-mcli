@@ -51,13 +51,11 @@ SOFILE = libvdr-$(PLUGIN).so
 XML_INC ?= $(shell xml2-config --cflags)
 XML_LIB ?= $(shell xml2-config --libs)
 
-ifdef MCLI_SHARED
-  LIBS = -Lmcast/client -lmcli $(XML_LIB)
-else
-  LIBS = mcast/client/libmcli.a $(XML_LIB)
-endif
+NETCV_INC:=$(shell pkg-config --cflags libnetceiver)
+NETCV_LIB:=$(shell pkg-config --libs libnetceiver)
 
-INCLUDES += -I$(VDRDIR)/include -I. $(XML_INC)
+LIBS = $(NETCV_LIB) $(XML_LIB)
+INCLUDES += -I$(VDRDIR)/include -I. $(XML_INC) $(NETCV_INC)
 
 DEFINES += -D_GNU_SOURCE -DPLUGIN_NAME_I18N='"$(PLUGIN)"'
 # -DDEVICE_ATTRIBUTES
@@ -68,21 +66,12 @@ OBJS = $(PLUGIN).o cam_menu.o device.o filter.o packetbuffer.o
 
 ### The main target:
 
-all:  lib plugin tools i18n
+all:  plugin i18n
 
 
 plugin: i18n
 	$(MAKE) XML_INC="$(XML_INC)" XML_LIB="$(XML_LIB)" libvdr-$(PLUGIN).so
 
-tools: lib
-	 $(MAKE) PLUGIN_NAME="$(PLUGIN)" XML_INC="$(XML_INC)" XML_LIB="$(XML_LIB)" -C mcast/client/ mcli
-	 $(MAKE) XML_INC="$(XML_INC)" XML_LIB="$(XML_LIB)" -C mcast/tool/ all
-
-lib:
-	$(MAKE) PLUGIN_NAME="$(PLUGIN)" XML_INC="$(XML_INC)" XML_LIB="$(XML_LIB)" libmcli.so
-
-libmcli.a libmcli.so:
-	$(MAKE) PLUGIN_NAME="$(PLUGIN)" XML_INC="$(XML_INC)" XML_LIB="$(XML_LIB)" -C mcast/client/ libmcli
 
 ### Implicit rules:
 
@@ -124,7 +113,7 @@ i18n: $(I18Npot)
 i18n-dist: $(I18Nmsgs)
 
 ### Targets:
-$(SOFILE): $(OBJS) libmcli.a
+$(SOFILE): $(OBJS)
 ifeq ($(APPLE_DARWIN), 1)
 	$(CXX) $(CXXFLAGS) $(OBJS) $(LIBS) -o $@
 else
@@ -146,7 +135,4 @@ dist: clean
 
 clean:
 	@-rm -f $(OBJS) $(DEPFILE) *.so *.tgz core* *~  po/*.mo po/*.pot .dependencies
-	$(MAKE) -C mcast/client/ clean
-	$(MAKE) -C mcast/netcv2dvbip/ clean
-	$(MAKE) -C mcast/tool/ clean
 

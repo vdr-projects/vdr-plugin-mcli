@@ -375,6 +375,11 @@ bool cPluginMcli::ProcessArgs (int argc, char *argv[])
 				m_debugmask = atoi (optarg);
 			};
 			dsyslog("mcli::%s: enable debug mask: %d (0x%02x)", __FUNCTION__, m_debugmask, m_debugmask);
+			// Communicate debug bits from our mask to the libnetceiver mask
+			if (m_debugmask & DEBUG_BIT_PIDS)
+				netcv_debugmask |= NETCV_DEBUG_BIT_PIDS;
+			if (m_debugmask & DEBUG_BIT_recv_ts_func_NO_LOGRATELIMIT)
+				netcv_debugmask |= NETCV_DEBUG_BIT_recv_ts_func_NO_LOGRATELIMIT;
 			break;
 		case 11:
 			m_cam_disable = true;
@@ -390,6 +395,9 @@ bool cPluginMcli::ProcessArgs (int argc, char *argv[])
 				m_logskipmask = atoi (optarg);
 			};
 			isyslog("mcli::%s: enable log skip mask: %d (0x%02x)", __FUNCTION__, m_logskipmask, m_logskipmask);
+			// Communicate log skip bits from our mask to the libnetceiver mask
+			if (m_logskipmask & LOGSKIP_BIT_recv_ts_func_pid_Data)
+				netcv_logskipmask |= NETCV_LOGSKIP_BIT_recv_ts_func_pid_Data;
 			break;
 		case 13:
 			m_netcvupdate_use_lftp = true;
