@@ -20,6 +20,9 @@ Copyright (C) 2013      by Hoppaz
 It is dynamically linked against "libnetceiver", available via GIT at:
 https://github.com/vdr-projects/libnetceiver
 
+"netcv2dvbip" was carved out into a dedicated project available via GIT at:
+https://github.com/vdr-projects/netcv2dvbip
+
 ------------------------------------------------------------------
 
 The vdr-plugin is covered by the
