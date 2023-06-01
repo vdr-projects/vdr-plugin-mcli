@@ -7,41 +7,22 @@ http://www.baycom.de/hardware/netceiver/
 Latest version available via GIT at:
 https://github.com/vdr-projects/vdr-plugin-mcli
 
-The vdr-plugin, mcli-library and associated tools&drivers
-except netcv2dvbip are
+The vdr-plugin is
 Copyright (C) 2007-2010 by BayCom GmbH <info@baycom.de>
 
 Extensions by contributors
-Copyright (C) 2020-2022 by Peter Bieringer <pb@bieringer.de>
+Copyright (C) 2020-2023 by Peter Bieringer <pb@bieringer.de>
 Copyright (C) 2013-2015 by hsteinhaus
 Copyright (C) 2014      by mhorwath
 Copyright (C) 2013      by Hoppaz
 
 
-netcv2dvbip is 
-Copyright (C) 2010 by Christian Cier-Zniewski <c.cier@gmx.de>
+It is dynamically linked against "libnetceiver", available via GIT at:
+https://github.com/vdr-projects/libnetceiver
 
 ------------------------------------------------------------------
 
-The mcli-library (libmcli.so) and all tools (including netcv2dvbip) 
-are covered by the GNU LESSER GENERAL PUBLIC LICENSE (LGPL), version 2.1:
-
-This library and all tools are free software; you can redistribute it and/or
-modify it under the terms of the GNU Lesser General Public License version
-2.1 as published by the Free Software Foundation.
-
-This library and all tools are distributed in the hope that it will be
-useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser
-General Public License for more details.
-
-You should have received a copy of the GNU Lesser General Public License
-along with this library; if not, write to the Free Software Foundation,
-Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
-
-------------------------------------------------------------------
-
-The vdr-plugin and associated tools are covered by the
+The vdr-plugin is covered by the
 GNU GENERAL PUBLIC LICENSE (GPL), version 2:
 
 This program is free software; you can redistribute it and/or modify it
@@ -56,14 +37,6 @@ more details.
 You should have received a copy of the GNU General Public License along with
 this program; if not, write to the Free Software Foundation, Inc., 51
 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
-
-**** TO BE CHECKED ****
-To properly integrate the mcli plugin into your VDR please apply these two
-patches:
-
-vdr-1.6.0-altmenuaction.patch (allows CAM messages to be displayed)
-vdr-1.6.0-intcamdevices.patch (enables selection of encrypted channels
-                               without local CI stack).
 
 **** Reviewed version ****
 
@@ -143,7 +116,7 @@ END
 dnf install vdr-devel rpm-build gcc-c++ libxml2-devel zlib-devel
 
 # specify version:
-VERSION=0.9.7
+VERSION=1.0.0
 
 # download version with proper tar.gz name:
 wget https://github.com/vdr-projects/vdr-plugin-mcli/archive/v$VERSION/vdr-plugin-mcli-$VERSION.tar.gz
@@ -151,5 +124,9 @@ wget https://github.com/vdr-projects/vdr-plugin-mcli/archive/v$VERSION/vdr-plugi
 # run rpm rebuild with tar.gz:
 rpmbuild -tb vdr-plugin-mcli-$VERSION.tar.gz
 
-# install (example, here 0.9.7 on Fedora 36)
-dnf localinstall $HOME/rpmbuild/RPMS/x86_64/vdr-mcli-0.9.7-4.fc36.x86_64.rpm
+# install (example, here 1.0.0 on Fedora 38)
+dnf localinstall $HOME/rpmbuild/RPMS/x86_64/vdr-mcli-1.0.0-5.fc38.x86_64.rpm
+
+== Packages ==
+
+* RPM (Fedora): until included in upstream available via COPR: https://copr.fedorainfracloud.org/coprs/pbiering/vdr_extensions/packages/

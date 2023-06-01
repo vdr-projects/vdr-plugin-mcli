@@ -1,5 +1,9 @@
 VDR Plugin 'mcli' Revision History
 ----------------------------------
+2023-05-31 1.0.0
+- M-Reimer adjustments to link dynamically against "libnetceiver"
+- pbiering adjust spec file
+
 2022-02-07 0.9.7
 - pbiering fix lftp support for netcvupdate and cam_menu.c
 - pbiering add new options for plugin: --netcvupdate-use-lftp --netcvupdate-enable-debug

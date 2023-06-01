@@ -1,38 +1,40 @@
+## Build instructions
+# rpmbuild -bb --undefine=_disable_source_fetch vdr-mcli.spec
+
+## Build of a specific branch in upstream repository
+# rpmbuild -bb --undefine=_disable_source_fetch -D "branch <branch>" vdr-mcli.spec
+
+## Build of a specific branch in forked repository
+# rpmbuild -bb --undefine=_disable_source_fetch -D "account <account>" -D "branch <branch>" vdr-mcli.spec
+
 %global pname   mcli
 %global __provides_exclude_from ^%{vdr_plugindir}/.*\\.so.*$
 
-#global fork_account pbiering
-#global fork_branch  vdr-2.4.1
-
-#global gitcommit e050aa1e1bb9563bd7120b2715ec1d7e3da98256
-#global gitshortcommit #(c=#{gitcommit}; echo ${c:0:7})
-#global gitdate 20210123
+# override account
+%if 0%{?account:1}
+%global fork_account %{account}
+%if 0%{?branch:1}
+%else
+%global branch master
+%endif
+%else
+%global account vdr-projects
+%endif
 
 %define rel	4
 
 Name:           vdr-%{pname}
-Version:        0.9.7
-%if 0%{?gitcommit:1}
-Release:        %{rel}.git.%{gitshortcommit}.%{gitdate}%{?dist}
-%else
-%if 0%{?fork_account:1}
-Release:        %{rel}.%{?fork_account:.fork.%fork_branch}%{?dist}
-%else
-Release:        %{rel}%{?dist}
-%endif
-%endif
 Summary:        DVB multicast stream client for the NetCeiver hardware for VDR
+Version:        1.0.0
+Release:        %{rel}%{?fork_account:.fork.%fork_account}%{?branch:.branch.%branch}%{?dist}
 
-License:        GPLv2+ and LGPLv2+
+License:        GPLv2+
 URL:            https://github.com/vdr-projects/vdr-plugin-mcli
-%if 0%{?fork_branch:1}
-Source0:        https://github.com/%{fork_account}/vdr-plugin-mcli/archive/%{fork_branch}/%{name}.tar.gz
-%else
-%if 0%{?gitcommit:1}
-Source0:        https://github.com/vdr-projects/vdr-plugin-mcli/archive/%{gitcommit}/%{name}-%{gitshortcommit}.tar.gz
+
+%if 0%{?branch:1} || 0%{?fork_account:1}
+Source0:        https://github.com/%{account}/vdr-plugin-mcli/archive/%{branch}/%{name}.tar.gz
 %else
 Source0:        https://github.com/vdr-projects/vdr-plugin-mcli/archive/v%{version}/vdr-plugin-%{pname}-%{version}.tar.gz
-%endif
 %endif
 
 %define		file_plugin_config		%{name}.conf
@@ -41,8 +43,13 @@ Source0:        https://github.com/vdr-projects/vdr-plugin-mcli/archive/v%{versi
 BuildRequires:  gcc-c++
 BuildRequires:  vdr-devel >= 2.3.9
 BuildRequires:  zlib-devel
-BuildRequires:  libxml2-devel
+BuildRequires:  libnetceiver-devel >= 0.0.6
+
 Requires:       vdr(abi)%{?_isa} = %{vdr_apiversion}
+Requires:       libnetceiver >= 0.0.6
+
+Conflicts:      vdr-mcli-devel
+
 
 %description
 Multicast client plugin to access DVB-streams produced by the
@@ -50,36 +57,13 @@ Multicast client plugin to access DVB-streams produced by the
 Contains also systemd/override config for vdr to allow vdr to
  open raw sockets:
   %{_sysconfdir}/systemd/system/vdr.service.d/vdr-mcli.conf
-%if 0%{?fork_account:1}
-Fork: %{fork_account} / Branch: %{fork_branch}
-%else
-%if 0%{?gitcommit:1}
-git-commit: %{gitshortcommit} from %{gitdate}
-%endif
-%endif
-
-
-%package devel
-Summary:        C header files for DVB multicast stream client 
-Requires:       vdr-devel
-
-%description devel
-C header files for multicast client plugin to access DVB-streams
-produced by the NetCeiver hardware for VDR
-%if 0%{?fork_account:1}
-Fork: %{fork_account} / Branch: %{fork_branch}
-%endif
 
 
 %prep
-%if 0%{?fork_account:1}
-%setup -q -n vdr-plugin-%{pname}-%{fork_branch}
-%else
-%if 0%{?gitcommit:1}
-%setup -q -n vdr-plugin-%{pname}-%{gitcommit}
+%if 0%{?branch:1}
+%setup -q -n vdr-plugin-%{pname}-%{branch}
 %else
 %setup -q -n vdr-plugin-%{pname}-%{version}
-%endif
 %endif
 
 
@@ -89,17 +73,9 @@ Fork: %{fork_account} / Branch: %{fork_branch}
 
 %make_build AUTOCONFIG=0
 
-cd mcast/tool
-%make_build AUTOCONFIG=0
-
 
 %install
 %make_install
-
-pushd mcast/tool
-mkdir -p $RPM_BUILD_ROOT/usr/sbin/
-%make_install
-popd
 
 # plugin config file
 install -Dpm 644 contrib/%{file_plugin_config} $RPM_BUILD_ROOT%{_sysconfdir}/sysconfig/vdr-plugins.d/%{pname}.conf
@@ -110,9 +86,6 @@ install -Dpm 644 contrib/%{file_systemd_override_config} $RPM_BUILD_ROOT%{_sysco
 
 %find_lang %{name} --all-name --with-man
 
-mkdir -p $RPM_BUILD_ROOT/usr/include/vdr/
-install -Dpm 644 mcliheaders.h $RPM_BUILD_ROOT%{_includedir}/vdr
-
 
 %files -f %{name}.lang
 %license COPYING
@@ -120,10 +93,6 @@ install -Dpm 644 mcliheaders.h $RPM_BUILD_ROOT%{_includedir}/vdr
 %config(noreplace) %{_sysconfdir}/sysconfig/vdr-plugins.d/*.conf
 %{_sysconfdir}/systemd/system/vdr.service.d/vdr-mcli.conf
 %{vdr_plugindir}/libvdr-*.so.%{vdr_apiversion}
-%{_sbindir}/*
-
-%files devel
-%{_includedir}/vdr/*.h
 
 
 %post
@@ -131,6 +100,10 @@ systemctl daemon-reload
 
 
 %changelog
+* Wed May 31 2023 Peter Bieringer <pb@bieringer.de> - 1.0.0.5
+- Update to new release which depends on libnetceiver
+- Remove devel subpackage (now header files included in libnetceiver-devel)
+
 * Mon Feb 07 2022 Peter Bieringer <pb@bieringer.de> - 0.9.7-4
 - Update to new release
 
