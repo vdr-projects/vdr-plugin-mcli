@@ -21,7 +21,7 @@
 %global account vdr-projects
 %endif
 
-%define rel	4
+%define rel	5
 
 Name:           vdr-%{pname}
 Summary:        DVB multicast stream client for the NetCeiver hardware for VDR
@@ -100,7 +100,7 @@ systemctl daemon-reload
 
 
 %changelog
-* Wed May 31 2023 Peter Bieringer <pb@bieringer.de> - 1.0.0.5
+* Wed May 31 2023 Peter Bieringer <pb@bieringer.de> - 1.0.0-5
 - Update to new release which depends on libnetceiver
 - Remove devel subpackage (now header files included in libnetceiver-devel)
 
