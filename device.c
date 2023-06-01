@@ -1187,3 +1187,13 @@ cString cMcliDevice::DeviceType(void) const
 	};
 }
 #endif
+
+#if VDRVERSNUM >= 10727
+cString cMcliDevice::DeviceName(void) const
+{
+	if (!m_enable) {
+		return "";
+	};
+	return cString::sprintf("%s %d", "netceiver", CardIndex () + 1);
+}
+#endif

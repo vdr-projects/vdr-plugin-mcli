@@ -1,6 +1,9 @@
 VDR Plugin 'mcli' Revision History
 ----------------------------------
-2023-05-31 1.0.0
+2023-06-01 1.0.0
+- pbiering add DeviceName, contribution from https://github.com/vdr-projects/vdr-plugin-mcli/issues/15
+
+2023-05-31
 - M-Reimer adjustments to link dynamically against "libnetceiver"
 - pbiering adjust spec file
 

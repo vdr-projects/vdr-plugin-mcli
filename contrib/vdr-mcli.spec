@@ -26,7 +26,7 @@
 Name:           vdr-%{pname}
 Summary:        DVB multicast stream client for the NetCeiver hardware for VDR
 Version:        1.0.0
-Release:        %{rel}%{?fork_account:.fork.%fork_account}%{?branch:.branch.%branch}%{?dist}
+Release:        %{rel}%{?fork_account:.fork.%fork_account}%{?branch:.branch.%(echo "%{branch}" | sed 's/-//g')}%{?dist}
 
 License:        GPLv2+
 URL:            https://github.com/vdr-projects/vdr-plugin-mcli
