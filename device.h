@@ -168,6 +168,9 @@ class cMcliDevice:public cDevice
 #if VDRVERSNUM >= 10728
        virtual cString DeviceType(void) const;
 #endif
+#if VDRVERSNUM >= 10727
+       virtual cString DeviceName(void) const;
+#endif
 };
 
 #endif // VDR_MCLI_DEVICE_H
