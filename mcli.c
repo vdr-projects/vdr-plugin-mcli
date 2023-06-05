@@ -1068,7 +1068,7 @@ bool cPluginMcli::Initialize (void)
 		return false;
 	};
 
-	bool ret = InitMcli();
+	ret = InitMcli();
 	if (!ret) {
 		esyslog ("mcli::%s: InitMcli failed", __FUNCTION__);
 		return false;
