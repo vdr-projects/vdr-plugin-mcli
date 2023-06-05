@@ -25,7 +25,7 @@
 
 Name:           vdr-%{pname}
 Summary:        DVB multicast stream client for the NetCeiver hardware for VDR
-Version:        1.0.0
+Version:        1.0.1
 Release:        %{rel}%{?fork_account:.fork.%fork_account}%{?branch:.branch.%(echo "%{branch}" | sed 's/-//g')}%{?dist}
 
 License:        GPLv2+
@@ -100,6 +100,9 @@ systemctl daemon-reload
 
 
 %changelog
+* Wed May 31 2023 Peter Bieringer <pb@bieringer.de> - 1.0.1-5
+- Update to new release 1.0.1
+
 * Wed May 31 2023 Peter Bieringer <pb@bieringer.de> - 1.0.0-5
 - Update to new release which depends on libnetceiver
 - Remove devel subpackage (now header files included in libnetceiver-devel)

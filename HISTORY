@@ -1,6 +1,6 @@
 VDR Plugin 'mcli' Revision History
 ----------------------------------
-2023-06-05
+2023-06-05 1.0.1
 - pbiering move call of InitMcli from cPluginMcli::Start to cPluginMcli::Initialize (https://github.com/vdr-projects/vdr-plugin-mcli/pull/17)
 
 2023-06-01 1.0.0
