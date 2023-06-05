@@ -1067,6 +1067,13 @@ bool cPluginMcli::Initialize (void)
 		esyslog ("mcli::%s: PreInitMcli failed", __FUNCTION__);
 		return false;
 	};
+
+	ret = InitMcli();
+	if (!ret) {
+		esyslog ("mcli::%s: InitMcli failed", __FUNCTION__);
+		return false;
+	};
+
 	dsyslog ("mcli::%s: successful", __FUNCTION__);
 	return true;
 }
@@ -1075,14 +1082,6 @@ bool cPluginMcli::Initialize (void)
 bool cPluginMcli::Start (void)
 {
 	isyslog("mcli version " MCLI_PLUGIN_VERSION " started");
-#ifdef REELVDR
-	if (access("/dev/dvb/adapter0", F_OK) != 0) //TB: this line allows the client to be used with usb-sticks without conflicts
-#endif
-	bool ret = InitMcli();
-	if (!ret) {
-		esyslog ("mcli::%s: InitMcli failed", __FUNCTION__);
-		return false;
-	};
 
 	cThread::Start ();
 	// Start any background activities the plugin shall perform.
