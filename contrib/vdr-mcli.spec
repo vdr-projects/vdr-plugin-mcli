@@ -21,7 +21,7 @@
 %global account vdr-projects
 %endif
 
-%define rel	5
+%define rel	6
 
 Name:           vdr-%{pname}
 Summary:        DVB multicast stream client for the NetCeiver hardware for VDR
@@ -42,6 +42,7 @@ Source0:        https://github.com/vdr-projects/vdr-plugin-mcli/archive/v%{versi
 
 BuildRequires:  gcc-c++
 BuildRequires:  vdr-devel >= 2.3.9
+BuildRequires:  gettext
 BuildRequires:  zlib-devel
 BuildRequires:  libnetceiver-devel >= 0.0.6
 
@@ -100,6 +101,9 @@ systemctl daemon-reload
 
 
 %changelog
+* Sat Apr 27 2024 Peter Bieringer <pb@bieringer.de> - 1.0.1-6
+- Add gettext to BuildRequires (Fedora 40 issue)
+
 * Wed May 31 2023 Peter Bieringer <pb@bieringer.de> - 1.0.1-5
 - Update to new release 1.0.1
 
